@@ -1,0 +1,60 @@
+.dashboard-layout {
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.dashboard-layout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.dashboard-layout-header h1 {
+  margin: 0;
+  font-family: var(--font-logo);
+  font-size: clamp(40px, 10vw, 116px);
+  font-weight: 200;
+  line-height: 0.9;
+  color: var(--color-logo);
+}
+
+.dashboard-layout-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.dashboard-layout-actions select,
+.dashboard-layout-actions button {
+  min-height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: var(--color-input);
+  color: var(--color-text);
+}
+
+.dashboard-layout-actions button {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  cursor: pointer;
+}
+
+.dashboard-layout-actions button:hover {
+  background: var(--color-primary-hover);
+}
+
+.dashboard-layout-content {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-layout-card {
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}

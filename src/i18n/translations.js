@@ -1,6 +1,6 @@
 export const translations = {
   es: {
-    appName: "BolsilloX",
+    appName: "bolsillox",
     expensesSummaryTitle: "Resumen de gastos",
     expensesListTitle: "Lista de gastos",
     totalSpent: "Total gastado",
@@ -13,7 +13,7 @@ export const translations = {
     darkTheme: "Oscuro",
   },
   en: {
-    appName: "BolsilloX",
+    appName: "bolsillox",
     expensesSummaryTitle: "Expense summary",
     expensesListTitle: "Expense list",
     totalSpent: "Total spent",

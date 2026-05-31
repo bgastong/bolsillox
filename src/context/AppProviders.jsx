@@ -1,5 +1,5 @@
 import { LanguageProvider } from "./LanguageContext";
-import { themeProvider } from "./ThemeContext";
+import { ThemeProvider } from "./ThemeContext";
 
 /*
 Utilizamos este context para no ensuciar main de muchos providers.
@@ -13,7 +13,7 @@ Toda al app puede usar el tema y los idiomas
 function AppProviders({ children }) {
   return (
     <LanguageProvider>
-      <themeProvider>{children}</themeProvider>
+      <ThemeProvider>{children}</ThemeProvider>
     </LanguageProvider>
   );
 }

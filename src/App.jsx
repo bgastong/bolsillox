@@ -1,6 +1,8 @@
 import "./App.css";
+import DashboardLayout from "./layouts/DashboardLayout/DashboardLayout";
 
 function App() {
-  return <div className="App">Hola gente</div>;
+  return <DashboardLayout />;
 }
+
 export default App;
