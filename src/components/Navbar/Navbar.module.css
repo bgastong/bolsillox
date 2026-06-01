@@ -1,0 +1,41 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+}
+
+.logo {
+  height: 40px;
+  width: auto;
+  display: block;
+}
+
+.icon {
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border-radius: 8px;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+.menu {
+  position: absolute;
+  top: 76px;
+  right: 24px;
+  display: grid;
+  gap: 12px;
+  min-width: 180px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}

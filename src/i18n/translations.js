@@ -6,11 +6,8 @@ export const translations = {
     totalSpent: "Total gastado",
     expenseCount: "Cantidad de gastos",
     language: "Idioma",
-    spanish: "Español",
-    english: "Inglés",
-    theme: "Tema",
-    lightTheme: "Claro",
-    darkTheme: "Oscuro",
+    spanish: "Espanol",
+    english: "Ingles",
   },
   en: {
     appName: "bolsillox",
@@ -21,9 +18,6 @@ export const translations = {
     language: "Language",
     spanish: "Spanish",
     english: "English",
-    theme: "Theme",
-    lightTheme: "Light",
-    darkTheme: "Dark",
   },
 };
 
