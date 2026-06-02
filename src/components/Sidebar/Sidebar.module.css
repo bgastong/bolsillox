@@ -1,0 +1,14 @@
+.sidebar {
+  font-family: var(--font-base);
+  border-right-color: var(--sidebar-border);
+}
+
+.sidebar [data-sidebar="sidebar"] {
+  background: var(--sidebar);
+  color: var(--sidebar-foreground);
+}
+
+.footerText {
+  font-family: var(--font-base);
+  text-align: right;
+}

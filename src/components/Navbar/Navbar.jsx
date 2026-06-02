@@ -1,9 +1,8 @@
-import { useState } from "react";
 import { useLanguage } from "../../hooks/useLanguage";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import styles from "./Navbar.module.css";
 
 function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { language, setLanguage } = useLanguage();
 
   function changeLanguage() {
@@ -12,6 +11,10 @@ function Navbar() {
 
   return (
     <nav className={styles.navbar}>
+      <div className={styles.left}>
+        <SidebarTrigger className={styles.sidebarButton} />
+      </div>
+
       <a href="/" className={styles.brand}>
         <img
           className={styles.logo}
@@ -23,15 +26,6 @@ function Navbar() {
       <div className={styles.actions}>
         <img
           className={styles.icon}
-          src="/menu.png"
-          alt="Abrir menu"
-          role="button"
-          tabIndex="0"
-          onClick={() => setIsMenuOpen((open) => !open)}
-        />
-
-        <img
-          className={styles.icon}
           src={language === "es" ? "/es.png" : "/en.png"}
           alt="Cambiar idioma"
           role="button"
@@ -39,7 +33,6 @@ function Navbar() {
           onClick={changeLanguage}
         />
       </div>
-      {isMenuOpen && <div className={styles.menu}></div>}
     </nav>
   );
 }

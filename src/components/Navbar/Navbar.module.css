@@ -1,21 +1,43 @@
 .navbar {
+  position: relative;
   display: flex;
+  width: 100%;
+  min-height: 64px;
   align-items: center;
-  justify-content: space-between;
   padding: 12px 24px;
   background: var(--color-bg);
   color: var(--color-text);
 }
 
+.left {
+  display: flex;
+  align-items: center;
+}
+
+.sidebarButton {
+  position: fixed;
+  top: 18px;
+  left: 8px;
+}
+
+:global(.dashboard-shell-wrapper:has([data-slot="sidebar"][data-state="expanded"])) .sidebarButton {
+  left: calc(var(--sidebar-width) + 8px);
+}
+
 .brand {
+  position: absolute;
+  left: 50%;
+  top: 50%;
   display: inline-flex;
   align-items: center;
+  transform: translate(-50%, -50%);
 }
 
 .logo {
   height: 40px;
   width: auto;
   display: block;
+  align-items: center;
 }
 
 .icon {
@@ -27,15 +49,11 @@
   cursor: pointer;
 }
 
-.menu {
+.actions {
   position: absolute;
-  top: 76px;
   right: 24px;
-  display: grid;
-  gap: 12px;
-  min-width: 180px;
-  padding: 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  background: var(--color-surface);
+  top: 50%;
+  display: flex;
+  align-items: center;
+  transform: translateY(-50%);
 }
