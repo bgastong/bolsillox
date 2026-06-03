@@ -1,4 +1,5 @@
 import styles from "./Sidebar.module.css";
+import { useLanguage } from "../../hooks/useLanguage";
 import {
   Sidebar,
   SidebarContent,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 
 function AppSidebar() {
+  const { t } = useLanguage();
   return (
     <Sidebar collapsible="offcanvas" className={styles.sidebar}>
       <SidebarHeader>
@@ -22,13 +24,13 @@ function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <a href="/">Inicio</a>
+                <a href="/">{t("home")}</a>
               </SidebarMenuButton>
             </SidebarMenuItem>
 
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <a href="/history">Historial</a>
+                <a href="/history">{t("history")}</a>
               </SidebarMenuButton>
             </SidebarMenuItem>
 
