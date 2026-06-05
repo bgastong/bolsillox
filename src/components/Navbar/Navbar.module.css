@@ -1,7 +1,11 @@
 .navbar {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  z-index: 20;
+
   display: flex;
-  width: 100%;
   min-height: 76px;
   align-items: center;
   padding: 16px 28px;
@@ -26,11 +30,13 @@
 
 .brand {
   position: absolute;
-  left: 50%;
+  left: 45%;
   top: 50%;
   display: inline-flex;
   align-items: center;
   transform: translate(-50%, -50%);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .logo {
@@ -38,6 +44,7 @@
   width: auto;
   display: block;
   align-items: center;
+  -webkit-user-drag: none;
 }
 
 .icon {
