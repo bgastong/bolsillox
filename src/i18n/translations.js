@@ -14,6 +14,10 @@ export const translations = {
     cardprofit: "Rendimientos",
     info: "Sobre nosotros",
     categorytitle: "Ingreso mensual",
+    category: "Categoria",
+    method: "Metodo",
+    amount: "Cantidad",
+    footerhistory: "Lista de tus ultimos gastos.",
   },
   en: {
     appName: "bolsillox",
@@ -30,6 +34,10 @@ export const translations = {
     cardprofit: "Performance",
     info: "About me",
     categorytitle: "Monthly income",
+    category: "Category",
+    method: "Method",
+    amount: "Amount",
+    footerhistory: "List of your recent expenses",
   },
 };
 

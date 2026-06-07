@@ -1,12 +1,19 @@
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
-import SummaryCards from "./components/Cards/SummaryCards/SummaryCards";
 import DashboardLayout from "./layouts/DashboardLayout/DashboardLayout";
+import History from "./pages/History";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
-    <DashboardLayout>
-      <SummaryCards />
-    </DashboardLayout>
+    <BrowserRouter>
+      <DashboardLayout>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/history" element={<History />} />
+        </Routes>
+      </DashboardLayout>
+    </BrowserRouter>
   );
 }
 

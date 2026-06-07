@@ -1,10 +1,9 @@
 import SummaryCards from "@/components/Cards/SummaryCards/SummaryCards";
+import TableHistory from "../components/TableHistory/TableHistory";
 
 function Dashboard() {
   return (
     <main className="dashboard">
-      <h2>Dashboard</h2>
-      <p>Resumen</p>
       <SummaryCards />
     </main>
   );
