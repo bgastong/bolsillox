@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "../../hooks/useLanguage";
+import { mockExpenses } from "../../data/mockExpenses";
 import {
   Table,
   TableBody,
@@ -17,17 +18,21 @@ function TableHistory() {
       <TableCaption>{t("footerhistory")}</TableCaption>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[100px]">{t("category")}</TableHead>
+          <TableHead className="w-[100px]">{t("titleHistory")}</TableHead>
+          <TableHead>{t("category")}</TableHead>
           <TableHead>{t("method")}</TableHead>
           <TableHead className="text-right">{t("amount")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        <TableRow>
-          <TableCell className="font-medium">INV001</TableCell>
-          <TableCell>Credit Card</TableCell>
-          <TableCell className="text-right">$250.00</TableCell>
-        </TableRow>
+        {mockExpenses.map((expense) => (
+          <TableRow key={expense.id}>
+            <TableCell className="font-medium">{expense.title}</TableCell>
+            <TableCell>{expense.category}</TableCell>
+            <TableCell>{expense.paymentMethod}</TableCell>
+            <TableCell className="text-right">${expense.amount}</TableCell>
+          </TableRow>
+        ))}
       </TableBody>
     </Table>
   );

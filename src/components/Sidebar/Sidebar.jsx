@@ -33,12 +33,6 @@ function AppSidebar() {
                 <a href="/history">{t("history")}</a>
               </SidebarMenuButton>
             </SidebarMenuItem>
-
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a href="/settings">Configuración</a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

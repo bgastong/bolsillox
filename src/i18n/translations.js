@@ -18,6 +18,8 @@ export const translations = {
     method: "Metodo",
     amount: "Cantidad",
     footerhistory: "Lista de tus ultimos gastos.",
+    titleHistory: "Historial",
+    priceHistory: "Precio",
   },
   en: {
     appName: "bolsillox",
@@ -38,6 +40,8 @@ export const translations = {
     method: "Method",
     amount: "Amount",
     footerhistory: "List of your recent expenses",
+    titleHistory: "History",
+    priceHistory: "Price",
   },
 };
 
