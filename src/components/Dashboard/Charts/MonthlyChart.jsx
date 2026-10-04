@@ -63,9 +63,34 @@ function MonthlyChart({ data }) {
   };
 
   return (
-    <div className="relative h-64 sm:h-72 lg:h-auto lg:min-h-72 lg:flex-1" role="img" aria-label={t("chartMonthly")}>
-      <Bar data={chartData} options={options} />
-    </div>
+    <>
+      <div
+        className="relative h-64 sm:h-72 lg:h-auto lg:min-h-72 lg:flex-1"
+        aria-hidden="true"
+      >
+        <Bar data={chartData} options={options} />
+      </div>
+      {/* Version accesible del grafico para lectores de pantalla */}
+      <table className="sr-only">
+        <caption>{t("chartMonthly")}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{t("month")}</th>
+            <th scope="col">{t("incomes")}</th>
+            <th scope="col">{t("expenses")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((item) => (
+            <tr key={item.month}>
+              <th scope="row">{formatMonth(item.month, locale)}</th>
+              <td>{formatCurrency(item.income, locale)}</td>
+              <td>{formatCurrency(item.expense, locale)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
   );
 }
 

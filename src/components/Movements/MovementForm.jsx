@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowDownLeftIcon, ArrowUpRightIcon } from "lucide-react";
+import { ArrowDownLeftIcon, ArrowUpRightIcon, Trash2Icon } from "lucide-react";
 import {
   CATEGORIES_BY_TYPE,
   NOTE_MAX_LENGTH,
@@ -66,7 +66,7 @@ function Field({ id, label, error, children, className }) {
 Formulario de alta/edicion. Valida en el front con el mismo schema (zod)
 que usa el back, y muestra tambien los errores que devuelva el servidor.
 */
-function MovementForm({ movement, onSubmit, onCancel }) {
+function MovementForm({ movement, onSubmit, onCancel, onDelete }) {
   const { t } = useLanguage();
   const [values, setValues] = useState(() => toFormValues(movement));
   const [errors, setErrors] = useState({});
@@ -143,7 +143,7 @@ function MovementForm({ movement, onSubmit, onCancel }) {
                 aria-checked={active}
                 onClick={() => update("type", value)}
                 className={cn(
-                  "flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
+                  "flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all sm:h-10 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
                   active
                     ? "bg-secondary text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
                     : "text-muted-foreground hover:text-foreground",
@@ -168,7 +168,8 @@ function MovementForm({ movement, onSubmit, onCancel }) {
           placeholder={t("titlePlaceholder")}
           maxLength={TITLE_MAX_LENGTH}
           autoComplete="off"
-          autoFocus
+          autoCapitalize="sentences"
+          enterKeyHint="next"
         />
       </Field>
 
@@ -178,9 +179,11 @@ function MovementForm({ movement, onSubmit, onCancel }) {
             {...fieldProps("amount")}
             type="number"
             inputMode="decimal"
+            enterKeyHint="next"
             min="0"
             step="0.01"
             placeholder="0"
+            className="font-display text-lg font-semibold tabular-nums sm:text-base"
           />
         </Field>
 
@@ -209,7 +212,7 @@ function MovementForm({ movement, onSubmit, onCancel }) {
                 aria-checked={active}
                 onClick={() => update("category", category)}
                 className={cn(
-                  "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm transition-all focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
+                  "inline-flex h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-all sm:h-9 sm:px-3 focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
                   active
                     ? "font-medium text-foreground"
                     : "border-input text-muted-foreground hover:border-white/20 hover:text-foreground",
@@ -265,13 +268,28 @@ function MovementForm({ movement, onSubmit, onCancel }) {
         />
       </Field>
 
-      <div className="mt-2 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
-          {t("cancel")}
-        </Button>
-        <Button type="submit" disabled={saving}>
-          {saving ? t("saving") : t("save")}
-        </Button>
+      {/* Acciones fijas abajo: siempre visibles aunque el teclado este abierto */}
+      <div className="sticky bottom-0 -mx-5 mt-1 flex flex-col gap-2 border-t bg-popover px-5 pt-3 pb-1 sm:static sm:mx-0 sm:flex-row sm:items-center sm:border-0 sm:p-0">
+        {onDelete && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onDelete}
+            disabled={saving}
+            className="order-3 text-destructive hover:bg-destructive/10 hover:text-destructive sm:order-none sm:mr-auto"
+          >
+            <Trash2Icon data-icon="inline-start" />
+            {t("delete")}
+          </Button>
+        )}
+        <div className="grid grid-cols-2 gap-2 sm:ml-auto sm:flex">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
+            {t("cancel")}
+          </Button>
+          <Button type="submit" disabled={saving}>
+            {saving ? t("saving") : t("save")}
+          </Button>
+        </div>
       </div>
     </form>
   );

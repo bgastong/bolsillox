@@ -2,6 +2,7 @@ import { PencilIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { movementLabel } from "@/lib/movementLabel";
 import { useLanguage } from "../../hooks/useLanguage";
 import { AmountText, CategoryBadge, CategoryIcon } from "../Movements/MovementBits";
 import {
@@ -129,29 +130,35 @@ function TableHistory({ movements, onEdit, onDelete }) {
         </Table>
       </div>
 
-      {/* Mobile: tarjetas */}
+      {/* Mobile: tarjetas; toda la tarjeta es un boton para editar */}
       <div className="grid gap-3 md:hidden">
-        <p className="m-0 text-xs text-muted-foreground">{summaryText}</p>
+        <p className="m-0 px-1 text-sm text-muted-foreground">{summaryText}</p>
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {movements.map((movement) => (
-            <li key={movement.id} className="flex items-start gap-3 rounded-2xl border bg-card p-3.5">
-              <CategoryIcon category={movement.category} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="m-0 truncate font-medium">{movement.title}</p>
-                  <AmountText type={movement.type} amount={movement.amount} className="text-sm" />
+            <li key={movement.id}>
+              <button
+                type="button"
+                onClick={() => onEdit(movement)}
+                aria-label={movementLabel(movement, t, locale)}
+                className="flex w-full touch-manipulation items-center gap-3 rounded-2xl border bg-card p-3.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-white/[0.04]"
+              >
+                <CategoryIcon category={movement.category} className="size-11" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="m-0 truncate text-[15px] font-medium">{movement.title}</p>
+                    <AmountText type={movement.type} amount={movement.amount} className="text-[15px]" />
+                  </div>
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <CategoryBadge category={movement.category} className="min-w-0" />
+                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                      {formatDate(movement.date, locale, { day: "numeric", month: "short" })}
+                    </span>
+                  </div>
+                  {movement.note && (
+                    <p className="m-0 mt-1.5 truncate text-xs text-muted-foreground">{movement.note}</p>
+                  )}
                 </div>
-                <p className="m-0 mt-0.5 text-xs text-muted-foreground">
-                  {formatDate(movement.date, locale)} · {t(`pm_${movement.paymentMethod}`)}
-                </p>
-                {movement.note && (
-                  <p className="m-0 mt-1 truncate text-xs text-muted-foreground">{movement.note}</p>
-                )}
-                <div className="mt-2 flex items-center justify-between">
-                  <CategoryBadge category={movement.category} />
-                  <RowActions movement={movement} onEdit={onEdit} onDelete={onDelete} />
-                </div>
-              </div>
+              </button>
             </li>
           ))}
         </ul>

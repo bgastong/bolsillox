@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { PlusIcon } from "lucide-react";
 import HistoryFilters from "@/components/History/HistoryFilters";
-import { MovementDialogs } from "@/components/Movements/MovementDialogs";
 import { PageHeader } from "@/components/Movements/MovementBits";
 import { EmptyState, ErrorState } from "@/components/States/States";
 import TableHistory, { TableHistorySkeleton } from "../components/TableHistory/TableHistory";
@@ -10,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { useApiData } from "@/hooks/useApiData";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useMovementDialogs } from "@/hooks/useMovementDialogs";
+import { useMovements } from "@/hooks/useMovements";
 
 const FILTER_KEYS = ["type", "category", "paymentMethod", "from", "to"];
 const DEFAULT_SORT = "date-desc";
@@ -20,7 +19,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 // y no perderlos al recargar.
 function History() {
   const { t } = useLanguage();
-  const dialogs = useMovementDialogs();
+  const { openCreate, openEdit, openDelete, version } = useMovements();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const filters = {
@@ -69,7 +68,8 @@ function History() {
   const rangeError = Boolean(filters.from && filters.to && filters.from > filters.to);
   const hasFilters = Boolean(q || FILTER_KEYS.some((key) => filters[key]) || filters.sort !== DEFAULT_SORT);
 
-  const queryKey = JSON.stringify({ ...filters, q, rangeError });
+  // `version` cambia al crear/editar/borrar y fuerza la recarga.
+  const queryKey = JSON.stringify({ ...filters, q, rangeError, version });
 
   const loadMovements = useCallback(
     (signal) => {
@@ -109,7 +109,7 @@ function History() {
       </EmptyState>
     ) : (
       <EmptyState message={t("emptyMovements")}>
-        <Button size="sm" onClick={dialogs.openCreate}>
+        <Button size="sm" onClick={openCreate}>
           <PlusIcon data-icon="inline-start" />
           {t("newMovement")}
         </Button>
@@ -120,8 +120,8 @@ function History() {
       <div className="transition-opacity" style={{ opacity: loading ? 0.6 : 1 }}>
         <TableHistory
           movements={movements}
-          onEdit={dialogs.openEdit}
-          onDelete={dialogs.openDelete}
+          onEdit={openEdit}
+          onDelete={openDelete}
         />
       </div>
     );
@@ -133,7 +133,7 @@ function History() {
         title={t("titleHistory")}
         subtitle={t("historySubtitle")}
         actions={
-          <Button onClick={dialogs.openCreate}>
+          <Button onClick={openCreate} className="max-md:hidden">
             <PlusIcon data-icon="inline-start" />
             {t("newMovement")}
           </Button>
@@ -150,17 +150,12 @@ function History() {
         rangeError={rangeError}
       />
 
-      <div aria-busy={loading} aria-live="polite">
-        {content}
-      </div>
+      {/* Anuncio para lectores de pantalla cuando cambian los resultados */}
+      <p className="sr-only" role="status" aria-live="polite">
+        {movements && !loading ? t("resultsCount", { count: movements.length }) : ""}
+      </p>
 
-      <MovementDialogs
-        form={dialogs.form}
-        onFormClose={dialogs.closeForm}
-        toDelete={dialogs.toDelete}
-        onDeleteClose={dialogs.closeDelete}
-        onChange={reload}
-      />
+      <div aria-busy={loading}>{content}</div>
     </div>
   );
 }
