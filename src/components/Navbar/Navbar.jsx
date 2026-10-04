@@ -1,5 +1,8 @@
+import { Link } from "react-router-dom";
+import { CheckIcon } from "lucide-react";
 import { useLanguage } from "../../hooks/useLanguage";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import Wordmark from "../Brand/Wordmark";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import styles from "./Navbar.module.css";
 import {
   DropdownMenu,
@@ -9,28 +12,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 function Navbar() {
-  const { t, setLanguage } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
+  const { isMobile, state } = useSidebar();
+  // El logo se muestra en la barra solo cuando el sidebar no esta visible.
+  const showBrand = isMobile || state === "collapsed";
 
   return (
     <nav className={styles.navbar}>
       <div className={styles.left}>
         <SidebarTrigger className={styles.sidebarButton} />
+        {showBrand && (
+          <Link to="/" className={styles.brand} aria-label={t("home")}>
+            <Wordmark className="text-[1.35rem]" />
+          </Link>
+        )}
       </div>
 
-      <a href="/" className={styles.brand}>
-        <img
-          className={styles.logo}
-          src="/bolsillox-entero.png"
-          alt="Logo bolsilloX"
-        />
-      </a>
       <div className={styles.actions}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               className={styles.languageButton}
               type="button"
-              aria-label="Seleccionar idioma"
+              aria-label={t("selectLanguage")}
+              title={t("selectLanguage")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -54,6 +59,7 @@ function Navbar() {
               }}
             >
               {t("spanish")}
+              {language === "es" && <CheckIcon className="ml-auto" />}
             </DropdownMenuItem>
             <DropdownMenuItem
               className={styles.languageItem}
@@ -63,6 +69,7 @@ function Navbar() {
               }}
             >
               {t("english")}
+              {language === "en" && <CheckIcon className="ml-auto" />}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
