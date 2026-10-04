@@ -1,40 +1,162 @@
-import { Badge } from "@/components/ui/badge";
+import { PencilIcon, Trash2Icon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { useLanguage } from "../../hooks/useLanguage";
-import { mockExpenses } from "../../data/mockExpenses";
+import { AmountText, CategoryBadge, CategoryIcon } from "../Movements/MovementBits";
 import {
   Table,
   TableBody,
   TableCaption,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 
-function TableHistory() {
+function RowActions({ movement, onEdit, onDelete }) {
   const { t } = useLanguage();
   return (
-    <Table>
-      <TableCaption>{t("footerhistory")}</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[100px]">{t("titleHistory")}</TableHead>
-          <TableHead>{t("category")}</TableHead>
-          <TableHead>{t("method")}</TableHead>
-          <TableHead className="text-right">{t("amount")}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {mockExpenses.map((expense) => (
-          <TableRow key={expense.id}>
-            <TableCell className="font-medium">{expense.title}</TableCell>
-            <TableCell>{expense.category}</TableCell>
-            <TableCell>{expense.paymentMethod}</TableCell>
-            <TableCell className="text-right">${expense.amount}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="flex justify-end gap-1">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-muted-foreground hover:text-foreground"
+        onClick={() => onEdit(movement)}
+        aria-label={`${t("edit")}: ${movement.title}`}
+        title={t("edit")}
+      >
+        <PencilIcon />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+        onClick={() => onDelete(movement)}
+        aria-label={`${t("delete")}: ${movement.title}`}
+        title={t("delete")}
+      >
+        <Trash2Icon />
+      </Button>
+    </div>
+  );
+}
+
+export function TableHistorySkeleton() {
+  return (
+    <div className="grid gap-2" aria-hidden="true">
+      {Array.from({ length: 6 }, (_, index) => (
+        <Skeleton key={index} className="h-16 w-full rounded-xl" />
+      ))}
+    </div>
+  );
+}
+
+function TableHistory({ movements, onEdit, onDelete }) {
+  const { t, locale } = useLanguage();
+  const net = movements.reduce(
+    (sum, movement) => sum + (movement.type === "income" ? movement.amount : -movement.amount),
+    0,
+  );
+  const summaryText = `${t("resultsCount", { count: movements.length })} · ${t("resultsTotal", {
+    total: formatCurrency(net, locale, { signed: true }),
+  })}`;
+
+  return (
+    <>
+      {/* Escritorio: tabla */}
+      <div className="hidden overflow-hidden rounded-2xl border bg-card md:block">
+        <Table>
+          <TableCaption className="sr-only">{t("footerhistory")}</TableCaption>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="h-11 pl-5 text-xs font-medium text-muted-foreground">
+                {t("titleLabel")}
+              </TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">{t("category")}</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">{t("date")}</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">{t("method")}</TableHead>
+              <TableHead className="text-right text-xs font-medium text-muted-foreground">
+                {t("amount")}
+              </TableHead>
+              <TableHead className="w-24 pr-5 text-right">
+                <span className="sr-only">{t("actions")}</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {movements.map((movement) => (
+              <TableRow key={movement.id} className="group hover:bg-white/[0.02]">
+                <TableCell className="max-w-72 py-3 pl-5">
+                  <div className="flex items-center gap-3">
+                    <CategoryIcon category={movement.category} className="size-9 rounded-lg" />
+                    <div className="min-w-0">
+                      <p className="m-0 truncate font-medium">{movement.title}</p>
+                      {movement.note && (
+                        <p className="m-0 truncate text-xs text-muted-foreground">{movement.note}</p>
+                      )}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <CategoryBadge category={movement.category} />
+                </TableCell>
+                <TableCell className="text-muted-foreground tabular-nums">
+                  {formatDate(movement.date, locale)}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {t(`pm_${movement.paymentMethod}`)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <AmountText type={movement.type} amount={movement.amount} />
+                </TableCell>
+                <TableCell className="pr-5">
+                  <div className="opacity-60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                    <RowActions movement={movement} onEdit={onEdit} onDelete={onDelete} />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter className="bg-white/[0.02]">
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={6} className="px-5 py-3 text-right text-sm text-muted-foreground">
+                {summaryText}
+              </TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </div>
+
+      {/* Mobile: tarjetas */}
+      <div className="grid gap-3 md:hidden">
+        <p className="m-0 text-xs text-muted-foreground">{summaryText}</p>
+        <ul className="m-0 flex list-none flex-col gap-2 p-0">
+          {movements.map((movement) => (
+            <li key={movement.id} className="flex items-start gap-3 rounded-2xl border bg-card p-3.5">
+              <CategoryIcon category={movement.category} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="m-0 truncate font-medium">{movement.title}</p>
+                  <AmountText type={movement.type} amount={movement.amount} className="text-sm" />
+                </div>
+                <p className="m-0 mt-0.5 text-xs text-muted-foreground">
+                  {formatDate(movement.date, locale)} · {t(`pm_${movement.paymentMethod}`)}
+                </p>
+                {movement.note && (
+                  <p className="m-0 mt-1 truncate text-xs text-muted-foreground">{movement.note}</p>
+                )}
+                <div className="mt-2 flex items-center justify-between">
+                  <CategoryBadge category={movement.category} />
+                  <RowActions movement={movement} onEdit={onEdit} onDelete={onDelete} />
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
   );
 }
 
