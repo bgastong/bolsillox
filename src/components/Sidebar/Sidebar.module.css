@@ -9,7 +9,29 @@
   color: var(--sidebar-foreground);
 }
 
+.header {
+  gap: 0;
+  padding: 16px 12px 8px;
+}
+
+.tagline {
+  margin: 0;
+  padding-left: 14px;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+}
+
+.menuButton {
+  height: 42px;
+  font-size: 0.95rem;
+  border-radius: 8px;
+}
+
 .footerText {
+  margin: 0;
+  padding: 8px;
+  color: var(--muted-foreground);
   font-family: var(--font-base);
+  font-size: 0.8rem;
   text-align: right;
 }

@@ -20,21 +20,24 @@
   --color-danger: #f87171;
 }
 
-* {
-  box-sizing: border-box;
-}
+/* En @layer base para que las utilidades de Tailwind puedan pisarlas. */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
 
-body {
-  margin: 0;
-  font-size: 17px;
-  font-family: var(--font-base);
-  background: var(--color-bg);
-  color: var(--color-text);
-}
+  body {
+    margin: 0;
+    font-size: 17px;
+    font-family: var(--font-base);
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 }
