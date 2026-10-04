@@ -4,7 +4,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-export function HoverCards() {
+function HoverCards() {
   return (
     <HoverCard openDelay={10} closeDelay={100}>
       <HoverCardTrigger asChild>
@@ -21,4 +21,5 @@ export function HoverCards() {
   );
 }
 
+export { HoverCards as HoverCardDemo };
 export default HoverCards;
