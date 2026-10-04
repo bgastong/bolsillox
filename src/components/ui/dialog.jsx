@@ -24,13 +24,17 @@ function DialogOverlay({ className, ...props }) {
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 z-50 bg-black/60 duration-100 supports-backdrop-filter:backdrop-blur-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 z-50 bg-black/70 duration-150 supports-backdrop-filter:backdrop-blur-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props} />
   );
 }
 
+/*
+En mobile se muestra como "bottom sheet" (pegado abajo, a ancho completo,
+con la zona segura del iPhone); desde sm en adelante, centrado.
+*/
 function DialogContent({ className, children, showCloseButton = true, closeLabel = "Close", ...props }) {
   return (
     <DialogPortal>
@@ -38,16 +42,19 @@ function DialogContent({ className, children, showCloseButton = true, closeLabel
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-2xl border bg-popover p-5 text-popover-foreground shadow-2xl outline-none duration-150 sm:p-6 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed inset-x-0 bottom-0 z-50 grid max-h-[92svh] w-full gap-5 overflow-y-auto overscroll-contain rounded-t-3xl border border-b-0 bg-popover px-5 pt-3 pb-[calc(1.25rem+env(safe-area-inset-bottom))] text-popover-foreground shadow-2xl outline-none duration-200 data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-bottom-10 data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-bottom-10",
+          "sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-h-[calc(100svh-2rem)] sm:w-[calc(100%-2rem)] sm:max-w-lg sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border-b sm:p-6 sm:data-open:slide-in-from-bottom-0 sm:data-open:zoom-in-95 sm:data-closed:slide-out-to-bottom-0 sm:data-closed:zoom-out-95",
           className
         )}
         {...props}>
+        {/* Indicador visual de hoja inferior (solo mobile) */}
+        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-white/15 sm:hidden" />
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
-            <XIcon className="size-4" />
+            className="absolute top-3 right-3 inline-flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:top-4 sm:right-4 sm:size-9">
+            <XIcon className="size-5 sm:size-4" />
             <span className="sr-only">{closeLabel}</span>
           </DialogPrimitive.Close>
         )}
@@ -60,7 +67,7 @@ function DialogHeader({ className, ...props }) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-1.5 pr-8 text-left", className)}
+      className={cn("flex flex-col gap-1.5 pr-12 text-left", className)}
       {...props} />
   );
 }
@@ -78,7 +85,7 @@ function DialogTitle({ className, ...props }) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn("text-lg font-semibold", className)}
+      className={cn("font-display text-xl font-semibold tracking-[-0.02em] sm:text-lg", className)}
       {...props} />
   );
 }

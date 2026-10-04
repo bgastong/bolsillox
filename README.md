@@ -9,7 +9,9 @@ bolsillox es una aplicacion web para registrar y visualizar tus finanzas persona
 - **Dashboard:** saldo acumulado, ingresos y gastos del mes con variacion contra el mes anterior, tasa de ahorro, grafico de ingresos vs. gastos (ultimos 6 meses), gastos por categoria y ultimos movimientos. Se puede navegar entre meses.
 - **Historial:** busqueda por texto, filtros por tipo, categoria, metodo de pago y rango de fechas, y orden por fecha, monto o titulo. Los filtros quedan en la URL.
 - **Idiomas:** espanol / ingles (se recuerda la eleccion). Montos en ARS con `Intl.NumberFormat` y fechas segun el idioma.
-- **Estados de carga, error y vacio**, notificaciones al guardar y diseno responsive (tabla en escritorio, tarjetas en mobile).
+- **Pensada para el celular:** navegacion inferior con boton "+" para cargar desde cualquier pantalla, formularios como hoja inferior con botones siempre visibles, areas tactiles de 44px, inputs de 16px (sin zoom en iOS), filas que se tocan enteras para editar y soporte de zonas seguras (notch). Se puede agregar a la pantalla de inicio (manifest).
+- **Accesibilidad:** sin violaciones en axe-core (WCAG 2.1 AA), enlace "saltar al contenido", foco visible, anuncios para lectores de pantalla, tabla alternativa para el grafico, categorias identificadas por color + icono + nombre y respeto de "reducir movimiento".
+- **Estados de carga, error y vacio** y notificaciones al guardar.
 
 ## Tecnologias
 

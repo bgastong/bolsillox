@@ -8,7 +8,6 @@ import CategoryBreakdown from "@/components/Dashboard/Charts/CategoryBreakdown";
 import MonthlyChart from "@/components/Dashboard/Charts/MonthlyChart";
 import ExpenseList from "@/components/Dashboard/ExpenseList/ExpenseList";
 import Panel from "@/components/Dashboard/Panel";
-import { MovementDialogs } from "@/components/Movements/MovementDialogs";
 import { PageHeader } from "@/components/Movements/MovementBits";
 import { EmptyState, ErrorState } from "@/components/States/States";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,7 @@ import { api } from "@/lib/api";
 import { currentMonthKey, formatMonth, shiftMonth } from "@/lib/format";
 import { useApiData } from "@/hooks/useApiData";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useMovementDialogs } from "@/hooks/useMovementDialogs";
+import { useMovements } from "@/hooks/useMovements";
 import "@/components/Dashboard/Charts/chartSetup";
 
 function capitalize(text) {
@@ -29,24 +28,30 @@ function MonthPicker({ month, onChange }) {
   const isCurrent = month >= currentMonthKey();
 
   return (
-    <div className="flex h-10 items-center rounded-lg border border-input bg-white/[0.03]">
+    <div className="flex h-11 w-full items-center justify-between rounded-xl border border-input bg-white/[0.03] sm:h-10 sm:w-auto sm:rounded-lg sm:[&>button]:size-9">
       <Button
         variant="ghost"
-        size="icon-sm"
+        size="icon"
+        className="rounded-l-xl sm:rounded-l-lg"
         onClick={() => onChange(shiftMonth(month, -1))}
         aria-label={t("previousMonth")}
       >
         <ChevronLeftIcon />
       </Button>
-      <span className="min-w-32 px-2 text-center text-sm font-medium" aria-live="polite">
+      <span
+        className="min-w-32 px-2 text-center text-sm font-medium"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         {capitalize(formatMonth(month, locale))}
       </span>
       <Button
         variant="ghost"
-        size="icon-sm"
+        size="icon"
         onClick={() => onChange(shiftMonth(month, 1))}
         disabled={isCurrent}
         aria-label={t("nextMonth")}
+        className="rounded-r-xl sm:rounded-r-lg"
       >
         <ChevronRightIcon />
       </Button>
@@ -61,12 +66,19 @@ function PanelSkeleton({ className = "h-64" }) {
 function Dashboard() {
   const { t, locale } = useLanguage();
   const [month, setMonth] = useState(currentMonthKey);
-  const dialogs = useMovementDialogs();
+  const { openCreate, openEdit, version } = useMovements();
 
-  const loadSummary = useCallback((signal) => api.getSummary(month, { signal }), [month]);
+  // `version` cambia al crear/editar/borrar: fuerza la recarga del resumen.
+  const loadSummary = useCallback(
+    (signal) => api.getSummary(month, { signal }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [month, version],
+  );
   const { data: summary, error, loading, reload } = useApiData(loadSummary);
 
-  const hasMonthlyData = summary?.monthly.some((item) => item.income || item.expense);
+  const hasMonthlyData = summary?.monthly.some(
+    (item) => item.income || item.expense,
+  );
   const showSkeleton = loading && !summary;
 
   return (
@@ -77,7 +89,7 @@ function Dashboard() {
         actions={
           <>
             <MonthPicker month={month} onChange={setMonth} />
-            <Button onClick={dialogs.openCreate}>
+            <Button onClick={openCreate} className="max-md:hidden">
               <PlusIcon data-icon="inline-start" />
               {t("newMovement")}
             </Button>
@@ -93,11 +105,16 @@ function Dashboard() {
           style={{ opacity: loading && summary ? 0.6 : 1 }}
           aria-busy={loading}
         >
-          {showSkeleton ? <SummaryCardsSkeleton /> : <SummaryCards summary={summary} />}
+          {showSkeleton ? (
+            <SummaryCardsSkeleton />
+          ) : (
+            <SummaryCards summary={summary} />
+          )}
 
+          {/* En mobile primero los ultimos movimientos, luego los graficos */}
           <div className="grid gap-6 lg:grid-cols-5">
             <Panel
-              className="lg:col-span-3"
+              className="order-3 lg:order-1 lg:col-span-3"
               title={t("chartMonthly")}
               hint={t("chartMonthlyHint")}
             >
@@ -111,7 +128,7 @@ function Dashboard() {
             </Panel>
 
             <Panel
-              className="lg:col-span-2"
+              className="order-2 lg:col-span-2"
               title={t("chartByCategory")}
               hint={t("chartByCategoryHint")}
             >
@@ -123,43 +140,40 @@ function Dashboard() {
                 <EmptyState message={t("chartEmpty")} />
               )}
             </Panel>
-          </div>
 
-          <Panel
-            title={t("recentMovements")}
-            action={
-              <Button asChild variant="link" size="xs">
-                <Link to="/history">{t("viewAll")}</Link>
-              </Button>
-            }
-          >
-            {showSkeleton ? (
-              <div className="grid gap-3">
-                {Array.from({ length: 4 }, (_, index) => (
-                  <PanelSkeleton key={index} className="h-12" />
-                ))}
-              </div>
-            ) : summary.recent.length ? (
-              <ExpenseList movements={summary.recent} onEdit={dialogs.openEdit} />
-            ) : (
-              <EmptyState message={t("emptyMovements")}>
-                <Button size="sm" onClick={dialogs.openCreate}>
-                  <PlusIcon data-icon="inline-start" />
-                  {t("newMovement")}
+            <Panel
+              className="order-1 lg:order-3 lg:col-span-5"
+              title={t("recentMovements")}
+              action={
+                <Button
+                  asChild
+                  variant="link"
+                  className="-mt-2.5 -mr-3"
+                >
+                  <Link to="/history">{t("viewAll")}</Link>
                 </Button>
-              </EmptyState>
-            )}
-          </Panel>
+              }
+            >
+              {showSkeleton ? (
+                <div className="grid gap-3">
+                  {Array.from({ length: 4 }, (_, index) => (
+                    <PanelSkeleton key={index} className="h-12" />
+                  ))}
+                </div>
+              ) : summary.recent.length ? (
+                <ExpenseList movements={summary.recent} onEdit={openEdit} />
+              ) : (
+                <EmptyState message={t("emptyMovements")}>
+                  <Button size="sm" onClick={openCreate}>
+                    <PlusIcon data-icon="inline-start" />
+                    {t("newMovement")}
+                  </Button>
+                </EmptyState>
+              )}
+            </Panel>
+          </div>
         </div>
       )}
-
-      <MovementDialogs
-        form={dialogs.form}
-        onFormClose={dialogs.closeForm}
-        toDelete={dialogs.toDelete}
-        onDeleteClose={dialogs.closeDelete}
-        onChange={reload}
-      />
     </div>
   );
 }

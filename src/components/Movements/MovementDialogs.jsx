@@ -22,7 +22,14 @@ Dialogos de crear/editar y eliminar.
 - form: { movement: null | movimiento, key } cuando esta abierto
 - toDelete: movimiento a confirmar
 */
-export function MovementDialogs({ form, onFormClose, toDelete, onDeleteClose, onChange }) {
+export function MovementDialogs({
+  form,
+  onFormClose,
+  toDelete,
+  onDeleteClose,
+  onChange,
+  onRequestDelete,
+}) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [deleting, setDeleting] = useState(false);
@@ -66,7 +73,7 @@ export function MovementDialogs({ form, onFormClose, toDelete, onDeleteClose, on
   return (
     <>
       <Dialog open={Boolean(form)} onOpenChange={(open) => !open && onFormClose()}>
-        <DialogContent closeLabel={t("cancel")}>
+        <DialogContent closeLabel={t("close")}>
           <DialogHeader>
             <DialogTitle>{isEdit ? t("editMovement") : t("newMovement")}</DialogTitle>
             <DialogDescription>
@@ -79,6 +86,7 @@ export function MovementDialogs({ form, onFormClose, toDelete, onDeleteClose, on
               movement={form.movement}
               onSubmit={handleSubmit}
               onCancel={onFormClose}
+              onDelete={isEdit && onRequestDelete ? () => onRequestDelete(form.movement) : undefined}
             />
           )}
         </DialogContent>
@@ -88,7 +96,7 @@ export function MovementDialogs({ form, onFormClose, toDelete, onDeleteClose, on
         open={Boolean(toDelete)}
         onOpenChange={(open) => !open && !deleting && onDeleteClose()}
       >
-        <DialogContent className="max-w-md" closeLabel={t("cancel")}>
+        <DialogContent className="max-w-md" closeLabel={t("close")}>
           <DialogHeader>
             <DialogTitle>{t("deleteTitle")}</DialogTitle>
             <DialogDescription>
@@ -100,7 +108,7 @@ export function MovementDialogs({ form, onFormClose, toDelete, onDeleteClose, on
               {t("cancel")}
             </Button>
             <Button
-              className="bg-destructive text-white hover:bg-destructive/85"
+              className="bg-destructive text-white shadow-none hover:bg-destructive/85"
               onClick={handleDelete}
               disabled={deleting}
             >
