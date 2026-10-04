@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import { CheckIcon } from "lucide-react";
 import { useLanguage } from "../../hooks/useLanguage";
-import BrandLogo from "../Brand/BrandLogo";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import Wordmark from "../Brand/Wordmark";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import styles from "./Navbar.module.css";
 import {
   DropdownMenu,
@@ -13,16 +13,21 @@ import {
 
 function Navbar() {
   const { t, language, setLanguage } = useLanguage();
+  const { isMobile, state } = useSidebar();
+  // El logo se muestra en la barra solo cuando el sidebar no esta visible.
+  const showBrand = isMobile || state === "collapsed";
 
   return (
     <nav className={styles.navbar}>
       <div className={styles.left}>
         <SidebarTrigger className={styles.sidebarButton} />
+        {showBrand && (
+          <Link to="/" className={styles.brand} aria-label={t("home")}>
+            <Wordmark className="text-[1.35rem]" />
+          </Link>
+        )}
       </div>
 
-      <Link to="/" className={styles.brand} aria-label={t("home")}>
-        <BrandLogo className={styles.logo} />
-      </Link>
       <div className={styles.actions}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

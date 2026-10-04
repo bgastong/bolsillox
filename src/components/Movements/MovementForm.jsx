@@ -14,10 +14,9 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { todayISO } from "@/lib/format";
+import { getCategoryMeta } from "@/lib/categories";
 import { useLanguage } from "@/hooks/useLanguage";
 
-const inputClass =
-  "rounded-md border-input bg-background px-3 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/20";
 
 function toFormValues(movement) {
   if (!movement) {
@@ -127,13 +126,14 @@ function MovementForm({ movement, onSubmit, onCancel }) {
 
   return (
     <form noValidate onSubmit={handleSubmit} className="grid gap-4">
-      <fieldset className="grid gap-2" disabled={saving}>
-        <legend className="mb-2 text-sm font-medium">{t("type")}</legend>
-        <div className="grid grid-cols-2 gap-2" role="radiogroup">
+      <fieldset className="m-0 grid gap-2 border-0 p-0" disabled={saving}>
+        <legend className="sr-only">{t("type")}</legend>
+        {/* Control segmentado gasto / ingreso */}
+        <div className="grid grid-cols-2 gap-1 rounded-xl bg-white/[0.04] p-1" role="radiogroup" aria-label={t("type")}>
           {[
-            { value: "expense", label: t("expense"), icon: ArrowUpRightIcon, color: "text-expense" },
-            { value: "income", label: t("income"), icon: ArrowDownLeftIcon, color: "text-income" },
-          ].map(({ value, label, icon: Icon, color }) => {
+            { value: "expense", label: t("expense"), icon: ArrowUpRightIcon },
+            { value: "income", label: t("income"), icon: ArrowDownLeftIcon },
+          ].map(({ value, label, icon: Icon }) => {
             const active = values.type === value;
             return (
               <button
@@ -143,13 +143,13 @@ function MovementForm({ movement, onSubmit, onCancel }) {
                 aria-checked={active}
                 onClick={() => update("type", value)}
                 className={cn(
-                  "flex h-11 items-center justify-center gap-2 rounded-md border text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
+                  "flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
                   active
-                    ? "border-foreground bg-secondary text-foreground"
-                    : "border-input text-muted-foreground hover:bg-muted hover:text-foreground",
+                    ? "bg-secondary text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className={cn("size-4", color)} />
+                <Icon className={cn("size-4", active && value === "income" && "text-income")} />
                 {label}
               </button>
             );
@@ -165,7 +165,6 @@ function MovementForm({ movement, onSubmit, onCancel }) {
       <Field id="movement-title" label={t("titleLabel")} error={errorText("title")}>
         <Input
           {...fieldProps("title")}
-          className={inputClass}
           placeholder={t("titlePlaceholder")}
           maxLength={TITLE_MAX_LENGTH}
           autoComplete="off"
@@ -177,7 +176,6 @@ function MovementForm({ movement, onSubmit, onCancel }) {
         <Field id="movement-amount" label={`${t("amount")} (ARS)`} error={errorText("amount")}>
           <Input
             {...fieldProps("amount")}
-            className={inputClass}
             type="number"
             inputMode="decimal"
             min="0"
@@ -187,24 +185,59 @@ function MovementForm({ movement, onSubmit, onCancel }) {
         </Field>
 
         <Field id="movement-date" label={t("date")} error={errorText("date")}>
-          <Input {...fieldProps("date")} className={inputClass} type="date" />
+          <Input {...fieldProps("date")} type="date" />
         </Field>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field id="movement-category" label={t("category")} error={errorText("category")}>
-          <NativeSelect {...fieldProps("category")}>
-            <option value="" disabled>
-              {t("selectPlaceholder")}
-            </option>
-            {categories.map((category) => (
-              <option key={category} value={category}>
+      <fieldset
+        className="m-0 grid gap-2 border-0 p-0"
+        disabled={saving}
+        aria-describedby={errors.category ? "movement-category-error" : undefined}
+      >
+        <legend className="mb-2 text-sm font-medium">{t("category")}</legend>
+        {/* Chips de categoria, cada una con su color e icono */}
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("category")}>
+          {categories.map((category, index) => {
+            const { color, icon: Icon } = getCategoryMeta(category);
+            const active = values.category === category;
+            return (
+              <button
+                key={category}
+                id={index === 0 ? "movement-category" : undefined}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => update("category", category)}
+                className={cn(
+                  "inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-sm transition-all focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
+                  active
+                    ? "font-medium text-foreground"
+                    : "border-input text-muted-foreground hover:border-white/20 hover:text-foreground",
+                  errors.category && !active && "border-destructive/50",
+                )}
+                style={
+                  active
+                    ? {
+                        borderColor: color,
+                        background: `color-mix(in srgb, ${color} 16%, transparent)`,
+                      }
+                    : undefined
+                }
+              >
+                <Icon className="size-3.5" style={{ color }} aria-hidden="true" />
                 {t(`cat_${category}`)}
-              </option>
-            ))}
-          </NativeSelect>
-        </Field>
+              </button>
+            );
+          })}
+        </div>
+        {errors.category && (
+          <p id="movement-category-error" role="alert" className="text-xs text-destructive">
+            {t(errors.category)}
+          </p>
+        )}
+      </fieldset>
 
+      <div className="grid gap-4">
         <Field
           id="movement-paymentMethod"
           label={t("method")}

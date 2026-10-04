@@ -11,7 +11,7 @@ export function ErrorState({ error, onRetry, className }) {
     <div
       role="alert"
       className={cn(
-        "flex flex-col items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-10 text-center",
+        "flex flex-col items-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 px-6 py-10 text-center",
         className,
       )}
     >
@@ -34,7 +34,7 @@ export function EmptyState({ message, children, className }) {
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-10 text-center text-muted-foreground",
+        "flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-10 text-center text-muted-foreground",
         className,
       )}
     >

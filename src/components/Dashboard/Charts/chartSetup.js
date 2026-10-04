@@ -10,24 +10,24 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 ChartJS.defaults.font.family =
-  '"Satoshi", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-ChartJS.defaults.color = "#a8a8a8";
+  '"Geist Variable", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+ChartJS.defaults.color = "#8b8b94";
 
-// Paleta categorica validada contra la superficie oscura (#161616).
+// Paleta validada para daltonismo contra la superficie de las tarjetas (#111113).
 export const SERIES_COLORS = {
-  income: "#3987e5",
-  expense: "#d95926",
+  income: "#199e70",
+  expense: "#8b6fe8",
 };
 
-export const GRID_COLOR = "rgba(255, 255, 255, 0.06)";
+export const GRID_COLOR = "rgba(255, 255, 255, 0.05)";
 
 export const tooltipStyle = {
-  backgroundColor: "#0d0d0d",
-  borderColor: "#2e2e2e",
+  backgroundColor: "#18181b",
+  borderColor: "rgba(255, 255, 255, 0.1)",
   borderWidth: 1,
   titleColor: "#ffffff",
   bodyColor: "#c7c7c7",
   padding: 10,
-  cornerRadius: 8,
+  cornerRadius: 10,
   boxPadding: 4,
 };

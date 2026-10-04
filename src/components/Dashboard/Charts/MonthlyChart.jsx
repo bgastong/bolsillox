@@ -14,7 +14,7 @@ function MonthlyChart({ data }) {
         label: t("incomes"),
         data: data.map((item) => item.income),
         backgroundColor: SERIES_COLORS.income,
-        borderRadius: 4,
+        borderRadius: 6,
         borderSkipped: "start",
         maxBarThickness: 22,
         categoryPercentage: 0.6,
@@ -24,7 +24,7 @@ function MonthlyChart({ data }) {
         label: t("expenses"),
         data: data.map((item) => item.expense),
         backgroundColor: SERIES_COLORS.expense,
-        borderRadius: 4,
+        borderRadius: 6,
         borderSkipped: "start",
         maxBarThickness: 22,
         categoryPercentage: 0.6,
@@ -41,7 +41,7 @@ function MonthlyChart({ data }) {
       legend: {
         position: "top",
         align: "end",
-        labels: { boxWidth: 10, boxHeight: 10, useBorderRadius: true, borderRadius: 2, color: "#e5e5e5" },
+        labels: { boxWidth: 8, boxHeight: 8, useBorderRadius: true, borderRadius: 4, color: "#d4d4d8" },
       },
       tooltip: {
         ...tooltipStyle,
@@ -63,7 +63,7 @@ function MonthlyChart({ data }) {
   };
 
   return (
-    <div className="h-64 sm:h-72" role="img" aria-label={t("chartMonthly")}>
+    <div className="relative h-64 sm:h-72 lg:h-auto lg:min-h-72 lg:flex-1" role="img" aria-label={t("chartMonthly")}>
       <Bar data={chartData} options={options} />
     </div>
   );

@@ -2,6 +2,8 @@ export const translations = {
   es: {
     appName: "bolsillox",
     appTagline: "Tus finanzas personales",
+    menu: "Menú",
+    sidebarFooter: "Tus datos se guardan en tu compu",
     language: "Idioma",
     selectLanguage: "Seleccionar idioma",
     spanish: "Español",
@@ -139,6 +141,8 @@ export const translations = {
   en: {
     appName: "bolsillox",
     appTagline: "Your personal finances",
+    menu: "Menu",
+    sidebarFooter: "Your data stays on your computer",
     language: "Language",
     selectLanguage: "Select language",
     spanish: "Spanish",

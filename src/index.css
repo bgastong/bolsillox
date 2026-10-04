@@ -1,4 +1,5 @@
-@import url("https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap");
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/bricolage-grotesque";
 @import "tailwindcss";
 @import "./styles/theme.css";
 @import "tw-animate-css";
@@ -6,42 +7,41 @@
 
 /* Tokens de shadcn/ui (la app es solo modo oscuro). */
 :root {
-  --background: #0d0d0d;
-  --foreground: #ffffff;
-  --card: #161616;
-  --card-foreground: #ffffff;
-  --popover: #161616;
-  --popover-foreground: #ffffff;
-  --primary: #f4f4f4;
-  --primary-foreground: #0d0d0d;
-  --secondary: #2b2b2b;
-  --secondary-foreground: #ffffff;
-  --muted: #232323;
-  --muted-foreground: #a8a8a8;
-  --accent: #2b2b2b;
-  --accent-foreground: #ffffff;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #111113;
+  --card-foreground: #fafafa;
+  --popover: #141416;
+  --popover-foreground: #fafafa;
+  /* Color de marca: lima */
+  --primary: #d4f75c;
+  --primary-foreground: #0b0d05;
+  --secondary: #1c1c20;
+  --secondary-foreground: #fafafa;
+  --muted: #18181b;
+  --muted-foreground: #9b9ba4;
+  --accent: #1f1f23;
+  --accent-foreground: #fafafa;
   --destructive: #f87171;
-  --border: #2e2e2e;
-  --input: #4a4a4a;
-  --ring: #8a8a8a;
-  /* Series de graficos (paleta categorica validada para fondo oscuro) */
-  --chart-1: #3987e5;
-  --chart-2: #d95926;
-  --chart-3: #199e70;
-  --chart-4: #c98500;
-  --chart-5: #d55181;
-  --income: #6aa9f0; /* mismo tono que la serie de ingresos */
-  --expense: #ec7a4b; /* mismo tono que la serie de gastos */
-  --radius: 0.625rem;
-  --sidebar: #161616;
-  --sidebar-background: #161616;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #f4f4f4;
-  --sidebar-primary-foreground: #0d0d0d;
-  --sidebar-accent: #2b2b2b;
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: #232323;
-  --sidebar-ring: #8a8a8a;
+  --border: rgba(255, 255, 255, 0.07);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #d4f75c;
+  /* Series de graficos (validadas para daltonismo sobre #111113) */
+  --chart-income: #199e70;
+  --chart-expense: #8b6fe8;
+  /* Texto de montos */
+  --income: #34d399;
+  --expense: #fafafa;
+  --radius: 0.875rem;
+  --sidebar: #0c0c0e;
+  --sidebar-background: #0c0c0e;
+  --sidebar-foreground: #e4e4e7;
+  --sidebar-primary: #d4f75c;
+  --sidebar-primary-foreground: #0b0d05;
+  --sidebar-accent: rgba(255, 255, 255, 0.06);
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #d4f75c;
 }
 
 @theme inline {
@@ -63,11 +63,10 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
+  --color-chart-income: var(--chart-income);
+  --color-chart-expense: var(--chart-expense);
+  --font-sans: "Geist Variable", system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Geist Variable", system-ui, sans-serif;
   --color-income: var(--income);
   --color-expense: var(--expense);
   --radius-sm: calc(var(--radius) - 4px);
@@ -87,6 +86,16 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 35%, transparent);
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
   }
 
   /* Inputs nativos de fecha con el icono visible en modo oscuro */
