@@ -1,10 +1,24 @@
-// Acceso a datos de movimientos. Recibe la instancia de better-sqlite3.
+// Acceso a datos de movimientos. Recibe una instancia de node:sqlite (DatabaseSync).
+// node:sqlite rechaza parametros con nombre que no esten en la consulta,
+// por eso se arman los objetos con los campos exactos.
 
 const COLUMNS = `
   id, type, title, amount, date, category,
   payment_method AS paymentMethod, note,
   created_at AS createdAt, updated_at AS updatedAt
 `;
+
+function movementParams(data) {
+  return {
+    type: data.type,
+    title: data.title,
+    amount: data.amount,
+    date: data.date,
+    category: data.category,
+    paymentMethod: data.paymentMethod,
+    note: data.note ?? "",
+  };
+}
 
 const SORT_COLUMNS = { date: "date", amount: "amount", title: "title COLLATE NOCASE" };
 
@@ -71,21 +85,21 @@ export function createRepository(db) {
   }
 
   function create(data) {
-    const { lastInsertRowid } = insertStmt.run(data);
-    return get(lastInsertRowid);
+    const { lastInsertRowid } = insertStmt.run(movementParams(data));
+    return get(Number(lastInsertRowid));
   }
 
   function update(id, data) {
-    const { changes } = updateStmt.run({ ...data, id });
-    return changes ? get(id) : null;
+    const { changes } = updateStmt.run({ ...movementParams(data), id });
+    return Number(changes) ? get(id) : null;
   }
 
   function remove(id) {
-    return deleteStmt.run(id).changes > 0;
+    return Number(deleteStmt.run(id).changes) > 0;
   }
 
   function totalsBetween(from, to) {
-    const row = db
+    return db
       .prepare(
         `SELECT
            COALESCE(SUM(CASE WHEN type = 'income' THEN amount END), 0) AS income,
@@ -95,7 +109,6 @@ export function createRepository(db) {
          WHERE (@from IS NULL OR date >= @from) AND date <= @to`,
       )
       .get({ from, to });
-    return row;
   }
 
   function expensesByCategory(from, to) {

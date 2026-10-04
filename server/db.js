@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
 import { buildSeed } from "./seed.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,8 +30,9 @@ export function openDatabase({ filename = DEFAULT_DB_PATH, seed = true } = {}) {
     fs.mkdirSync(path.dirname(filename), { recursive: true });
   }
 
-  const db = new Database(filename);
-  db.pragma("journal_mode = WAL");
+  // SQLite nativo de Node (node:sqlite): no requiere compilar nada.
+  const db = new DatabaseSync(filename);
+  if (filename !== ":memory:") db.exec("PRAGMA journal_mode = WAL");
   db.exec(SCHEMA);
 
   if (seed) seedIfEmpty(db);
@@ -48,6 +49,13 @@ export function seedIfEmpty(db) {
     VALUES (@type, @title, @amount, @date, @category, @paymentMethod, @note)
   `);
   const rows = buildSeed();
-  db.transaction(() => rows.forEach((row) => insert.run(row)))();
+  db.exec("BEGIN");
+  try {
+    for (const row of rows) insert.run(row);
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
   return rows.length;
 }
