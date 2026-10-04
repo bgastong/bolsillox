@@ -1,7 +1,6 @@
 .dashboard-shell {
   min-height: 100svh;
   min-width: 0;
-  background: var(--color-bg);
   color: var(--color-text);
 }
 

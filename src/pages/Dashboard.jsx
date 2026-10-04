@@ -4,7 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import SummaryCards, {
   SummaryCardsSkeleton,
 } from "@/components/Cards/SummaryCards/SummaryCards";
-import CategoryChart from "@/components/Dashboard/Charts/CategoryChart";
+import CategoryBreakdown from "@/components/Dashboard/Charts/CategoryBreakdown";
 import MonthlyChart from "@/components/Dashboard/Charts/MonthlyChart";
 import ExpenseList from "@/components/Dashboard/ExpenseList/ExpenseList";
 import Panel from "@/components/Dashboard/Panel";
@@ -29,7 +29,7 @@ function MonthPicker({ month, onChange }) {
   const isCurrent = month >= currentMonthKey();
 
   return (
-    <div className="flex items-center rounded-md border">
+    <div className="flex h-10 items-center rounded-lg border border-input bg-white/[0.03]">
       <Button
         variant="ghost"
         size="icon-sm"
@@ -118,7 +118,7 @@ function Dashboard() {
               {showSkeleton ? (
                 <PanelSkeleton />
               ) : summary.byCategory.length ? (
-                <CategoryChart data={summary.byCategory} />
+                <CategoryBreakdown data={summary.byCategory} />
               ) : (
                 <EmptyState message={t("chartEmpty")} />
               )}

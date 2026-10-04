@@ -2,12 +2,13 @@ import { NavLink } from "react-router-dom";
 import { HistoryIcon, LayoutDashboardIcon } from "lucide-react";
 import styles from "./Sidebar.module.css";
 import { useLanguage } from "../../hooks/useLanguage";
-import BrandLogo from "../Brand/BrandLogo";
+import Wordmark from "../Brand/Wordmark";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -32,15 +33,21 @@ function AppSidebar() {
   return (
     <Sidebar collapsible="offcanvas" className={styles.sidebar}>
       <SidebarHeader className={styles.header}>
-        <NavLink to="/" onClick={handleNavigate} aria-label={t("home")}>
-          <BrandLogo />
+        <NavLink
+          to="/"
+          onClick={handleNavigate}
+          aria-label={t("home")}
+          className="w-fit rounded-md outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+        >
+          <Wordmark />
         </NavLink>
         <p className={styles.tagline}>{t("appTagline")}</p>
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarMenu>
+          <SidebarGroupLabel className={styles.groupLabel}>{t("menu")}</SidebarGroupLabel>
+          <SidebarMenu className="gap-1">
             {NAV_ITEMS.map(({ to, labelKey, icon: Icon, end }) => (
               <SidebarMenuItem key={to}>
                 <NavLink
@@ -69,7 +76,10 @@ function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <p className={styles.footerText}>{t("appName")}</p>
+        <div className={styles.footerCard}>
+          <span className={styles.footerDot} aria-hidden="true" />
+          <p className={styles.footerText}>{t("sidebarFooter")}</p>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

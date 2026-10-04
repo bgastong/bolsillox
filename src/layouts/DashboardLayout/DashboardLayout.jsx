@@ -9,7 +9,7 @@ function DashboardLayout({ children }) {
     <SidebarProvider className="dashboard-shell-wrapper">
       <AppSidebar />
 
-      <SidebarInset className="dashboard-shell">
+      <SidebarInset className="dashboard-shell bg-transparent">
         <Navbar />
         <div className="dashboard-content">{children}</div>
         <Footer />

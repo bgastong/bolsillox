@@ -20,8 +20,6 @@ const SORT_OPTIONS = [
   { value: "title-asc", labelKey: "sortTitleAsc" },
 ];
 
-const inputClass =
-  "rounded-md border-input bg-background px-3 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 aria-invalid:border-destructive";
 
 function FilterField({ id, label, children, className }) {
   return (
@@ -71,12 +69,12 @@ function HistoryFilters({
   return (
     <section
       aria-label={t("filters")}
-      className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8"
+      className="grid gap-3 rounded-2xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
     >
       <FilterField
         id="filter-q"
         label={t("search")}
-        className="sm:col-span-2 lg:col-span-4 xl:col-span-2"
+        className="sm:col-span-2"
       >
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -90,7 +88,7 @@ function HistoryFilters({
               value={search}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder={t("searchPlaceholder")}
-              className={`${inputClass} pl-9`}
+              className="pl-9"
               maxLength={80}
             />
           </div>
@@ -175,7 +173,7 @@ function HistoryFilters({
           value={filters.from}
           max={filters.to || undefined}
           onChange={(event) => onFilterChange("from", event.target.value)}
-          className={inputClass}
+          
         />
       </FilterField>
 
@@ -186,7 +184,7 @@ function HistoryFilters({
           value={filters.to}
           min={filters.from || undefined}
           onChange={(event) => onFilterChange("to", event.target.value)}
-          className={inputClass}
+          
           aria-invalid={rangeError ? true : undefined}
           aria-describedby={rangeError ? "filter-range-error" : undefined}
         />
@@ -207,7 +205,7 @@ function HistoryFilters({
       </FilterField>
 
       {(rangeError || hasFilters) && (
-        <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2 lg:col-span-4 xl:col-span-8">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2 lg:col-span-4">
           {rangeError ? (
             <p
               id="filter-range-error"

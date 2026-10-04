@@ -13,7 +13,7 @@ bolsillox es una aplicacion web para registrar y visualizar tus finanzas persona
 
 ## Tecnologias
 
-- **Frontend:** React 19, Vite, React Router, Tailwind CSS 4, shadcn/ui (Radix UI), Chart.js, lucide-react.
+- **Frontend:** React 19, Vite, React Router, Tailwind CSS 4, shadcn/ui (Radix UI), Chart.js, lucide-react. Fuentes Geist y Bricolage Grotesque (empaquetadas con Fontsource).
 - **Backend:** Node.js, Express 5, SQLite nativo de Node (`node:sqlite`, no hay que compilar nada), zod.
 - **Calidad:** ESLint, tests de la API con `node:test`.
 

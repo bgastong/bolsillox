@@ -35,9 +35,9 @@ function Variation({ value, inverse = false }) {
   );
 }
 
-function StatCard({ label, value, icon: Icon, footer, valueClassName }) {
+function StatCard({ label, value, icon: Icon, footer, valueClassName, featured = false }) {
   return (
-    <article className={styles.card}>
+    <article className={`${styles.card} ${featured ? styles.featured : ""}`}>
       <div className={styles.cardHeader}>
         <span>{label}</span>
         <span className={styles.icon}>
@@ -71,6 +71,7 @@ function SummaryCards({ summary }) {
   return (
     <div className={styles.grid}>
       <StatCard
+        featured
         label={t("cardtotal")}
         icon={WalletIcon}
         value={money(summary.balance)}
