@@ -1,0 +1,17 @@
+# Dependencias y build
+node_modules
+dist
+
+# Base de datos local (SQLite)
+server/data/
+
+# Logs y entorno
+*.log
+.env
+.env.*
+
+# Editor / SO
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea

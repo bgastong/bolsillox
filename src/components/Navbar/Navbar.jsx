@@ -1,4 +1,7 @@
+import { Link } from "react-router-dom";
+import { CheckIcon } from "lucide-react";
 import { useLanguage } from "../../hooks/useLanguage";
+import BrandLogo from "../Brand/BrandLogo";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import styles from "./Navbar.module.css";
 import {
@@ -9,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 function Navbar() {
-  const { t, setLanguage } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
 
   return (
     <nav className={styles.navbar}>
@@ -17,20 +20,17 @@ function Navbar() {
         <SidebarTrigger className={styles.sidebarButton} />
       </div>
 
-      <a href="/" className={styles.brand}>
-        <img
-          className={styles.logo}
-          src="/bolsillox-entero.png"
-          alt="Logo bolsilloX"
-        />
-      </a>
+      <Link to="/" className={styles.brand} aria-label={t("home")}>
+        <BrandLogo className={styles.logo} />
+      </Link>
       <div className={styles.actions}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               className={styles.languageButton}
               type="button"
-              aria-label="Seleccionar idioma"
+              aria-label={t("selectLanguage")}
+              title={t("selectLanguage")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -54,6 +54,7 @@ function Navbar() {
               }}
             >
               {t("spanish")}
+              {language === "es" && <CheckIcon className="ml-auto" />}
             </DropdownMenuItem>
             <DropdownMenuItem
               className={styles.languageItem}
@@ -63,6 +64,7 @@ function Navbar() {
               }}
             >
               {t("english")}
+              {language === "en" && <CheckIcon className="ml-auto" />}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
