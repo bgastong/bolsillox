@@ -14,8 +14,7 @@ function CategoryBreakdown({ data }) {
     <div className="grid gap-5">
       <div
         className="flex h-2.5 gap-0.5 overflow-hidden rounded-full"
-        role="img"
-        aria-label={t("chartByCategory")}
+        aria-hidden="true"
       >
         {data.map((item) => (
           <span

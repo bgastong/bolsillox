@@ -1,0 +1,13 @@
+{
+  "name": "bolsillox",
+  "short_name": "bolsillox",
+  "description": "Tus finanzas personales",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "lang": "es",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -18,6 +18,8 @@
 }
 
 .footer a {
+  display: inline-block;
+  padding: 12px 0;
   color: var(--color-text);
   text-decoration: underline;
   text-underline-offset: 3px;

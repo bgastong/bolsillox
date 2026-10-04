@@ -42,7 +42,10 @@ export function LanguageProvider({ children }) {
 
   const t = useCallback(
     (key, vars) => {
-      const text = translations[language]?.[key] ?? key;
+      const dict = translations[language] ?? {};
+      // Plural simple: si count === 1 y existe "<clave>_one", se usa esa.
+      const singularKey = vars?.count === 1 ? `${key}_one` : null;
+      const text = (singularKey && dict[singularKey]) ?? dict[key] ?? key;
       if (!vars) return text;
       return text.replace(/\{\{(\w+)\}\}/g, (match, name) =>
         name in vars ? String(vars[name]) : match,

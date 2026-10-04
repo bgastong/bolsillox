@@ -20,7 +20,8 @@ function Navbar() {
   return (
     <nav className={styles.navbar}>
       <div className={styles.left}>
-        <SidebarTrigger className={styles.sidebarButton} />
+        {/* En mobile la navegacion esta abajo (MobileNav) */}
+        {!isMobile && <SidebarTrigger className={styles.sidebarButton} aria-label={t("toggleSidebar")} />}
         {showBrand && (
           <Link to="/" className={styles.brand} aria-label={t("home")}>
             <Wordmark className="text-[1.35rem]" />
