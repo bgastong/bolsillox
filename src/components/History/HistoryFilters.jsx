@@ -20,7 +20,6 @@ const SORT_OPTIONS = [
   { value: "title-asc", labelKey: "sortTitleAsc" },
 ];
 
-
 function FilterField({ id, label, children, className }) {
   return (
     <div className={cn("grid gap-1.5", className)}>
@@ -71,11 +70,7 @@ function HistoryFilters({
       aria-label={t("filters")}
       className="grid gap-3 rounded-2xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
     >
-      <FilterField
-        id="filter-q"
-        label={t("search")}
-        className="sm:col-span-2"
-      >
+      <FilterField id="filter-q" label={t("search")} className="sm:col-span-2">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <SearchIcon
@@ -96,14 +91,24 @@ function HistoryFilters({
             type="button"
             variant="outline"
             size="icon"
-            className="relative rounded-md sm:hidden"
+            className={cn(
+              "relative sm:hidden",
+              expanded && "border-ring bg-muted",
+            )}
             onClick={() => setExpanded((value) => !value)}
             aria-expanded={expanded}
-            aria-label={t("filters")}
+            aria-label={
+              activeCount
+                ? `${t("filters")} (${t("activeFilters", { count: activeCount })})`
+                : t("filters")
+            }
           >
             <SlidersHorizontalIcon />
             {activeCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+              <span
+                aria-hidden="true"
+                className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground"
+              >
                 {activeCount}
               </span>
             )}
@@ -111,7 +116,39 @@ function HistoryFilters({
         </div>
       </FilterField>
 
-      <FilterField className={advanced} id="filter-type" label={t("type")}>
+      {/* Mobile: tipo como control segmentado, siempre visible */}
+      <div
+        role="radiogroup"
+        aria-label={t("type")}
+        className="grid grid-cols-3 gap-1 rounded-xl bg-white/[0.04] p-1 sm:hidden"
+      >
+        {[
+          { value: "", label: t("all") },
+          { value: "income", label: t("incomes") },
+          { value: "expense", label: t("expenses") },
+        ].map((option) => {
+          const active = filters.type === option.value;
+          return (
+            <button
+              key={option.value || "all"}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onFilterChange("type", option.value)}
+              className={cn(
+                "h-11 touch-manipulation rounded-lg text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                active
+                  ? "bg-secondary text-foreground shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                  : "text-muted-foreground",
+              )}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <FilterField className="max-sm:hidden" id="filter-type" label={t("type")}>
         <NativeSelect
           id="filter-type"
           value={filters.type}
@@ -173,7 +210,6 @@ function HistoryFilters({
           value={filters.from}
           max={filters.to || undefined}
           onChange={(event) => onFilterChange("from", event.target.value)}
-          
         />
       </FilterField>
 
@@ -184,7 +220,6 @@ function HistoryFilters({
           value={filters.to}
           min={filters.from || undefined}
           onChange={(event) => onFilterChange("to", event.target.value)}
-          
           aria-invalid={rangeError ? true : undefined}
           aria-describedby={rangeError ? "filter-range-error" : undefined}
         />

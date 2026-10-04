@@ -32,55 +32,63 @@ function AppSidebar() {
 
   return (
     <Sidebar collapsible="offcanvas" className={styles.sidebar}>
-      <SidebarHeader className={styles.header}>
-        <NavLink
-          to="/"
-          onClick={handleNavigate}
-          aria-label={t("home")}
-          className="w-fit rounded-md outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-        >
-          <Wordmark />
-        </NavLink>
-        <p className={styles.tagline}>{t("appTagline")}</p>
-      </SidebarHeader>
+      {/* Landmark de navegacion que envuelve todo el sidebar */}
+      <nav
+        aria-label={t("mainNavigation")}
+        className="flex min-h-0 flex-1 flex-col"
+      >
+        <SidebarHeader className={styles.header}>
+          <NavLink
+            to="/"
+            onClick={handleNavigate}
+            aria-label={t("home")}
+            className="flex min-h-11 w-fit items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          >
+            <Wordmark />
+          </NavLink>
+          <p className={styles.tagline}>{t("appTagline")}</p>
+        </SidebarHeader>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className={styles.groupLabel}>{t("menu")}</SidebarGroupLabel>
-          <SidebarMenu className="gap-1">
-            {NAV_ITEMS.map(({ to, labelKey, icon: Icon, end }) => (
-              <SidebarMenuItem key={to}>
-                <NavLink
-                  to={to}
-                  end={end}
-                  onClick={handleNavigate}
-                  className="block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-                >
-                  {({ isActive }) => (
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive}
-                      className={styles.menuButton}
-                    >
-                      <span>
-                        <Icon />
-                        <span>{t(labelKey)}</span>
-                      </span>
-                    </SidebarMenuButton>
-                  )}
-                </NavLink>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
-      </SidebarContent>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel className={styles.groupLabel}>
+              {t("menu")}
+            </SidebarGroupLabel>
+            <SidebarMenu className="gap-1">
+              {NAV_ITEMS.map(({ to, labelKey, icon: Icon, end }) => (
+                <SidebarMenuItem key={to}>
+                  <NavLink
+                    to={to}
+                    end={end}
+                    onClick={handleNavigate}
+                    className="block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+                  >
+                    {({ isActive }) => (
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        className={styles.menuButton}
+                      >
+                        <span>
+                          <Icon />
+                          <span>{t(labelKey)}</span>
+                        </span>
+                      </SidebarMenuButton>
+                    )}
+                  </NavLink>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
 
-      <SidebarFooter>
-        <div className={styles.footerCard}>
-          <span className={styles.footerDot} aria-hidden="true" />
-          <p className={styles.footerText}>{t("sidebarFooter")}</p>
-        </div>
-      </SidebarFooter>
+        <SidebarFooter>
+          <div className={styles.footerCard}>
+            <span className={styles.footerDot} aria-hidden="true" />
+            <p className={styles.footerText}>{t("sidebarFooter")}</p>
+          </div>
+        </SidebarFooter>
+      </nav>
     </Sidebar>
   );
 }
