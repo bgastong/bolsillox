@@ -6,16 +6,15 @@
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,magenta \"npm:dev:server\" \"npm:dev:client\"",
     "dev:client": "vite",
-    "dev:server": "node --watch server/index.js",
+    "dev:server": "node --disable-warning=ExperimentalWarning --watch server/index.js",
     "build": "vite build",
-    "start": "node server/index.js --production",
-    "test": "node --test \"server/**/*.test.js\"",
+    "start": "node --disable-warning=ExperimentalWarning server/index.js --production",
+    "test": "node --disable-warning=ExperimentalWarning --test \"server/**/*.test.js\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
-    "better-sqlite3": "^13.0.3",
     "chart.js": "^4.5.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
