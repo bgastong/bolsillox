@@ -7,7 +7,6 @@ import AppSidebar from "../../components/Sidebar/Sidebar";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import MobileNav from "../../components/MobileNav/MobileNav";
-import Splash from "../../components/Brand/Splash";
 
 function DashboardLayout({ children }) {
   const { t } = useLanguage();
@@ -15,7 +14,6 @@ function DashboardLayout({ children }) {
 
   return (
     <MovementsProvider>
-      <Splash />
       {/* Grilla decorativa de fondo */}
       <div className="bg-grid" aria-hidden="true" />
       <SidebarProvider className="dashboard-shell-wrapper">

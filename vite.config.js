@@ -32,7 +32,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": API_URL,
+      // changeOrigin en false: la API recibe el Host original (localhost:5173),
+      // que es el que compara con el Origin para frenar pedidos de otros sitios.
+      "/api": { target: API_URL, changeOrigin: false },
     },
   },
 });

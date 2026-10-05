@@ -101,7 +101,8 @@ Todos son decorativos y respetan prefers-reduced-motion (ver index.css).
   gap: 28px;
   background: var(--background);
   pointer-events: none;
-  animation: splash-out 0.45s ease 1.25s forwards;
+  /* Total ~1,2 s: la salida (ease-in) es mas corta que la entrada. */
+  animation: splash-out 0.3s cubic-bezier(0.4, 0, 1, 1) 0.9s forwards;
 }
 
 .splash-logo {
@@ -111,7 +112,7 @@ Todos son decorativos y respetan prefers-reduced-motion (ver index.css).
 }
 
 .splash-mark {
-  animation: splash-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: splash-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 .splash-word {
@@ -123,8 +124,8 @@ Todos son decorativos y respetan prefers-reduced-motion (ver index.css).
 
 .splash-word > span {
   display: inline-block;
-  animation: splash-letter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(0.25s + var(--i) * 0.045s);
+  animation: splash-letter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(0.15s + var(--i) * 0.035s);
 }
 
 .splash-bar {
@@ -143,7 +144,7 @@ Todos son decorativos y respetan prefers-reduced-motion (ver index.css).
   border-radius: inherit;
   background: var(--primary);
   transform-origin: left;
-  animation: splash-fill 1.05s cubic-bezier(0.65, 0, 0.35, 1) 0.15s both;
+  animation: splash-fill 0.75s cubic-bezier(0.65, 0, 0.35, 1) 0.1s both;
 }
 
 @keyframes splash-pop {
