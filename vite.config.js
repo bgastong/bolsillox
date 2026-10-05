@@ -14,6 +14,22 @@ export default defineConfig({
       "@shared": fileURLToPath(new URL("./shared", import.meta.url)),
     },
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        // React y el router casi nunca cambian: en un archivo aparte quedan
+        // cacheados entre versiones de la app.
+        advancedChunks: {
+          groups: [
+            {
+              name: "react",
+              test: /node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom)[\\/]/,
+            },
+          ],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       "/api": API_URL,

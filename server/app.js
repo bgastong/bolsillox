@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import compression from "compression";
 import express from "express";
 import { rateSettingsSchema } from "../shared/movementSchema.js";
 import { createRepository } from "./repository.js";
@@ -31,6 +32,8 @@ export function createApp(db, { serveStatic = false, now, fetchImpl } = {}) {
   const rates = createRatesService(db, { now, fetchImpl });
 
   app.disable("x-powered-by");
+  // Respuestas comprimidas (gzip/brotli): la API y el build pesan bastante menos.
+  app.use(compression());
   app.use(express.json({ limit: "100kb" }));
 
   app.get("/api/health", (req, res) => {
@@ -69,8 +72,15 @@ export function createApp(db, { serveStatic = false, now, fetchImpl } = {}) {
 
   // En produccion el mismo servidor sirve el build de Vite.
   if (serveStatic && fs.existsSync(DIST_DIR)) {
-    app.use(express.static(DIST_DIR));
+    // Los archivos de /assets llevan un hash en el nombre: se pueden cachear
+    // "para siempre". index.html no, para que siempre tome la ultima version.
+    app.use(
+      "/assets",
+      express.static(path.join(DIST_DIR, "assets"), { immutable: true, maxAge: "1y" }),
+    );
+    app.use(express.static(DIST_DIR, { index: false }));
     app.get(/^(?!\/api).*/, (req, res) => {
+      res.setHeader("Cache-Control", "no-cache");
       res.sendFile(path.join(DIST_DIR, "index.html"));
     });
   }
