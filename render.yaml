@@ -8,7 +8,9 @@ services:
     # Misma zona que la base en Neon (AWS US East): menos demora en cada consulta.
     region: virginia
     branch: master
-    buildCommand: npm ci && npm run build
+    # NODE_ENV=production hace que npm saltee las devDependencies (Vite);
+    # para compilar hacen falta, por eso --include=dev.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true

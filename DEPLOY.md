@@ -76,6 +76,7 @@ Para probarlo en tu compu, poné las mismas dos variables en tu `.env` y corré 
 
 | Qué pasa | Qué revisar |
 | --- | --- |
+| El build falla con `Cannot find package '@vitejs/plugin-react'` | Que el Build Command sea `npm ci --include=dev && npm run build`. |
 | La primera carga tarda mucho | Es el servidor gratis despertándose; esperá hasta un minuto. |
 | El deploy falla al arrancar con un error de base de datos | Que `DATABASE_URL` sea la connection string completa de Neon, con `?sslmode=require`. |
 | Google dice `redirect_uri_mismatch` | Que la URI cargada en Google sea exactamente `PUBLIC_URL` + `/api/auth/google/callback`. |
