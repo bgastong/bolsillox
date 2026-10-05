@@ -45,11 +45,32 @@ function toQuery(params = {}) {
 }
 
 export const api = {
+  // Movimientos
   listMovements: (filters, options) =>
     request(`/movements${toQuery(filters)}`, options),
-  getSummary: (month, options) => request(`/summary${toQuery({ month })}`, options),
   createMovement: (data) => request("/movements", { method: "POST", body: data }),
   updateMovement: (id, data) =>
     request(`/movements/${id}`, { method: "PUT", body: data }),
   deleteMovement: (id) => request(`/movements/${id}`, { method: "DELETE" }),
+
+  // Resumen del dashboard (currency: moneda en la que se ven los totales)
+  getSummary: (month, currency, options) =>
+    request(`/summary${toQuery({ month, currency })}`, options),
+
+  // Recurrentes
+  listRecurring: (options) => request("/recurring", options),
+  createRecurring: (data) => request("/recurring", { method: "POST", body: data }),
+  updateRecurring: (id, data) => request(`/recurring/${id}`, { method: "PUT", body: data }),
+  deleteRecurring: (id) => request(`/recurring/${id}`, { method: "DELETE" }),
+
+  // Presupuestos
+  getBudgets: (month, options) => request(`/budgets${toQuery({ month })}`, options),
+  setBudget: (category, amount) =>
+    request(`/budgets/${category}`, { method: "PUT", body: { amount } }),
+  deleteBudget: (category) => request(`/budgets/${category}`, { method: "DELETE" }),
+
+  // Cotizacion del dolar
+  getRates: (options) => request("/rates", options),
+  saveRateSettings: (settings) =>
+    request("/rates/settings", { method: "PUT", body: settings }),
 };

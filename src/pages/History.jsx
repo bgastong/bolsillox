@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { PlusIcon } from "lucide-react";
 import HistoryFilters from "@/components/History/HistoryFilters";
 import { PageHeader } from "@/components/Movements/MovementBits";
+import MovementTabs from "@/components/Recurring/MovementTabs";
 import { EmptyState, ErrorState } from "@/components/States/States";
 import TableHistory, { TableHistorySkeleton } from "../components/TableHistory/TableHistory";
 import { Button } from "@/components/ui/button";
@@ -139,6 +140,8 @@ function History() {
           </Button>
         }
       />
+
+      <MovementTabs />
 
       <HistoryFilters
         search={search}

@@ -2,7 +2,7 @@ import { ChevronRightIcon } from "lucide-react";
 import { formatDate } from "@/lib/format";
 import { movementLabel } from "@/lib/movementLabel";
 import { useLanguage } from "@/hooks/useLanguage";
-import { AmountText, CategoryIcon } from "../../Movements/MovementBits";
+import { AmountText, CategoryIcon, RecurringMark } from "../../Movements/MovementBits";
 
 // Lista compacta de los ultimos movimientos (dashboard).
 // Cada fila es un boton grande (comodo para el pulgar) que abre la edicion.
@@ -21,12 +21,15 @@ function ExpenseList({ movements, onEdit }) {
           >
             <CategoryIcon category={movement.category} />
             <div className="min-w-0 flex-1">
-              <p className="m-0 truncate text-[15px] font-medium sm:text-sm">{movement.title}</p>
+              <p className="m-0 flex min-w-0 items-center gap-1.5 text-[15px] font-medium sm:text-sm">
+                <span className="truncate">{movement.title}</span>
+                {movement.recurringId && <RecurringMark />}
+              </p>
               <p className="m-0 truncate text-xs text-muted-foreground">
                 {t(`cat_${movement.category}`)} · {formatDate(movement.date, locale)}
               </p>
             </div>
-            <AmountText type={movement.type} amount={movement.amount} className="text-[15px] sm:text-sm" />
+            <AmountText type={movement.type} amount={movement.amount} currency={movement.currency} className="text-[15px] sm:text-sm" />
             <ChevronRightIcon
               aria-hidden="true"
               className="size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5"

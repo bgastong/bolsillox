@@ -1,10 +1,12 @@
+import { convertedAmountSql, roundMoney, unconvertedSql } from "./money.js";
+
 // Acceso a datos de movimientos. Recibe una instancia de node:sqlite (DatabaseSync).
 // node:sqlite rechaza parametros con nombre que no esten en la consulta,
 // por eso se arman los objetos con los campos exactos.
 
 const COLUMNS = `
-  id, type, title, amount, date, category,
-  payment_method AS paymentMethod, note,
+  id, type, title, amount, currency, date, category,
+  payment_method AS paymentMethod, note, recurring_id AS recurringId,
   created_at AS createdAt, updated_at AS updatedAt
 `;
 
@@ -13,6 +15,7 @@ function movementParams(data) {
     type: data.type,
     title: data.title,
     amount: data.amount,
+    currency: data.currency ?? "ARS",
     date: data.date,
     category: data.category,
     paymentMethod: data.paymentMethod,
@@ -25,12 +28,12 @@ const SORT_COLUMNS = { date: "date", amount: "amount", title: "title COLLATE NOC
 export function createRepository(db) {
   const getStmt = db.prepare(`SELECT ${COLUMNS} FROM movements WHERE id = ?`);
   const insertStmt = db.prepare(`
-    INSERT INTO movements (type, title, amount, date, category, payment_method, note)
-    VALUES (@type, @title, @amount, @date, @category, @paymentMethod, @note)
+    INSERT INTO movements (type, title, amount, currency, date, category, payment_method, note)
+    VALUES (@type, @title, @amount, @currency, @date, @category, @paymentMethod, @note)
   `);
   const updateStmt = db.prepare(`
     UPDATE movements
-    SET type = @type, title = @title, amount = @amount, date = @date,
+    SET type = @type, title = @title, amount = @amount, currency = @currency, date = @date,
         category = @category, payment_method = @paymentMethod, note = @note,
         updated_at = datetime('now')
     WHERE id = @id
@@ -41,17 +44,16 @@ export function createRepository(db) {
     const where = [];
     const params = {};
 
-    if (filters.type) {
-      where.push("type = @type");
-      params.type = filters.type;
-    }
-    if (filters.category) {
-      where.push("category = @category");
-      params.category = filters.category;
-    }
-    if (filters.paymentMethod) {
-      where.push("payment_method = @paymentMethod");
-      params.paymentMethod = filters.paymentMethod;
+    for (const [key, column] of [
+      ["type", "type"],
+      ["category", "category"],
+      ["paymentMethod", "payment_method"],
+      ["currency", "currency"],
+    ]) {
+      if (filters[key]) {
+        where.push(`${column} = @${key}`);
+        params[key] = filters[key];
+      }
     }
     if (filters.from) {
       where.push("date >= @from");
@@ -98,29 +100,40 @@ export function createRepository(db) {
     return Number(deleteStmt.run(id).changes) > 0;
   }
 
-  function totalsBetween(from, to) {
-    return db
+  // Totales de ingresos y gastos en la moneda `target`.
+  // from = null suma desde el principio (para el saldo acumulado).
+  function totalsBetween(from, to, { target = "ARS", rate = null } = {}) {
+    const row = db
       .prepare(
         `SELECT
-           COALESCE(SUM(CASE WHEN type = 'income' THEN amount END), 0) AS income,
-           COALESCE(SUM(CASE WHEN type = 'expense' THEN amount END), 0) AS expense,
-           COUNT(*) AS count
+           COALESCE(SUM(CASE WHEN type = 'income' THEN ${convertedAmountSql} END), 0) AS income,
+           COALESCE(SUM(CASE WHEN type = 'expense' THEN ${convertedAmountSql} END), 0) AS expense,
+           COUNT(*) AS count,
+           COALESCE(${unconvertedSql}, 0) AS unconverted
          FROM movements
          WHERE (@from IS NULL OR date >= @from) AND date <= @to`,
       )
-      .get({ from, to });
+      .get({ from, to, target, rate });
+    return {
+      income: roundMoney(row.income),
+      expense: roundMoney(row.expense),
+      count: row.count,
+      unconverted: row.unconverted,
+    };
   }
 
-  function expensesByCategory(from, to) {
+  function expensesByCategory(from, to, { target = "ARS", rate = null } = {}) {
     return db
       .prepare(
-        `SELECT category, SUM(amount) AS total, COUNT(*) AS count
+        `SELECT category, SUM(${convertedAmountSql}) AS total, COUNT(*) AS count
          FROM movements
          WHERE type = 'expense' AND date BETWEEN @from AND @to
          GROUP BY category
          ORDER BY total DESC`,
       )
-      .all({ from, to });
+      .all({ from, to, target, rate })
+      .map((row) => ({ ...row, total: roundMoney(row.total) }))
+      .filter((row) => row.total > 0);
   }
 
   return { list, get, create, update, remove, totalsBetween, expensesByCategory };

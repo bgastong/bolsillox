@@ -27,28 +27,39 @@ export function percentChange(current, previous) {
   return Math.round(((current - previous) / Math.abs(previous)) * 1000) / 10;
 }
 
-export function buildSummary(repo, monthKey, { months = 6, recent = 5 } = {}) {
+// money: { target: "ARS" | "USD", rate: pesos por dolar o null }
+export function buildSummary(
+  repo,
+  monthKey,
+  { months = 6, recent = 5, target = "ARS", rate = null } = {},
+) {
+  const money = { target, rate };
   const current = monthRange(monthKey);
   const previous = monthRange(monthKey, -1);
 
-  const currentTotals = repo.totalsBetween(current.from, current.to);
-  const previousTotals = repo.totalsBetween(previous.from, previous.to);
-  const allTime = repo.totalsBetween(null, current.to);
-  const previousAllTime = repo.totalsBetween(null, previous.to);
+  const currentTotals = repo.totalsBetween(current.from, current.to, money);
+  const previousTotals = repo.totalsBetween(previous.from, previous.to, money);
+  const allTime = repo.totalsBetween(null, current.to, money);
+  const previousAllTime = repo.totalsBetween(null, previous.to, money);
 
-  const balance = allTime.income - allTime.expense;
-  const previousBalance = previousAllTime.income - previousAllTime.expense;
-  const net = currentTotals.income - currentTotals.expense;
+  const round = (value) => Math.round(value * 100) / 100;
+  const balance = round(allTime.income - allTime.expense);
+  const previousBalance = round(previousAllTime.income - previousAllTime.expense);
+  const net = round(currentTotals.income - currentTotals.expense);
 
   const monthly = [];
   for (let offset = months - 1; offset >= 0; offset--) {
     const range = monthRange(monthKey, -offset);
-    const totals = repo.totalsBetween(range.from, range.to);
+    const totals = repo.totalsBetween(range.from, range.to, money);
     monthly.push({ month: range.key, income: totals.income, expense: totals.expense });
   }
 
   return {
     month: current.key,
+    currency: target,
+    rate,
+    // Movimientos en otra moneda que no se pudieron convertir (sin cotizacion).
+    unconverted: allTime.unconverted,
     balance,
     income: currentTotals.income,
     expense: currentTotals.expense,
@@ -68,7 +79,7 @@ export function buildSummary(repo, monthKey, { months = 6, recent = 5 } = {}) {
       expense: percentChange(currentTotals.expense, previousTotals.expense),
       balance: percentChange(balance, previousBalance),
     },
-    byCategory: repo.expensesByCategory(current.from, current.to),
+    byCategory: repo.expensesByCategory(current.from, current.to, money),
     monthly,
     recent: repo.list({ to: current.to, sort: "date", order: "desc", limit: recent }),
   };
