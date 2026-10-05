@@ -1,7 +1,14 @@
-import { useCallback, useMemo, useState } from "react";
-import { MovementDialogs } from "@/components/Movements/MovementDialogs";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useMovementDialogs } from "@/hooks/useMovementDialogs";
 import { MovementsContext } from "./MovementsContextValue";
+import { whenIdle } from "@/lib/idle";
+
+// Los dialogos (formulario + zod) se bajan aparte: no hacen falta para la
+// primera pantalla. Se precargan apenas el navegador queda libre.
+const loadDialogs = () => import("@/components/Movements/MovementDialogs");
+const MovementDialogs = lazy(() =>
+  loadDialogs().then((module) => ({ default: module.MovementDialogs })),
+);
 
 /*
 Un solo juego de dialogos para toda la app: asi el boton "+" de la
@@ -19,6 +26,12 @@ export function MovementsProvider({ children }) {
     openDelete,
     closeForm,
   } = dialogs;
+
+  // Se montan con la primera apertura y quedan montados (para las animaciones de cierre).
+  const [dialogsMounted, setDialogsMounted] = useState(false);
+  if (!dialogsMounted && (dialogs.form || dialogs.toDelete)) setDialogsMounted(true);
+
+  useEffect(() => whenIdle(loadDialogs), []);
 
   const handleChange = useCallback(() => setVersion((value) => value + 1), []);
 
@@ -47,14 +60,18 @@ export function MovementsProvider({ children }) {
   return (
     <MovementsContext.Provider value={value}>
       {children}
-      <MovementDialogs
-        form={dialogs.form}
-        onFormClose={dialogs.closeForm}
-        toDelete={dialogs.toDelete}
-        onDeleteClose={dialogs.closeDelete}
-        onChange={handleChange}
-        onRequestDelete={handleRequestDelete}
-      />
+      {dialogsMounted && (
+        <Suspense fallback={null}>
+          <MovementDialogs
+            form={dialogs.form}
+            onFormClose={dialogs.closeForm}
+            toDelete={dialogs.toDelete}
+            onDeleteClose={dialogs.closeDelete}
+            onChange={handleChange}
+            onRequestDelete={handleRequestDelete}
+          />
+        </Suspense>
+      )}
     </MovementsContext.Provider>
   );
 }

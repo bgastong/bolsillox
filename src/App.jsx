@@ -1,15 +1,30 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import DashboardLayout from "./layouts/DashboardLayout/DashboardLayout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { whenIdle } from "@/lib/idle";
 
-// Cada pagina se carga bajo demanda (Chart.js solo se baja en el dashboard).
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const History = lazy(() => import("./pages/History"));
-const Recurring = lazy(() => import("./pages/Recurring"));
-const Budgets = lazy(() => import("./pages/Budgets"));
-const Settings = lazy(() => import("./pages/Settings"));
+// Cada pagina se carga bajo demanda (Chart.js solo se baja en el dashboard)
+// y, una vez abierta la app, el resto se precarga para que navegar sea instantaneo.
+const pages = {
+  dashboard: () => import("./pages/Dashboard"),
+  history: () => import("./pages/History"),
+  recurring: () => import("./pages/Recurring"),
+  budgets: () => import("./pages/Budgets"),
+  settings: () => import("./pages/Settings"),
+};
+const Dashboard = lazy(pages.dashboard);
+const History = lazy(pages.history);
+const Recurring = lazy(pages.recurring);
+const Budgets = lazy(pages.budgets);
+const Settings = lazy(pages.settings);
 const NotFound = lazy(() => import("./pages/NotFound"));
+
+function prefetchPages() {
+  // Con ahorro de datos activado no se precarga nada.
+  if (navigator.connection?.saveData) return undefined;
+  return whenIdle(() => Object.values(pages).forEach((load) => load()), 4000);
+}
 
 function PageFallback() {
   return (
@@ -22,6 +37,8 @@ function PageFallback() {
 }
 
 function App() {
+  useEffect(prefetchPages, []);
+
   return (
     <BrowserRouter>
       <DashboardLayout>
