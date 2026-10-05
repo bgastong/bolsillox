@@ -1,4 +1,5 @@
 import { DEFAULT_RATE_SOURCE } from "../shared/catalog.js";
+import { sql } from "./sql.js";
 
 // API publica y gratuita de cotizaciones del dolar en Argentina
 // (RATES_URL permite apuntar a otra, por ejemplo un mock en desarrollo).
@@ -11,38 +12,26 @@ const CACHE_TTL_MS = 30 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 5000;
 
 /*
-Cotizaciones con cache en la base:
+Cotizaciones con cache en la base (compartidas por todos los usuarios):
 - Si hay datos guardados, responde con eso y actualiza en segundo plano
   cuando tienen mas de 30 minutos.
 - Si la API no responde, se siguen usando los ultimos valores guardados.
-- Si nunca se pudo consultar, el usuario puede cargar una cotizacion manual.
+- Si nunca se pudo consultar, cada usuario puede cargar una cotizacion manual.
+La fuente elegida y la cotizacion manual son de cada usuario (user_settings).
 fetchImpl y now se pueden reemplazar en los tests.
 */
 export function createRatesService(db, { fetchImpl = globalThis.fetch, now = () => new Date() } = {}) {
-  const upsertRate = db.prepare(`
-    INSERT INTO exchange_rates (source, buy, sell, updated_at, fetched_at)
-    VALUES (@source, @buy, @sell, @updatedAt, @fetchedAt)
-    ON CONFLICT (source) DO UPDATE SET
-      buy = excluded.buy, sell = excluded.sell,
-      updated_at = excluded.updated_at, fetched_at = excluded.fetched_at
-  `);
-  const selectRates = db.prepare(
-    "SELECT source, buy, sell, updated_at AS updatedAt, fetched_at AS fetchedAt FROM exchange_rates",
-  );
-  const getSetting = db.prepare("SELECT value FROM settings WHERE key = ?");
-  const setSetting = db.prepare(`
-    INSERT INTO settings (key, value) VALUES (?, ?)
-    ON CONFLICT (key) DO UPDATE SET value = excluded.value
-  `);
-  const deleteSetting = db.prepare("DELETE FROM settings WHERE key = ?");
-
   let inFlight = null;
   let lastError = null;
 
-  function readRates() {
+  async function readRates() {
+    const rows = await db.all(sql`
+      SELECT source, buy, sell, updated_at AS "updatedAt", fetched_at AS "fetchedAt"
+      FROM exchange_rates
+    `);
     const rates = {};
     let fetchedAt = null;
-    for (const row of selectRates.all()) {
+    for (const row of rows) {
       rates[row.source] = { buy: row.buy, sell: row.sell, updatedAt: row.updatedAt };
       if (!fetchedAt || row.fetchedAt > fetchedAt) fetchedAt = row.fetchedAt;
     }
@@ -50,7 +39,7 @@ export function createRatesService(db, { fetchImpl = globalThis.fetch, now = () 
   }
 
   function isFresh(fetchedAt) {
-    return fetchedAt && now().getTime() - new Date(fetchedAt).getTime() < CACHE_TTL_MS;
+    return Boolean(fetchedAt) && now().getTime() - new Date(fetchedAt).getTime() < CACHE_TTL_MS;
   }
 
   async function fetchFromApi() {
@@ -69,13 +58,14 @@ export function createRatesService(db, { fetchImpl = globalThis.fetch, now = () 
       const sell = Number(item?.venta);
       if (!source || !Number.isFinite(sell) || sell <= 0) continue;
       const buy = Number(item?.compra);
-      upsertRate.run({
-        source,
-        buy: Number.isFinite(buy) ? buy : null,
-        sell,
-        updatedAt: item.fechaActualizacion ?? fetchedAt,
-        fetchedAt,
-      });
+      await db.run(sql`
+        INSERT INTO exchange_rates (source, buy, sell, updated_at, fetched_at)
+        VALUES (${source}, ${Number.isFinite(buy) ? buy : null}, ${sell},
+                ${item.fechaActualizacion ?? fetchedAt}, ${fetchedAt})
+        ON CONFLICT (source) DO UPDATE SET
+          buy = excluded.buy, sell = excluded.sell,
+          updated_at = excluded.updated_at, fetched_at = excluded.fetched_at
+      `);
       saved++;
     }
     if (!saved) throw new Error("sin cotizaciones validas");
@@ -100,39 +90,52 @@ export function createRatesService(db, { fetchImpl = globalThis.fetch, now = () 
   // Actualiza si hace falta. Sin datos guardados espera la respuesta;
   // con datos viejos, actualiza en segundo plano.
   async function ensureFresh() {
-    const { rates, fetchedAt } = readRates();
+    const { rates, fetchedAt } = await readRates();
     if (isFresh(fetchedAt)) return;
     if (Object.keys(rates).length === 0) await refresh();
     else refresh();
   }
 
-  function getSettings() {
-    const manual = getSetting.get("manualRate")?.value;
+  async function getSettings(userId) {
+    const rows = await db.all(sql`
+      SELECT key, value FROM user_settings
+      WHERE user_id = ${userId} AND key IN ('rateSource', 'manualRate')
+    `);
+    const values = Object.fromEntries(rows.map((row) => [row.key, row.value]));
     return {
-      source: getSetting.get("rateSource")?.value ?? DEFAULT_RATE_SOURCE,
-      manualRate: manual ? Number(manual) : null,
+      source: values.rateSource ?? DEFAULT_RATE_SOURCE,
+      manualRate: values.manualRate ? Number(values.manualRate) : null,
     };
   }
 
-  function saveSettings({ source, manualRate }) {
-    setSetting.run("rateSource", source);
-    if (manualRate) setSetting.run("manualRate", String(manualRate));
-    else deleteSetting.run("manualRate");
+  async function saveSettings(userId, { source, manualRate }) {
+    await db.transaction(async (tx) => {
+      await setSetting(tx, userId, "rateSource", source);
+      if (manualRate) await setSetting(tx, userId, "manualRate", String(manualRate));
+      else {
+        await tx.run(
+          sql`DELETE FROM user_settings WHERE user_id = ${userId} AND key = 'manualRate'`,
+        );
+      }
+    });
   }
 
-  // Cotizacion activa (venta) segun la fuente elegida, o null si no hay datos.
-  function getActiveRate() {
-    const { source, manualRate } = getSettings();
+  function activeRate({ source, manualRate }, rates) {
     if (source === "manual") return manualRate;
-    return readRates().rates[source]?.sell ?? null;
+    return rates[source]?.sell ?? null;
   }
 
-  function getStatus() {
-    const { rates, fetchedAt } = readRates();
-    const settings = getSettings();
+  // Cotizacion activa (venta) segun la fuente que eligio el usuario, o null.
+  async function getActiveRate(userId) {
+    const [settings, { rates }] = await Promise.all([getSettings(userId), readRates()]);
+    return activeRate(settings, rates);
+  }
+
+  async function getStatus(userId) {
+    const [settings, { rates, fetchedAt }] = await Promise.all([getSettings(userId), readRates()]);
     return {
       ...settings,
-      rate: getActiveRate(),
+      rate: activeRate(settings, rates),
       rates,
       fetchedAt,
       stale: !isFresh(fetchedAt),
@@ -141,4 +144,11 @@ export function createRatesService(db, { fetchImpl = globalThis.fetch, now = () 
   }
 
   return { ensureFresh, refresh, getSettings, saveSettings, getActiveRate, getStatus };
+}
+
+function setSetting(db, userId, key, value) {
+  return db.run(sql`
+    INSERT INTO user_settings (user_id, key, value) VALUES (${userId}, ${key}, ${value})
+    ON CONFLICT (user_id, key) DO UPDATE SET value = excluded.value
+  `);
 }

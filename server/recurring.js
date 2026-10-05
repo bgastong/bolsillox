@@ -1,4 +1,4 @@
-import { transaction } from "./db.js";
+import { raw, sql } from "./sql.js";
 
 /*
 Movimientos recurrentes: una regla genera un movimiento por mes, el dia
@@ -7,11 +7,11 @@ fechas que ya llegaron. Cada mes generado queda en recurring_occurrences,
 asi el proceso es idempotente y un movimiento borrado no se vuelve a crear.
 */
 
-const COLUMNS = `
-  id, type, title, amount, currency, category, payment_method AS paymentMethod, note,
-  day_of_month AS dayOfMonth, start_date AS startDate, end_date AS endDate, active,
-  created_at AS createdAt, updated_at AS updatedAt
-`;
+const COLUMNS = raw(`
+  id, type, title, amount, currency, category, payment_method AS "paymentMethod", note,
+  day_of_month AS "dayOfMonth", start_date AS "startDate", end_date AS "endDate", active,
+  created_at AS "createdAt", updated_at AS "updatedAt"
+`);
 
 // Tope de meses hacia atras que se generan de una vez (evita miles de filas
 // si alguien carga una fecha de inicio muy vieja por error).
@@ -50,51 +50,26 @@ function ruleParams(data) {
     dayOfMonth: Number(data.startDate.slice(8, 10)),
     startDate: data.startDate,
     endDate: data.endDate ?? null,
-    active: data.active === false ? 0 : 1,
+    active: data.active !== false,
   };
 }
 
-function toRule(row) {
-  return row ? { ...row, active: Boolean(row.active) } : null;
+// Meses ya generados de cada regla: { [ruleId]: Set("YYYY-MM") }.
+async function occurrencesByRule(db, ruleIds) {
+  const done = Object.fromEntries(ruleIds.map((id) => [id, new Set()]));
+  if (!ruleIds.length) return done;
+  const rows = await db.all(sql`
+    SELECT recurring_id AS "ruleId", month FROM recurring_occurrences
+    WHERE recurring_id = ANY(${ruleIds}::int[])
+  `);
+  for (const row of rows) done[row.ruleId].add(row.month);
+  return done;
 }
 
 export function createRecurringService(db, { now = () => new Date() } = {}) {
-  const listStmt = db.prepare(`SELECT ${COLUMNS} FROM recurring ORDER BY active DESC, day_of_month, title`);
-  const getStmt = db.prepare(`SELECT ${COLUMNS} FROM recurring WHERE id = ?`);
-  const insertStmt = db.prepare(`
-    INSERT INTO recurring (type, title, amount, currency, category, payment_method, note,
-                           day_of_month, start_date, end_date, active)
-    VALUES (@type, @title, @amount, @currency, @category, @paymentMethod, @note,
-            @dayOfMonth, @startDate, @endDate, @active)
-  `);
-  const updateStmt = db.prepare(`
-    UPDATE recurring
-    SET type = @type, title = @title, amount = @amount, currency = @currency,
-        category = @category, payment_method = @paymentMethod, note = @note,
-        day_of_month = @dayOfMonth, start_date = @startDate, end_date = @endDate,
-        active = @active, updated_at = datetime('now')
-    WHERE id = @id
-  `);
-  const deleteStmt = db.prepare("DELETE FROM recurring WHERE id = ?");
-  const activeStmt = db.prepare(`SELECT ${COLUMNS} FROM recurring WHERE active = 1`);
-  const occurrencesStmt = db.prepare("SELECT month FROM recurring_occurrences WHERE recurring_id = ?");
-  const insertOccurrence = db.prepare(
-    "INSERT OR IGNORE INTO recurring_occurrences (recurring_id, month) VALUES (?, ?)",
-  );
-  const insertMovement = db.prepare(`
-    INSERT INTO movements (type, title, amount, currency, date, category, payment_method,
-                           note, recurring_id)
-    VALUES (@type, @title, @amount, @currency, @date, @category, @paymentMethod,
-            @note, @recurringId)
-  `);
-  const lastGeneratedStmt = db.prepare(
-    "SELECT MAX(month) AS month FROM recurring_occurrences WHERE recurring_id = ?",
-  );
-
   // Proxima fecha que todavia no se genero (o null si la regla termino).
-  function nextDate(rule, today = toISODate(now())) {
+  function nextDate(rule, done, today = toISODate(now())) {
     if (!rule.active) return null;
-    const done = new Set(occurrencesStmt.all(rule.id).map((row) => row.month));
     let month = rule.startDate.slice(0, 7);
     const currentMonth = today.slice(0, 7);
     if (month < currentMonth) month = currentMonth;
@@ -107,80 +82,113 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
     return null;
   }
 
-  function withExtras(rule) {
-    if (!rule) return null;
-    return {
-      ...rule,
-      nextDate: nextDate(rule),
-      lastGeneratedMonth: lastGeneratedStmt.get(rule.id).month ?? null,
-    };
+  async function withExtras(rules) {
+    const done = await occurrencesByRule(db, rules.map((rule) => rule.id));
+    return rules.map((rule) => {
+      const months = [...done[rule.id]].sort();
+      return {
+        ...rule,
+        nextDate: nextDate(rule, done[rule.id]),
+        lastGeneratedMonth: months.at(-1) ?? null,
+      };
+    });
   }
 
-  function list() {
-    return listStmt.all().map((row) => withExtras(toRule(row)));
+  async function list(userId) {
+    const rules = await db.all(sql`
+      SELECT ${COLUMNS} FROM recurring WHERE user_id = ${userId}
+      ORDER BY active DESC, day_of_month, title
+    `);
+    return withExtras(rules);
   }
 
-  function get(id) {
-    return withExtras(toRule(getStmt.get(id)));
+  async function get(userId, id) {
+    const rule = await db.one(
+      sql`SELECT ${COLUMNS} FROM recurring WHERE id = ${id} AND user_id = ${userId}`,
+    );
+    return rule ? (await withExtras([rule]))[0] : null;
   }
 
-  // Genera todas las ocurrencias pendientes hasta hoy. Devuelve cuantas creo.
-  function generateDue(today = toISODate(now())) {
+  // Genera las ocurrencias pendientes hasta hoy para un usuario. Devuelve cuantas creo.
+  async function generateDue(userId, today = toISODate(now())) {
     const currentMonth = today.slice(0, 7);
-    let created = 0;
+    const oldest = addMonths(currentMonth, -MAX_BACKFILL_MONTHS);
 
-    transaction(db, () => {
-      for (const row of activeStmt.all()) {
-        const rule = toRule(row);
-        const done = new Set(occurrencesStmt.all(rule.id).map((item) => item.month));
+    return db.transaction(async (tx) => {
+      const rules = await tx.all(
+        sql`SELECT ${COLUMNS} FROM recurring WHERE user_id = ${userId} AND active`,
+      );
+      const done = await occurrencesByRule(tx, rules.map((rule) => rule.id));
+      let created = 0;
+
+      for (const rule of rules) {
         let month = rule.startDate.slice(0, 7);
-        const oldest = addMonths(currentMonth, -MAX_BACKFILL_MONTHS);
         if (month < oldest) month = oldest;
 
         for (; month <= currentMonth; month = addMonths(month, 1)) {
-          if (done.has(month)) continue;
+          if (done[rule.id].has(month)) continue;
           const date = occurrenceDate(month, rule.dayOfMonth);
           if (date < rule.startDate || date > today) continue;
           if (rule.endDate && date > rule.endDate) break;
 
-          insertMovement.run({
-            type: rule.type,
-            title: rule.title,
-            amount: rule.amount,
-            currency: rule.currency,
-            date,
-            category: rule.category,
-            paymentMethod: rule.paymentMethod,
-            note: rule.note,
-            recurringId: rule.id,
-          });
-          insertOccurrence.run(rule.id, month);
+          // Si otra peticion ya genero este mes, no se duplica.
+          const inserted = await tx.run(sql`
+            INSERT INTO recurring_occurrences (recurring_id, month)
+            VALUES (${rule.id}, ${month})
+            ON CONFLICT DO NOTHING
+          `);
+          if (!inserted) continue;
+          await tx.run(sql`
+            INSERT INTO movements (user_id, type, title, amount, currency, date, category,
+                                   payment_method, note, recurring_id)
+            VALUES (${userId}, ${rule.type}, ${rule.title}, ${rule.amount}, ${rule.currency},
+                    ${date}, ${rule.category}, ${rule.paymentMethod}, ${rule.note}, ${rule.id})
+          `);
           created++;
         }
       }
+      return created;
     });
-
-    return created;
   }
 
-  function create(data) {
-    const { lastInsertRowid } = insertStmt.run(ruleParams(data));
-    generateDue();
-    return get(Number(lastInsertRowid));
+  async function create(userId, data) {
+    const rule = ruleParams(data);
+    const { id } = await db.one(sql`
+      INSERT INTO recurring (user_id, type, title, amount, currency, category, payment_method,
+                             note, day_of_month, start_date, end_date, active)
+      VALUES (${userId}, ${rule.type}, ${rule.title}, ${rule.amount}, ${rule.currency},
+              ${rule.category}, ${rule.paymentMethod}, ${rule.note}, ${rule.dayOfMonth},
+              ${rule.startDate}, ${rule.endDate}, ${rule.active})
+      RETURNING id
+    `);
+    await generateDue(userId);
+    return get(userId, id);
   }
 
   // Los cambios aplican a las proximas ocurrencias; las ya generadas no se tocan.
-  function update(id, data) {
-    const { changes } = updateStmt.run({ ...ruleParams(data), id });
-    if (!Number(changes)) return null;
-    generateDue();
-    return get(id);
+  async function update(userId, id, data) {
+    const rule = ruleParams(data);
+    const changed = await db.run(sql`
+      UPDATE recurring
+      SET type = ${rule.type}, title = ${rule.title}, amount = ${rule.amount},
+          currency = ${rule.currency}, category = ${rule.category},
+          payment_method = ${rule.paymentMethod}, note = ${rule.note},
+          day_of_month = ${rule.dayOfMonth}, start_date = ${rule.startDate},
+          end_date = ${rule.endDate}, active = ${rule.active}, updated_at = now()
+      WHERE id = ${id} AND user_id = ${userId}
+    `);
+    if (!changed) return null;
+    await generateDue(userId);
+    return get(userId, id);
   }
 
   // Los movimientos ya generados se conservan (recurring_id pasa a NULL).
-  function remove(id) {
-    return Number(deleteStmt.run(id).changes) > 0;
+  async function remove(userId, id) {
+    const count = await db.run(
+      sql`DELETE FROM recurring WHERE id = ${id} AND user_id = ${userId}`,
+    );
+    return count > 0;
   }
 
-  return { list, get, create, update, remove, generateDue, nextDate };
+  return { list, get, create, update, remove, generateDue };
 }

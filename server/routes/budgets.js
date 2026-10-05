@@ -7,21 +7,22 @@ import { parseMonth } from "../params.js";
 export function budgetsRouter(budgets, rates) {
   const router = Router();
 
-  router.get("/", (req, res) => {
+  router.get("/", async (req, res) => {
     const month = parseMonth(req.query.month);
     const { from, to } = monthRange(month);
-    res.json({ month, ...budgets.list({ from, to, rate: rates.getActiveRate() }) });
+    const rate = await rates.getActiveRate(req.user.id);
+    res.json({ month, ...(await budgets.list(req.user.id, { from, to, rate })) });
   });
 
-  router.put("/:category", (req, res) => {
+  router.put("/:category", async (req, res) => {
     const category = parseCategory(req.params.category);
     const { amount } = budgetSchema.parse(req.body ?? {});
-    budgets.set(category, amount);
+    await budgets.set(req.user.id, category, amount);
     res.json({ category, amount });
   });
 
-  router.delete("/:category", (req, res) => {
-    if (!budgets.remove(parseCategory(req.params.category))) {
+  router.delete("/:category", async (req, res) => {
+    if (!(await budgets.remove(req.user.id, parseCategory(req.params.category)))) {
       throw new HttpError(404, "not_found");
     }
     res.status(204).end();

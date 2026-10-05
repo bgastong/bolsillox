@@ -1,48 +1,26 @@
 import { convertedAmountSql, roundMoney, unconvertedSql } from "./money.js";
+import { join, raw, sql } from "./sql.js";
 
-// Acceso a datos de movimientos. Recibe una instancia de node:sqlite (DatabaseSync).
-// node:sqlite rechaza parametros con nombre que no esten en la consulta,
-// por eso se arman los objetos con los campos exactos.
+// Acceso a los movimientos de un usuario. Todas las consultas filtran por
+// user_id: un usuario nunca ve ni toca datos de otro.
 
-const COLUMNS = `
+const COLUMNS = raw(`
   id, type, title, amount, currency, date, category,
-  payment_method AS paymentMethod, note, recurring_id AS recurringId,
-  created_at AS createdAt, updated_at AS updatedAt
-`;
+  payment_method AS "paymentMethod", note, recurring_id AS "recurringId",
+  created_at AS "createdAt", updated_at AS "updatedAt"
+`);
 
-function movementParams(data) {
-  return {
-    type: data.type,
-    title: data.title,
-    amount: data.amount,
-    currency: data.currency ?? "ARS",
-    date: data.date,
-    category: data.category,
-    paymentMethod: data.paymentMethod,
-    note: data.note ?? "",
-  };
+// Columnas de orden permitidas (lista cerrada: se insertan como texto fijo).
+const SORT_COLUMNS = { date: "date", amount: "amount", title: "lower(title)" };
+
+// Escapa los comodines de LIKE en el texto buscado.
+function likePattern(text) {
+  return `%${text.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
 }
 
-const SORT_COLUMNS = { date: "date", amount: "amount", title: "title COLLATE NOCASE" };
-
 export function createRepository(db) {
-  const getStmt = db.prepare(`SELECT ${COLUMNS} FROM movements WHERE id = ?`);
-  const insertStmt = db.prepare(`
-    INSERT INTO movements (type, title, amount, currency, date, category, payment_method, note)
-    VALUES (@type, @title, @amount, @currency, @date, @category, @paymentMethod, @note)
-  `);
-  const updateStmt = db.prepare(`
-    UPDATE movements
-    SET type = @type, title = @title, amount = @amount, currency = @currency, date = @date,
-        category = @category, payment_method = @paymentMethod, note = @note,
-        updated_at = datetime('now')
-    WHERE id = @id
-  `);
-  const deleteStmt = db.prepare("DELETE FROM movements WHERE id = ?");
-
-  function list(filters = {}) {
-    const where = [];
-    const params = {};
+  async function list(userId, filters = {}) {
+    const where = [sql`user_id = ${userId}`];
 
     for (const [key, column] of [
       ["type", "type"],
@@ -50,70 +28,70 @@ export function createRepository(db) {
       ["paymentMethod", "payment_method"],
       ["currency", "currency"],
     ]) {
-      if (filters[key]) {
-        where.push(`${column} = @${key}`);
-        params[key] = filters[key];
-      }
+      if (filters[key]) where.push(sql`${raw(column)} = ${filters[key]}`);
     }
-    if (filters.from) {
-      where.push("date >= @from");
-      params.from = filters.from;
-    }
-    if (filters.to) {
-      where.push("date <= @to");
-      params.to = filters.to;
-    }
+    if (filters.from) where.push(sql`date >= ${filters.from}`);
+    if (filters.to) where.push(sql`date <= ${filters.to}`);
     if (filters.q) {
-      where.push("(title LIKE @q ESCAPE '\\' OR note LIKE @q ESCAPE '\\')");
-      params.q = `%${filters.q.replace(/[\\%_]/g, (char) => `\\${char}`)}%`;
+      const pattern = likePattern(filters.q);
+      where.push(sql`(title ILIKE ${pattern} OR note ILIKE ${pattern})`);
     }
 
-    const sortColumn = SORT_COLUMNS[filters.sort] ?? SORT_COLUMNS.date;
-    const order = filters.order === "asc" ? "ASC" : "DESC";
-    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
-    const limitSql = filters.limit ? "LIMIT @limit" : "";
-    if (filters.limit) params.limit = filters.limit;
+    const sortColumn = raw(SORT_COLUMNS[filters.sort] ?? SORT_COLUMNS.date);
+    const order = raw(filters.order === "asc" ? "ASC" : "DESC");
+    const limit = filters.limit ? sql`LIMIT ${filters.limit}` : sql``;
 
-    return db
-      .prepare(
-        `SELECT ${COLUMNS} FROM movements ${whereSql}
-         ORDER BY ${sortColumn} ${order}, id ${order} ${limitSql}`,
-      )
-      .all(params);
+    return db.all(sql`
+      SELECT ${COLUMNS} FROM movements
+      WHERE ${join(where, " AND ")}
+      ORDER BY ${sortColumn} ${order}, id ${order}
+      ${limit}
+    `);
   }
 
-  function get(id) {
-    return getStmt.get(id) ?? null;
+  function get(userId, id) {
+    return db.one(sql`SELECT ${COLUMNS} FROM movements WHERE id = ${id} AND user_id = ${userId}`);
   }
 
-  function create(data) {
-    const { lastInsertRowid } = insertStmt.run(movementParams(data));
-    return get(Number(lastInsertRowid));
+  function create(userId, data) {
+    return db.one(sql`
+      INSERT INTO movements (user_id, type, title, amount, currency, date, category,
+                             payment_method, note)
+      VALUES (${userId}, ${data.type}, ${data.title}, ${data.amount}, ${data.currency ?? "ARS"},
+              ${data.date}, ${data.category}, ${data.paymentMethod}, ${data.note ?? ""})
+      RETURNING ${COLUMNS}
+    `);
   }
 
-  function update(id, data) {
-    const { changes } = updateStmt.run({ ...movementParams(data), id });
-    return Number(changes) ? get(id) : null;
+  function update(userId, id, data) {
+    return db.one(sql`
+      UPDATE movements
+      SET type = ${data.type}, title = ${data.title}, amount = ${data.amount},
+          currency = ${data.currency ?? "ARS"}, date = ${data.date}, category = ${data.category},
+          payment_method = ${data.paymentMethod}, note = ${data.note ?? ""}, updated_at = now()
+      WHERE id = ${id} AND user_id = ${userId}
+      RETURNING ${COLUMNS}
+    `);
   }
 
-  function remove(id) {
-    return Number(deleteStmt.run(id).changes) > 0;
+  async function remove(userId, id) {
+    return (await db.run(sql`DELETE FROM movements WHERE id = ${id} AND user_id = ${userId}`)) > 0;
   }
 
   // Totales de ingresos y gastos en la moneda `target`.
   // from = null suma desde el principio (para el saldo acumulado).
-  function totalsBetween(from, to, { target = "ARS", rate = null } = {}) {
-    const row = db
-      .prepare(
-        `SELECT
-           COALESCE(SUM(CASE WHEN type = 'income' THEN ${convertedAmountSql} END), 0) AS income,
-           COALESCE(SUM(CASE WHEN type = 'expense' THEN ${convertedAmountSql} END), 0) AS expense,
-           COUNT(*) AS count,
-           COALESCE(${unconvertedSql}, 0) AS unconverted
-         FROM movements
-         WHERE (@from IS NULL OR date >= @from) AND date <= @to`,
-      )
-      .get({ from, to, target, rate });
+  async function totalsBetween(userId, from, to, money = {}) {
+    const amount = convertedAmountSql(money);
+    const fromFilter = from ? sql`AND date >= ${from}` : sql``;
+    const row = await db.one(sql`
+      SELECT
+        COALESCE(SUM(CASE WHEN type = 'income' THEN ${amount} END), 0) AS income,
+        COALESCE(SUM(CASE WHEN type = 'expense' THEN ${amount} END), 0) AS expense,
+        COUNT(*) AS count,
+        COALESCE(${unconvertedSql(money)}, 0) AS unconverted
+      FROM movements
+      WHERE user_id = ${userId} AND date <= ${to} ${fromFilter}
+    `);
     return {
       income: roundMoney(row.income),
       expense: roundMoney(row.expense),
@@ -122,16 +100,15 @@ export function createRepository(db) {
     };
   }
 
-  function expensesByCategory(from, to, { target = "ARS", rate = null } = {}) {
-    return db
-      .prepare(
-        `SELECT category, SUM(${convertedAmountSql}) AS total, COUNT(*) AS count
-         FROM movements
-         WHERE type = 'expense' AND date BETWEEN @from AND @to
-         GROUP BY category
-         ORDER BY total DESC`,
-      )
-      .all({ from, to, target, rate })
+  async function expensesByCategory(userId, from, to, money = {}) {
+    const rows = await db.all(sql`
+      SELECT category, SUM(${convertedAmountSql(money)}) AS total, COUNT(*) AS count
+      FROM movements
+      WHERE user_id = ${userId} AND type = 'expense' AND date BETWEEN ${from} AND ${to}
+      GROUP BY category
+      ORDER BY total DESC
+    `);
+    return rows
       .map((row) => ({ ...row, total: roundMoney(row.total) }))
       .filter((row) => row.total > 0);
   }

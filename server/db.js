@@ -1,53 +1,63 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { DatabaseSync } from "node:sqlite";
 import { buildSeed } from "./seed.js";
+import { sql } from "./sql.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const DEFAULT_DB_PATH = path.join(__dirname, "data", "bolsillox.db");
-
-// Esquema inicial (version 1). Los cambios posteriores van en MIGRATIONS.
-const BASE_SCHEMA = `
-  CREATE TABLE IF NOT EXISTS movements (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    type           TEXT    NOT NULL CHECK (type IN ('income', 'expense')),
-    title          TEXT    NOT NULL,
-    amount         REAL    NOT NULL CHECK (amount > 0),
-    date           TEXT    NOT NULL,
-    category       TEXT    NOT NULL,
-    payment_method TEXT    NOT NULL,
-    note           TEXT    NOT NULL DEFAULT '',
-    created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
-    updated_at     TEXT    NOT NULL DEFAULT (datetime('now'))
-  );
-  CREATE INDEX IF NOT EXISTS idx_movements_date ON movements (date);
-  CREATE INDEX IF NOT EXISTS idx_movements_type ON movements (type);
-`;
+export const DEFAULT_DATA_DIR = path.join(__dirname, "data", "pglite");
 
 /*
-Migraciones en orden. Cada base guarda su version en PRAGMA user_version,
-asi una base existente se actualiza sola sin perder datos.
+Base de datos Postgres:
+- En produccion, DATABASE_URL apunta a un Postgres real (por ejemplo, Neon).
+- En desarrollo y en los tests se usa PGlite: Postgres embebido en Node,
+  sin instalar nada. Guarda los datos en server/data/pglite (o en memoria).
+
+Todas las funciones devuelven promesas y reciben consultas armadas con sql``.
 */
+
+// Migraciones en orden; la tabla schema_migrations guarda cuales ya corrieron.
 const MIGRATIONS = [
-  // v2: moneda por movimiento, recurrentes, presupuestos y cotizaciones.
+  // v1: usuarios, sesiones y todos los datos separados por usuario.
   `
-  CREATE TABLE recurring (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    type           TEXT    NOT NULL CHECK (type IN ('income', 'expense')),
-    title          TEXT    NOT NULL,
-    amount         REAL    NOT NULL CHECK (amount > 0),
-    currency       TEXT    NOT NULL DEFAULT 'ARS' CHECK (currency IN ('ARS', 'USD')),
-    category       TEXT    NOT NULL,
-    payment_method TEXT    NOT NULL,
-    note           TEXT    NOT NULL DEFAULT '',
-    day_of_month   INTEGER NOT NULL CHECK (day_of_month BETWEEN 1 AND 31),
-    start_date     TEXT    NOT NULL,
-    end_date       TEXT,
-    active         INTEGER NOT NULL DEFAULT 1,
-    created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
-    updated_at     TEXT    NOT NULL DEFAULT (datetime('now'))
+  CREATE TABLE users (
+    id            SERIAL PRIMARY KEY,
+    email         TEXT        NOT NULL UNIQUE,
+    name          TEXT        NOT NULL,
+    password_hash TEXT,
+    google_id     TEXT        UNIQUE,
+    -- true cuando Google confirmo que el email es de esta persona.
+    email_verified BOOLEAN    NOT NULL DEFAULT FALSE,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
   );
+
+  -- id = hash SHA-256 del token de la cookie (el token en si no se guarda).
+  CREATE TABLE sessions (
+    id         TEXT        PRIMARY KEY,
+    user_id    INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX idx_sessions_user ON sessions (user_id);
+
+  CREATE TABLE recurring (
+    id             SERIAL PRIMARY KEY,
+    user_id        INTEGER          NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    type           TEXT             NOT NULL CHECK (type IN ('income', 'expense')),
+    title          TEXT             NOT NULL,
+    amount         DOUBLE PRECISION NOT NULL CHECK (amount > 0),
+    currency       TEXT             NOT NULL DEFAULT 'ARS' CHECK (currency IN ('ARS', 'USD')),
+    category       TEXT             NOT NULL,
+    payment_method TEXT             NOT NULL,
+    note           TEXT             NOT NULL DEFAULT '',
+    day_of_month   INTEGER          NOT NULL CHECK (day_of_month BETWEEN 1 AND 31),
+    start_date     TEXT             NOT NULL,
+    end_date       TEXT,
+    active         BOOLEAN          NOT NULL DEFAULT TRUE,
+    created_at     TIMESTAMPTZ      NOT NULL DEFAULT now(),
+    updated_at     TIMESTAMPTZ      NOT NULL DEFAULT now()
+  );
+  CREATE INDEX idx_recurring_user ON recurring (user_id);
 
   -- Meses ya generados por cada regla. Si se borra el movimiento generado,
   -- la ocurrencia queda registrada y no se vuelve a crear.
@@ -57,109 +67,199 @@ const MIGRATIONS = [
     PRIMARY KEY (recurring_id, month)
   );
 
-  ALTER TABLE movements ADD COLUMN currency TEXT NOT NULL DEFAULT 'ARS'
-    CHECK (currency IN ('ARS', 'USD'));
-  ALTER TABLE movements ADD COLUMN recurring_id INTEGER
-    REFERENCES recurring (id) ON DELETE SET NULL;
+  CREATE TABLE movements (
+    id             SERIAL PRIMARY KEY,
+    user_id        INTEGER          NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    type           TEXT             NOT NULL CHECK (type IN ('income', 'expense')),
+    title          TEXT             NOT NULL,
+    amount         DOUBLE PRECISION NOT NULL CHECK (amount > 0),
+    currency       TEXT             NOT NULL DEFAULT 'ARS' CHECK (currency IN ('ARS', 'USD')),
+    date           TEXT             NOT NULL,
+    category       TEXT             NOT NULL,
+    payment_method TEXT             NOT NULL,
+    note           TEXT             NOT NULL DEFAULT '',
+    recurring_id   INTEGER          REFERENCES recurring (id) ON DELETE SET NULL,
+    created_at     TIMESTAMPTZ      NOT NULL DEFAULT now(),
+    updated_at     TIMESTAMPTZ      NOT NULL DEFAULT now()
+  );
+  CREATE INDEX idx_movements_user_date ON movements (user_id, date);
 
   CREATE TABLE budgets (
-    category   TEXT PRIMARY KEY,
-    amount     REAL NOT NULL CHECK (amount > 0),
-    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    user_id    INTEGER          NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    category   TEXT             NOT NULL,
+    amount     DOUBLE PRECISION NOT NULL CHECK (amount > 0),
+    updated_at TIMESTAMPTZ      NOT NULL DEFAULT now(),
+    PRIMARY KEY (user_id, category)
   );
 
-  CREATE TABLE settings (
-    key   TEXT PRIMARY KEY,
-    value TEXT NOT NULL
+  CREATE TABLE user_settings (
+    user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    key     TEXT    NOT NULL,
+    value   TEXT    NOT NULL,
+    PRIMARY KEY (user_id, key)
   );
 
+  -- Cotizaciones del dolar: son las mismas para todos los usuarios.
   CREATE TABLE exchange_rates (
     source     TEXT PRIMARY KEY,
-    buy        REAL,
-    sell       REAL NOT NULL,
+    buy        DOUBLE PRECISION,
+    sell       DOUBLE PRECISION NOT NULL,
     updated_at TEXT NOT NULL,
     fetched_at TEXT NOT NULL
   );
   `,
 ];
 
-export function transaction(db, fn) {
-  db.exec("BEGIN");
-  try {
-    const result = fn();
-    db.exec("COMMIT");
-    return result;
-  } catch (error) {
-    db.exec("ROLLBACK");
-    throw error;
+// BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.
+const INT8_OID = 20;
+const NUMERIC_OID = 1700;
+
+// Adapta un cliente (pg o PGlite) a una interfaz comun.
+function wrap(client, { affected }) {
+  async function query(statement) {
+    const { text, values } = statement.toQuery();
+    return client.query(text, values);
   }
+  return {
+    async all(statement) {
+      return (await query(statement)).rows;
+    },
+    async one(statement) {
+      return (await query(statement)).rows[0] ?? null;
+    },
+    // Cantidad de filas afectadas.
+    async run(statement) {
+      return affected(await query(statement));
+    },
+  };
 }
 
-function migrate(db) {
-  db.exec(BASE_SCHEMA);
-  const { user_version: current } = db.prepare("PRAGMA user_version").get();
-  // La version 1 es el esquema base; MIGRATIONS[0] lleva a la 2, etc.
-  const version = Math.max(current, 1);
-  for (let index = version - 1; index < MIGRATIONS.length; index++) {
-    transaction(db, () => {
-      db.exec(MIGRATIONS[index]);
-      db.exec(`PRAGMA user_version = ${index + 2}`);
-    });
-  }
+async function openPglite(dataDir) {
+  const { PGlite, types } = await import("@electric-sql/pglite");
+  if (dataDir) fs.mkdirSync(dataDir, { recursive: true });
+  const pg = await PGlite.create(dataDir, {
+    parsers: { [INT8_OID]: Number, [NUMERIC_OID]: Number },
+    serializers: { [types.INT8]: String },
+  });
+  const affected = (result) => result.affectedRows ?? 0;
+
+  return {
+    ...wrap(pg, { affected }),
+    exec: (text) => pg.exec(text),
+    transaction: (fn) => pg.transaction((tx) => fn(wrap(tx, { affected }))),
+    close: () => pg.close(),
+  };
 }
 
-// Abre (o crea) la base. Con seed=true carga datos de ejemplo si esta vacia.
-// today: fecha de referencia para los datos de ejemplo (los tests la fijan).
-export function openDatabase({ filename = DEFAULT_DB_PATH, seed = true, today = new Date() } = {}) {
-  if (filename !== ":memory:") {
-    fs.mkdirSync(path.dirname(filename), { recursive: true });
-  }
+async function openPostgres(url) {
+  const { default: pg } = await import("pg");
+  pg.types.setTypeParser(INT8_OID, Number);
+  pg.types.setTypeParser(NUMERIC_OID, Number);
+  const pool = new pg.Pool({ connectionString: url, max: 5 });
+  const affected = (result) => result.rowCount ?? 0;
 
-  // SQLite nativo de Node (node:sqlite): no requiere compilar nada.
-  const db = new DatabaseSync(filename);
-  if (filename !== ":memory:") db.exec("PRAGMA journal_mode = WAL");
-  db.exec("PRAGMA foreign_keys = ON");
-  migrate(db);
+  return {
+    ...wrap(pool, { affected }),
+    exec: (text) => pool.query(text),
+    async transaction(fn) {
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        const result = await fn(wrap(client, { affected }));
+        await client.query("COMMIT");
+        return result;
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+    close: () => pool.end(),
+  };
+}
 
-  if (seed) seedIfEmpty(db, today);
+async function migrate(db) {
+  await db.exec("CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY)");
+  await db.transaction(async (tx) => {
+    // Si hay varias instancias arrancando a la vez, solo una migra.
+    await tx.run(sql`SELECT pg_advisory_xact_lock(4242)`);
+    const row = await tx.one(sql`SELECT COALESCE(MAX(version), 0) AS version FROM schema_migrations`);
+    for (let index = row.version; index < MIGRATIONS.length; index++) {
+      // Cada migracion puede tener varias sentencias separadas por ";".
+      for (const statement of splitStatements(MIGRATIONS[index])) {
+        await tx.run(sql([statement]));
+      }
+      await tx.run(sql`INSERT INTO schema_migrations (version) VALUES (${index + 1})`);
+    }
+  });
+}
 
+function splitStatements(script) {
+  return script
+    .replace(/--.*$/gm, "")
+    .split(";")
+    .map((statement) => statement.trim())
+    .filter(Boolean);
+}
+
+/*
+Abre la base y aplica las migraciones pendientes.
+- url: Postgres (DATABASE_URL). Si no hay, se usa PGlite.
+- dataDir: carpeta de PGlite; null = en memoria (tests).
+*/
+export async function openDatabase({ url, dataDir = DEFAULT_DATA_DIR } = {}) {
+  const db = url ? await openPostgres(url) : await openPglite(dataDir ?? undefined);
+  await migrate(db);
   return db;
 }
 
-export function seedIfEmpty(db, today = new Date()) {
-  const { count } = db.prepare("SELECT COUNT(*) AS count FROM movements").get();
+// Carga los datos de ejemplo en la cuenta de un usuario (si no tiene movimientos).
+export async function seedUser(db, userId, today = new Date()) {
+  const { count } = await db.one(
+    sql`SELECT COUNT(*) AS count FROM movements WHERE user_id = ${userId}`,
+  );
   if (count > 0) return 0;
 
   const { movements, recurring, budgets } = buildSeed(today);
 
-  const insertRecurring = db.prepare(`
-    INSERT INTO recurring (type, title, amount, currency, category, payment_method, note,
-                           day_of_month, start_date)
-    VALUES (@type, @title, @amount, @currency, @category, @paymentMethod, @note,
-            @dayOfMonth, @startDate)
-  `);
-  const insertOccurrence = db.prepare(
-    "INSERT INTO recurring_occurrences (recurring_id, month) VALUES (?, ?)",
-  );
-  const insertMovement = db.prepare(`
-    INSERT INTO movements (type, title, amount, currency, date, category, payment_method,
-                           note, recurring_id)
-    VALUES (@type, @title, @amount, @currency, @date, @category, @paymentMethod,
-            @note, @recurringId)
-  `);
-  const insertBudget = db.prepare("INSERT INTO budgets (category, amount) VALUES (?, ?)");
-
-  transaction(db, () => {
+  await db.transaction(async (tx) => {
     const ruleIds = {};
     for (const { key, ...rule } of recurring) {
-      ruleIds[key] = Number(insertRecurring.run(rule).lastInsertRowid);
+      const row = await tx.one(sql`
+        INSERT INTO recurring (user_id, type, title, amount, currency, category, payment_method,
+                               note, day_of_month, start_date)
+        VALUES (${userId}, ${rule.type}, ${rule.title}, ${rule.amount}, ${rule.currency},
+                ${rule.category}, ${rule.paymentMethod}, ${rule.note}, ${rule.dayOfMonth},
+                ${rule.startDate})
+        RETURNING id
+      `);
+      ruleIds[key] = row.id;
     }
     for (const { recurringKey, ...movement } of movements) {
       const recurringId = recurringKey ? ruleIds[recurringKey] : null;
-      insertMovement.run({ ...movement, recurringId });
-      if (recurringId) insertOccurrence.run(recurringId, movement.date.slice(0, 7));
+      await tx.run(sql`
+        INSERT INTO movements (user_id, type, title, amount, currency, date, category,
+                               payment_method, note, recurring_id)
+        VALUES (${userId}, ${movement.type}, ${movement.title}, ${movement.amount},
+                ${movement.currency}, ${movement.date}, ${movement.category},
+                ${movement.paymentMethod}, ${movement.note}, ${recurringId})
+      `);
+      if (recurringId) {
+        await tx.run(sql`
+          INSERT INTO recurring_occurrences (recurring_id, month)
+          VALUES (${recurringId}, ${movement.date.slice(0, 7)})
+          ON CONFLICT DO NOTHING
+        `);
+      }
     }
-    for (const budget of budgets) insertBudget.run(budget.category, budget.amount);
+    for (const budget of budgets) {
+      await tx.run(sql`
+        INSERT INTO budgets (user_id, category, amount)
+        VALUES (${userId}, ${budget.category}, ${budget.amount})
+        ON CONFLICT DO NOTHING
+      `);
+    }
   });
 
   return movements.length;
