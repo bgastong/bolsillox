@@ -1,5 +1,6 @@
 import { BUDGET_WARNING_PERCENT } from "../shared/catalog.js";
 import { convertedAmountSql, roundMoney } from "./money.js";
+import { sql } from "./sql.js";
 
 /*
 Presupuestos mensuales por categoria de gasto, en pesos (ARS).
@@ -14,28 +15,24 @@ export function budgetStatus(percent) {
 }
 
 export function createBudgetsService(db) {
-  const listStmt = db.prepare("SELECT category, amount FROM budgets ORDER BY category");
-  const upsertStmt = db.prepare(`
-    INSERT INTO budgets (category, amount) VALUES (@category, @amount)
-    ON CONFLICT (category) DO UPDATE SET amount = excluded.amount, updated_at = datetime('now')
-  `);
-  const deleteStmt = db.prepare("DELETE FROM budgets WHERE category = ?");
-
-  function spentByCategory(from, to, rate) {
-    const rows = db
-      .prepare(
-        `SELECT category, SUM(${convertedAmountSql}) AS spent
-         FROM movements
-         WHERE type = 'expense' AND date BETWEEN @from AND @to
-         GROUP BY category`,
-      )
-      .all({ from, to, target: "ARS", rate });
+  async function spentByCategory(userId, from, to, rate) {
+    const rows = await db.all(sql`
+      SELECT category, SUM(${convertedAmountSql({ target: "ARS", rate })}) AS spent
+      FROM movements
+      WHERE user_id = ${userId} AND type = 'expense' AND date BETWEEN ${from} AND ${to}
+      GROUP BY category
+    `);
     return Object.fromEntries(rows.map((row) => [row.category, roundMoney(row.spent)]));
   }
 
-  function list({ from, to, rate }) {
-    const spent = spentByCategory(from, to, rate);
-    const items = listStmt.all().map(({ category, amount }) => {
+  async function list(userId, { from, to, rate }) {
+    const [spent, budgets] = await Promise.all([
+      spentByCategory(userId, from, to, rate),
+      db.all(
+        sql`SELECT category, amount FROM budgets WHERE user_id = ${userId} ORDER BY category`,
+      ),
+    ]);
+    const items = budgets.map(({ category, amount }) => {
       const value = spent[category] ?? 0;
       const percent = Math.round((value / amount) * 1000) / 10;
       return {
@@ -63,12 +60,18 @@ export function createBudgetsService(db) {
     };
   }
 
-  function set(category, amount) {
-    upsertStmt.run({ category, amount });
+  function set(userId, category, amount) {
+    return db.run(sql`
+      INSERT INTO budgets (user_id, category, amount) VALUES (${userId}, ${category}, ${amount})
+      ON CONFLICT (user_id, category) DO UPDATE SET amount = excluded.amount, updated_at = now()
+    `);
   }
 
-  function remove(category) {
-    return Number(deleteStmt.run(category).changes) > 0;
+  async function remove(userId, category) {
+    const count = await db.run(
+      sql`DELETE FROM budgets WHERE user_id = ${userId} AND category = ${category}`,
+    );
+    return count > 0;
   }
 
   return { list, set, remove };

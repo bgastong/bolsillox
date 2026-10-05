@@ -14,31 +14,31 @@ function parseId(raw) {
 export function recurringRouter(recurring) {
   const router = Router();
 
-  router.get("/", (req, res) => {
-    res.json(recurring.list());
+  router.get("/", async (req, res) => {
+    res.json(await recurring.list(req.user.id));
   });
 
-  router.get("/:id", (req, res) => {
-    const rule = recurring.get(parseId(req.params.id));
+  router.get("/:id", async (req, res) => {
+    const rule = await recurring.get(req.user.id, parseId(req.params.id));
     if (!rule) throw new HttpError(404, "not_found");
     res.json(rule);
   });
 
-  router.post("/", (req, res) => {
+  router.post("/", async (req, res) => {
     const data = recurringSchema.parse(req.body ?? {});
-    res.status(201).json(recurring.create(data));
+    res.status(201).json(await recurring.create(req.user.id, data));
   });
 
-  router.put("/:id", (req, res) => {
+  router.put("/:id", async (req, res) => {
     const id = parseId(req.params.id);
     const data = recurringSchema.parse(req.body ?? {});
-    const rule = recurring.update(id, data);
+    const rule = await recurring.update(req.user.id, id, data);
     if (!rule) throw new HttpError(404, "not_found");
     res.json(rule);
   });
 
-  router.delete("/:id", (req, res) => {
-    if (!recurring.remove(parseId(req.params.id))) throw new HttpError(404, "not_found");
+  router.delete("/:id", async (req, res) => {
+    if (!(await recurring.remove(req.user.id, parseId(req.params.id)))) throw new HttpError(404, "not_found");
     res.status(204).end();
   });
 

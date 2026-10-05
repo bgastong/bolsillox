@@ -1,71 +1,22 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import { after, before, describe, test } from "node:test";
-import { DatabaseSync } from "node:sqlite";
-import { createApp } from "./app.js";
-import { openDatabase } from "./db.js";
 import { buildSeed } from "./seed.js";
 import { monthRange } from "./summary.js";
 import { occurrenceDate } from "./recurring.js";
+import { fakeRates, MONTH, NOW, startTestServer } from "./testHelpers.js";
 
-// Reloj fijo: 15 de octubre de 2026 al mediodia.
-const NOW = new Date(2026, 9, 15, 12);
-const MONTH = "2026-10";
-
-// Cotizaciones simuladas con el formato de dolarapi.com.
-const FAKE_RATES = [
-  { casa: "oficial", compra: 950, venta: 1000, fechaActualizacion: "2026-10-15T10:00:00Z" },
-  { casa: "blue", compra: 1180, venta: 1200, fechaActualizacion: "2026-10-15T10:00:00Z" },
-  { casa: "bolsa", compra: 1140, venta: 1150, fechaActualizacion: "2026-10-15T10:00:00Z" },
-  { casa: "tarjeta", compra: 1500, venta: 1600, fechaActualizacion: "2026-10-15T10:00:00Z" },
-];
-
-let fetchCalls = 0;
-let fetchShouldFail = false;
-async function fakeFetch() {
-  fetchCalls++;
-  if (fetchShouldFail) throw new Error("sin red");
-  return { ok: true, status: 200, json: async () => FAKE_RATES };
-}
-
-function startServer(db, options) {
-  const app = createApp(db, { now: () => NOW, fetchImpl: fakeFetch, ...options });
-  return new Promise((resolve) => {
-    const server = app.listen(0, () => {
-      resolve({ server, url: `http://127.0.0.1:${server.address().port}/api` });
-    });
-  });
-}
-
-function stopServer(server) {
-  server.closeAllConnections();
-  server.close();
-}
-
-let server;
-let baseUrl;
-let db;
+// Todos estos tests usan una cuenta con los datos de ejemplo cargados.
+let api;
+let cookie;
 
 before(async () => {
-  db = openDatabase({ filename: ":memory:", today: NOW });
-  ({ server, url: baseUrl } = await startServer(db));
+  api = await startTestServer();
+  ({ cookie } = await api.signup({ seed: true }));
 });
 
-after(() => {
-  stopServer(server);
-  db.close();
-});
+after(() => api.stop());
 
-function request(path, { method = "GET", body } = {}) {
-  return fetch(`${baseUrl}${path}`, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-}
-
+const request = (path, options = {}) => api.request(path, { cookie, ...options });
 const json = async (path, options) => (await request(path, options)).json();
 
 const validExpense = {
@@ -77,14 +28,14 @@ const validExpense = {
   paymentMethod: "cash",
 };
 
-describe("health y seed", () => {
+describe("health y datos de ejemplo", () => {
   test("GET /health", async () => {
     const res = await request("/health");
     assert.equal(res.status, 200);
     assert.deepEqual(await res.json(), { status: "ok" });
   });
 
-  test("la base arranca con los datos de ejemplo", async () => {
+  test("la cuenta tiene los datos de ejemplo", async () => {
     const rows = await json("/movements");
     assert.equal(rows.length, buildSeed(NOW).movements.length);
     // Orden por defecto: fecha descendente
@@ -190,9 +141,9 @@ describe("validaciones", () => {
     expectMovementError({ ...validExpense, currency: "EUR" }, "currency", "errorCurrencyInvalid"));
 
   test("JSON mal formado", async () => {
-    const res = await fetch(`${baseUrl}/movements`, {
+    const res = await fetch(`${api.baseUrl}/movements`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Cookie: cookie },
       body: "{bad",
     });
     assert.equal(res.status, 400);
@@ -260,10 +211,10 @@ describe("cotizaciones", () => {
   });
 
   test("usa la cache y no vuelve a consultar la API", async () => {
-    const before = fetchCalls;
+    const before = fakeRates.calls;
     await json("/rates");
     await json("/rates");
-    assert.equal(fetchCalls, before);
+    assert.equal(fakeRates.calls, before);
   });
 
   test("cambiar la fuente cambia la cotizacion activa", async () => {
@@ -361,21 +312,21 @@ describe("resumen y conversion de moneda", () => {
 
 describe("sin cotizacion disponible", () => {
   test("los montos en otra moneda se informan como no convertidos", async () => {
-    const isolated = openDatabase({ filename: ":memory:", today: NOW });
-    fetchShouldFail = true;
-    const { server: s, url } = await startServer(isolated);
+    fakeRates.fail = true;
+    const isolated = await startTestServer();
     try {
-      const status = await (await fetch(`${url}/rates`)).json();
+      const { cookie: other } = await isolated.signup({ seed: true });
+      const status = await (await isolated.request("/rates", { cookie: other })).json();
       assert.equal(status.rate, null);
       assert.equal(status.error, "sin red");
 
-      const summary = await (await fetch(`${url}/summary?month=${MONTH}`)).json();
+      const res = await isolated.request(`/summary?month=${MONTH}`, { cookie: other });
+      const summary = await res.json();
       assert.equal(summary.rate, null);
       assert.ok(summary.unconverted > 0);
     } finally {
-      fetchShouldFail = false;
-      stopServer(s);
-      isolated.close();
+      fakeRates.fail = false;
+      await isolated.stop();
     }
   });
 });
@@ -525,36 +476,9 @@ describe("presupuestos", () => {
   });
 });
 
-describe("migraciones", () => {
-  test("una base v1 existente se actualiza sin perder datos", () => {
-    const legacy = new DatabaseSync(":memory:");
-    legacy.exec(`
-      CREATE TABLE movements (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT NOT NULL, title TEXT NOT NULL,
-        amount REAL NOT NULL, date TEXT NOT NULL, category TEXT NOT NULL,
-        payment_method TEXT NOT NULL, note TEXT NOT NULL DEFAULT '',
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
-      INSERT INTO movements (type, title, amount, date, category, payment_method)
-      VALUES ('expense', 'Viejo', 100, '2026-01-01', 'food', 'cash');
-    `);
-    // Simula abrir esa misma base con el codigo nuevo.
-    const file = path.join(os.tmpdir(), `bolsillox-migration-${process.pid}.db`);
-    fs.rmSync(file, { force: true });
-    legacy.exec(`VACUUM INTO '${file.replaceAll("'", "''")}'`);
-    legacy.close();
-
-    const migrated = openDatabase({ filename: file, seed: false });
-    try {
-      const row = migrated.prepare("SELECT title, currency, recurring_id FROM movements").get();
-      assert.equal(row.title, "Viejo");
-      assert.equal(row.currency, "ARS");
-      assert.equal(row.recurring_id, null);
-      assert.equal(migrated.prepare("PRAGMA user_version").get().user_version, 2);
-    } finally {
-      migrated.close();
-      for (const suffix of ["", "-wal", "-shm"]) fs.rmSync(file + suffix, { force: true });
-    }
+describe("datos de ejemplo", () => {
+  test("no se cargan en una cuenta que ya tiene movimientos", async () => {
+    const res = await request("/demo-data", { method: "POST" });
+    assert.equal(res.status, 409);
   });
 });

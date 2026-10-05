@@ -52,32 +52,32 @@ function parseId(raw) {
 export function movementsRouter(repo) {
   const router = Router();
 
-  router.get("/", (req, res) => {
+  router.get("/", async (req, res) => {
     const filters = listQuerySchema.parse(compact(req.query));
-    res.json(repo.list(filters));
+    res.json(await repo.list(req.user.id, filters));
   });
 
-  router.get("/:id", (req, res) => {
-    const movement = repo.get(parseId(req.params.id));
+  router.get("/:id", async (req, res) => {
+    const movement = await repo.get(req.user.id, parseId(req.params.id));
     if (!movement) throw new HttpError(404, "not_found");
     res.json(movement);
   });
 
-  router.post("/", (req, res) => {
+  router.post("/", async (req, res) => {
     const data = movementSchema.parse(req.body ?? {});
-    res.status(201).json(repo.create(data));
+    res.status(201).json(await repo.create(req.user.id, data));
   });
 
-  router.put("/:id", (req, res) => {
+  router.put("/:id", async (req, res) => {
     const id = parseId(req.params.id);
     const data = movementSchema.parse(req.body ?? {});
-    const movement = repo.update(id, data);
+    const movement = await repo.update(req.user.id, id, data);
     if (!movement) throw new HttpError(404, "not_found");
     res.json(movement);
   });
 
-  router.delete("/:id", (req, res) => {
-    const deleted = repo.remove(parseId(req.params.id));
+  router.delete("/:id", async (req, res) => {
+    const deleted = await repo.remove(req.user.id, parseId(req.params.id));
     if (!deleted) throw new HttpError(404, "not_found");
     res.status(204).end();
   });
