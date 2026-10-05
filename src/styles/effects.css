@@ -1,0 +1,222 @@
+/*
+Efectos visuales inspirados en las referencias de diseño:
+- .bg-grid: grilla sutil que se desvanece (fondo de la app)
+- .glow-orb: boton circular "de vidrio" con un borde del color --glow (sin halo difuso)
+- .wheel: selector tipo ruleta con los extremos difuminados
+Todos son decorativos y respetan prefers-reduced-motion (ver index.css).
+*/
+
+/* Grilla de fondo, fija detras de todo el contenido */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: -1px -1px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 25%, transparent 75%);
+  mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 25%, transparent 75%);
+}
+
+/* Boton/icono circular de vidrio con brillo de color */
+.glow-orb {
+  --glow: #d4f75c;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.02) 62%),
+    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--glow) 30%, transparent), transparent 70%),
+    #121214;
+  color: #fff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow) 35%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.45);
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.15s ease;
+}
+
+.glow-orb:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow) 60%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.45);
+}
+
+.glow-orb:active {
+  transform: scale(0.95);
+}
+
+/* Variante destacada (accion principal): borde mas marcado */
+.glow-orb-strong {
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--glow) 75%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* Selector tipo ruleta */
+.wheel {
+  --wheel-item: 44px;
+  --wheel-height: 220px;
+  position: relative;
+  height: var(--wheel-height);
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-block: calc((var(--wheel-height) - var(--wheel-item)) / 2);
+  -webkit-mask-image: linear-gradient(transparent, #000 32%, #000 68%, transparent);
+  mask-image: linear-gradient(transparent, #000 32%, #000 68%, transparent);
+}
+
+.wheel::-webkit-scrollbar {
+  display: none;
+}
+
+.wheel-item {
+  scroll-snap-align: center;
+  height: var(--wheel-item);
+  transition:
+    opacity 0.15s linear,
+    filter 0.15s linear;
+}
+
+/* Animacion de entrada (Splash) */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 28px;
+  background: var(--background);
+  pointer-events: none;
+  /* Total ~1,2 s: la salida (ease-in) es mas corta que la entrada. */
+  animation: splash-out 0.3s cubic-bezier(0.4, 0, 1, 1) 0.9s forwards;
+}
+
+.splash-logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.splash-mark {
+  animation: splash-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.splash-word {
+  display: inline-flex;
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--foreground);
+}
+
+.splash-word > span {
+  display: inline-block;
+  animation: splash-letter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(0.15s + var(--i) * 0.035s);
+}
+
+.splash-bar {
+  width: 120px;
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  overflow: hidden;
+  position: relative;
+}
+
+.splash-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--primary);
+  transform-origin: left;
+  animation: splash-fill 0.75s cubic-bezier(0.65, 0, 0.35, 1) 0.1s both;
+}
+
+@keyframes splash-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes splash-letter {
+  from {
+    opacity: 0;
+    transform: translateY(60%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes splash-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes splash-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+/* Entrada de cada pantalla: el contenido sube apenas y aparece escalonado */
+.page-enter > * {
+  animation: page-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.stagger > * {
+  animation: page-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.stagger > :nth-child(2) {
+  animation-delay: 0.06s;
+}
+
+.stagger > :nth-child(3) {
+  animation-delay: 0.12s;
+}
+
+.stagger > :nth-child(4) {
+  animation-delay: 0.18s;
+}
+
+.stagger > :nth-child(n + 5) {
+  animation-delay: 0.24s;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

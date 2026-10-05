@@ -2,6 +2,7 @@
 @import "@fontsource-variable/bricolage-grotesque";
 @import "tailwindcss";
 @import "./styles/theme.css";
+@import "./styles/effects.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 

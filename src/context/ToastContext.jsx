@@ -1,13 +1,21 @@
 import { useCallback, useMemo, useRef, useState } from "react";
-import { CircleAlertIcon, CircleCheckIcon, XIcon } from "lucide-react";
+import { CircleAlertIcon, CircleCheckIcon, TriangleAlertIcon, XIcon } from "lucide-react";
 import { ToastContext } from "./ToastContextValue";
 import { useLanguage } from "../hooks/useLanguage";
 
 const DURATION_MS = 3500;
+// Los avisos (presupuestos) quedan un poco mas para que se alcancen a leer.
+const WARNING_DURATION_MS = 6000;
+
+const VARIANTS = {
+  success: { icon: CircleCheckIcon, className: "text-income" },
+  error: { icon: CircleAlertIcon, className: "text-destructive" },
+  warning: { icon: TriangleAlertIcon, className: "text-amber-400" },
+};
 
 /*
 Notificaciones simples (ej: "Movimiento creado").
-toast(message, { variant: "success" | "error" })
+toast(message, { variant: "success" | "error" | "warning" })
 */
 export function ToastProvider({ children }) {
   const { t } = useLanguage();
@@ -22,7 +30,7 @@ export function ToastProvider({ children }) {
     (message, { variant = "success" } = {}) => {
       const id = ++nextId.current;
       setToasts((current) => [...current.slice(-2), { id, message, variant }]);
-      setTimeout(() => dismiss(id), DURATION_MS);
+      setTimeout(() => dismiss(id), variant === "warning" ? WARNING_DURATION_MS : DURATION_MS);
     },
     [dismiss],
   );
@@ -37,20 +45,14 @@ export function ToastProvider({ children }) {
         className="pointer-events-none fixed inset-x-4 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] z-100 flex flex-col items-center gap-2 md:inset-x-auto md:right-6 md:bottom-6 md:items-end"
       >
         {toasts.map(({ id, message, variant }) => {
-          const Icon = variant === "error" ? CircleAlertIcon : CircleCheckIcon;
+          const { icon: Icon, className: iconClass } = VARIANTS[variant] ?? VARIANTS.success;
           return (
             <div
               key={id}
-              role="status"
+              role={variant === "success" ? "status" : "alert"}
               className="pointer-events-auto flex w-full max-w-sm animate-in items-center gap-3 rounded-2xl border bg-popover px-4 py-3 text-sm text-popover-foreground shadow-xl fade-in-0 slide-in-from-bottom-2"
             >
-              <Icon
-                className={
-                  variant === "error"
-                    ? "size-4 shrink-0 text-expense"
-                    : "size-4 shrink-0 text-income"
-                }
-              />
+              <Icon className={`size-4 shrink-0 ${iconClass}`} aria-hidden="true" />
               <span className="flex-1">{message}</span>
               <button
                 type="button"

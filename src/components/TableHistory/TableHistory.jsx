@@ -3,8 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { movementLabel } from "@/lib/movementLabel";
+import { netTotals } from "@/lib/money";
+import { useSettings } from "@/hooks/useSettings";
 import { useLanguage } from "../../hooks/useLanguage";
-import { AmountText, CategoryBadge, CategoryIcon } from "../Movements/MovementBits";
+import { AmountText, CategoryBadge, CategoryIcon, RecurringMark } from "../Movements/MovementBits";
 import {
   Table,
   TableBody,
@@ -56,12 +58,12 @@ export function TableHistorySkeleton() {
 
 function TableHistory({ movements, onEdit, onDelete }) {
   const { t, locale } = useLanguage();
-  const net = movements.reduce(
-    (sum, movement) => sum + (movement.type === "income" ? movement.amount : -movement.amount),
-    0,
-  );
+  const { currency, rate } = useSettings();
+  const net = netTotals(movements, currency, rate)
+    .map((item) => formatCurrency(item.amount, locale, { signed: true, currency: item.currency }))
+    .join(" · ");
   const summaryText = `${t("resultsCount", { count: movements.length })} · ${t("resultsTotal", {
-    total: formatCurrency(net, locale, { signed: true }),
+    total: net,
   })}`;
 
   return (
@@ -93,7 +95,10 @@ function TableHistory({ movements, onEdit, onDelete }) {
                   <div className="flex items-center gap-3">
                     <CategoryIcon category={movement.category} className="size-9 rounded-lg" />
                     <div className="min-w-0">
-                      <p className="m-0 truncate font-medium">{movement.title}</p>
+                      <p className="m-0 flex min-w-0 items-center gap-1.5 font-medium">
+                        <span className="truncate">{movement.title}</span>
+                        {movement.recurringId && <RecurringMark />}
+                      </p>
                       {movement.note && (
                         <p className="m-0 truncate text-xs text-muted-foreground">{movement.note}</p>
                       )}
@@ -110,7 +115,7 @@ function TableHistory({ movements, onEdit, onDelete }) {
                   {t(`pm_${movement.paymentMethod}`)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <AmountText type={movement.type} amount={movement.amount} />
+                  <AmountText type={movement.type} amount={movement.amount} currency={movement.currency} />
                 </TableCell>
                 <TableCell className="pr-5">
                   <div className="opacity-60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
@@ -145,8 +150,11 @@ function TableHistory({ movements, onEdit, onDelete }) {
                 <CategoryIcon category={movement.category} className="size-11" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="m-0 truncate text-[15px] font-medium">{movement.title}</p>
-                    <AmountText type={movement.type} amount={movement.amount} className="text-[15px]" />
+                    <p className="m-0 flex min-w-0 items-center gap-1.5 text-[15px] font-medium">
+                      <span className="truncate">{movement.title}</span>
+                      {movement.recurringId && <RecurringMark />}
+                    </p>
+                    <AmountText type={movement.type} amount={movement.amount} currency={movement.currency} className="text-[15px]" />
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <CategoryBadge category={movement.category} className="min-w-0" />

@@ -1,0 +1,67 @@
+import { Link } from "react-router-dom";
+import { PASSWORD_MIN_LENGTH, registerSchema } from "@shared/authSchema.js";
+import { AuthField, AuthLayout, FormAlert, GoogleButton } from "@/components/Auth/AuthLayout";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useAuthForm } from "@/hooks/useAuthForm";
+import { useLanguage } from "@/hooks/useLanguage";
+
+function Register() {
+  const { t } = useLanguage();
+  const { register: createAccount } = useAuth();
+  const { formRef, register, handleSubmit, formError, submitting } = useAuthForm({
+    schema: registerSchema,
+    initialValues: { name: "", email: "", password: "" },
+    async onSubmit(data) {
+      try {
+        await createAccount(data);
+      } catch (error) {
+        // Email ya registrado: se muestra en el campo email.
+        if (error.code === "email_taken") error.fieldErrors = { email: "errorEmailTaken" };
+        throw error;
+      }
+    },
+  });
+
+  return (
+    <AuthLayout
+      title={t("registerTitle")}
+      subtitle={t("registerSubtitle")}
+      footer={
+        <>
+          {t("haveAccount")}{" "}
+          <Link to="/login" className="font-medium text-primary underline-offset-4 hover:underline">
+            {t("signIn")}
+          </Link>
+        </>
+      }
+    >
+      <GoogleButton />
+      <form ref={formRef} onSubmit={handleSubmit} noValidate className="grid gap-4">
+        <FormAlert>{formError && t(formError)}</FormAlert>
+        <AuthField label={t("yourName")} autoComplete="name" {...register("name")} />
+        <AuthField
+          label={t("email")}
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          {...register("email")}
+        />
+        <AuthField
+          label={t("password")}
+          type="password"
+          autoComplete="new-password"
+          hint={t("passwordHint", { count: PASSWORD_MIN_LENGTH })}
+          {...register("password")}
+        />
+        <Button type="submit" size="lg" className="mt-1 h-12 w-full sm:h-11" disabled={submitting}>
+          {submitting ? t("creatingAccount") : t("createAccount")}
+        </Button>
+      </form>
+    </AuthLayout>
+  );
+}
+
+export default Register;

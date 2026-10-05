@@ -4,7 +4,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { GRID_COLOR, SERIES_COLORS, tooltipStyle } from "./chartSetup";
 
 // Barras agrupadas: ingresos vs. gastos de los ultimos meses (un solo eje).
-function MonthlyChart({ data }) {
+function MonthlyChart({ data, currency = "ARS" }) {
   const { t, locale } = useLanguage();
 
   const chartData = {
@@ -47,7 +47,7 @@ function MonthlyChart({ data }) {
         ...tooltipStyle,
         callbacks: {
           title: (items) => formatMonth(data[items[0].dataIndex].month, locale),
-          label: (ctx) => ` ${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y, locale)}`,
+          label: (ctx) => ` ${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y, locale, { currency })}`,
         },
       },
     },
@@ -57,7 +57,7 @@ function MonthlyChart({ data }) {
         beginAtZero: true,
         grid: { color: GRID_COLOR },
         border: { display: false },
-        ticks: { callback: (value) => formatCompactCurrency(value, locale), maxTicksLimit: 5 },
+        ticks: { callback: (value) => formatCompactCurrency(value, locale, currency), maxTicksLimit: 5 },
       },
     },
   };
@@ -84,8 +84,8 @@ function MonthlyChart({ data }) {
           {data.map((item) => (
             <tr key={item.month}>
               <th scope="row">{formatMonth(item.month, locale)}</th>
-              <td>{formatCurrency(item.income, locale)}</td>
-              <td>{formatCurrency(item.expense, locale)}</td>
+              <td>{formatCurrency(item.income, locale, { currency })}</td>
+              <td>{formatCurrency(item.expense, locale, { currency })}</td>
             </tr>
           ))}
         </tbody>
