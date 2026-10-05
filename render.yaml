@@ -1,0 +1,28 @@
+# Blueprint de Render: crea el servicio web de bolsillox (plan gratis).
+# La base de datos va en Neon (ver DEPLOY.md); su URL se carga como DATABASE_URL.
+services:
+  - type: web
+    name: bolsillox
+    runtime: node
+    plan: free
+    # Misma zona que la base en Neon (AWS US East): menos demora en cada consulta.
+    region: virginia
+    branch: master
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      # Se completan a mano en el panel de Render (no se suben al repo).
+      - key: DATABASE_URL
+        sync: false
+      - key: PUBLIC_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
