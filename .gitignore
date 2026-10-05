@@ -2,13 +2,14 @@
 node_modules
 dist
 
-# Base de datos local (SQLite)
+# Base de datos local (PGlite y la SQLite de la version anterior)
 server/data/
 
 # Logs y entorno
 *.log
 .env
 .env.*
+!.env.example
 
 # Editor / SO
 .DS_Store
