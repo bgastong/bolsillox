@@ -1,0 +1,140 @@
+/*
+Efectos visuales inspirados en las referencias de diseño:
+- .bg-grid: grilla sutil que se desvanece (fondo de la app)
+- .glow-orb: boton circular "de vidrio" con brillo del color --glow
+- .horizon: arco de luz tipo horizonte
+- .wheel: selector tipo ruleta con los extremos difuminados
+Todos son decorativos y respetan prefers-reduced-motion (ver index.css).
+*/
+
+/* Grilla de fondo, fija detras de todo el contenido */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-position: -1px -1px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 25%, transparent 75%);
+  mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 25%, transparent 75%);
+}
+
+/* Boton/icono circular de vidrio con brillo de color */
+.glow-orb {
+  --glow: #d4f75c;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.02) 62%),
+    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--glow) 30%, transparent), transparent 70%),
+    #121214;
+  color: #fff;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow) 28%, transparent),
+    0 0 18px color-mix(in srgb, var(--glow) 40%, transparent),
+    0 0 42px color-mix(in srgb, var(--glow) 18%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.45);
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.15s ease;
+}
+
+.glow-orb:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--glow) 45%, transparent),
+    0 0 24px color-mix(in srgb, var(--glow) 55%, transparent),
+    0 0 56px color-mix(in srgb, var(--glow) 25%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.45);
+}
+
+.glow-orb:active {
+  transform: scale(0.95);
+}
+
+/* Variante destacada (accion principal): brillo mas intenso */
+.glow-orb-strong {
+  box-shadow:
+    0 0 0 1.5px color-mix(in srgb, var(--glow) 60%, transparent),
+    0 0 22px color-mix(in srgb, var(--glow) 60%, transparent),
+    0 0 60px color-mix(in srgb, var(--glow) 30%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.45);
+}
+
+/* Arco de luz tipo horizonte (anillo eliptico con degrade + resplandor) */
+.horizon {
+  position: absolute;
+  left: 50%;
+  width: 170%;
+  aspect-ratio: 2.4 / 1;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.horizon::before,
+.horizon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    #f97316 0%,
+    #fcd34d 16%,
+    #ffffff 34%,
+    #ffffff 66%,
+    #a5b4fc 84%,
+    #3b82f6 100%
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 3px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 3px));
+}
+
+/* Nucleo brillante */
+.horizon::before {
+  filter: blur(2px);
+}
+
+/* Resplandor amplio hacia adentro del arco */
+.horizon::after {
+  filter: blur(22px);
+  opacity: 0.85;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 46px), #000 calc(100% - 8px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 46px), #000 calc(100% - 8px));
+}
+
+/* Selector tipo ruleta */
+.wheel {
+  --wheel-item: 44px;
+  --wheel-height: 220px;
+  position: relative;
+  height: var(--wheel-height);
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-block: calc((var(--wheel-height) - var(--wheel-item)) / 2);
+  -webkit-mask-image: linear-gradient(transparent, #000 32%, #000 68%, transparent);
+  mask-image: linear-gradient(transparent, #000 32%, #000 68%, transparent);
+}
+
+.wheel::-webkit-scrollbar {
+  display: none;
+}
+
+.wheel-item {
+  scroll-snap-align: center;
+  height: var(--wheel-item);
+  transition:
+    opacity 0.15s linear,
+    filter 0.15s linear;
+}

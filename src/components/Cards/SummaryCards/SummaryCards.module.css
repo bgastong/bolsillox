@@ -37,10 +37,15 @@
   border-color: rgba(212, 247, 92, 0.35);
 }
 
-.featured .icon {
-  border-color: rgba(212, 247, 92, 0.3);
-  background: rgba(212, 247, 92, 0.12);
-  color: var(--primary);
+/* Arco de luz en la parte baja de la tarjeta destacada */
+.horizon {
+  top: 86%;
+  opacity: 0.7;
+}
+
+/* El contenido queda por encima del arco */
+.card > :not(.horizon) {
+  position: relative;
 }
 
 .cardHeader {
@@ -54,15 +59,9 @@
 }
 
 .icon {
-  display: inline-flex;
-  width: 34px;
-  height: 34px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  color: #d4d4d8;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
 }
 
 .icon svg {
@@ -159,8 +158,8 @@
   }
 
   .icon {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
   }
 
   /* Se oculta visualmente pero sigue disponible para lectores de pantalla */

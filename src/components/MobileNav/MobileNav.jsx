@@ -75,7 +75,7 @@ function MobileNav() {
           type="button"
           onClick={openCreate}
           aria-label={t("newMovement")}
-          className="mx-1 flex size-14 shrink-0 touch-manipulation items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_8px_24px_-6px_rgba(212,247,92,0.55)] transition-transform outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-95"
+          className="glow-orb glow-orb-strong mx-1 size-14 shrink-0 touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <PlusIcon className="size-6" strokeWidth={2.5} aria-hidden="true" />
         </button>
