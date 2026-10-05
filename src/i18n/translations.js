@@ -44,6 +44,9 @@ export const translations = {
     recentMovements: "Últimos movimientos",
     viewAll: "Ver todo",
     previousMonth: "Mes anterior",
+    chooseMonth: "Elegir mes",
+    noFutureMonths: "Este es el mes actual",
+    showMonth: "Ver {{month}}",
     nextMonth: "Mes siguiente",
 
     // Movimientos
@@ -305,6 +308,9 @@ export const translations = {
     recentMovements: "Recent transactions",
     viewAll: "View all",
     previousMonth: "Previous month",
+    chooseMonth: "Choose month",
+    noFutureMonths: "This is the current month",
+    showMonth: "Show {{month}}",
     nextMonth: "Next month",
 
     newMovement: "New transaction",

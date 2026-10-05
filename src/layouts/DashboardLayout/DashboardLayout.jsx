@@ -12,6 +12,8 @@ function DashboardLayout({ children }) {
 
   return (
     <MovementsProvider>
+      {/* Grilla decorativa de fondo */}
+      <div className="bg-grid" aria-hidden="true" />
       <SidebarProvider className="dashboard-shell-wrapper">
         {/* Accesibilidad: saltar directo al contenido con el teclado */}
         <a href="#main-content" className="skip-link">

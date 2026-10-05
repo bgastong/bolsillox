@@ -6,10 +6,12 @@ function NotFound() {
   const { t } = useLanguage();
 
   return (
-    <div className="flex flex-col items-center gap-4 py-20 text-center">
-      <p className="m-0 text-6xl font-bold text-muted-foreground">404</p>
-      <h1 className="m-0 text-xl font-semibold">{t("notFoundTitle")}</h1>
-      <Button asChild variant="outline">
+    <div className="relative flex min-h-[60svh] flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl py-20 text-center">
+      {/* Arco de luz decorativo */}
+      <span className="horizon top-[74%]" aria-hidden="true" />
+      <p className="relative m-0 font-display text-7xl font-bold tracking-[-0.05em] text-foreground">404</p>
+      <h1 className="relative m-0 text-xl font-semibold">{t("notFoundTitle")}</h1>
+      <Button asChild variant="outline" className="relative">
         <Link to="/">{t("backHome")}</Link>
       </Button>
     </div>

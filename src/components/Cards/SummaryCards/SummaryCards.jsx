@@ -35,12 +35,15 @@ function Variation({ value, inverse = false }) {
   );
 }
 
-function StatCard({ label, value, icon: Icon, footer, valueClassName, featured = false }) {
+// glow: color del brillo del icono (estilo "orbe de vidrio").
+function StatCard({ label, value, icon: Icon, footer, valueClassName, glow, featured = false }) {
   return (
     <article className={`${styles.card} ${featured ? styles.featured : ""}`}>
+      {/* Arco de luz decorativo en la tarjeta destacada */}
+      {featured && <span className={`horizon ${styles.horizon}`} aria-hidden="true" />}
       <div className={styles.cardHeader}>
         <span>{label}</span>
-        <span className={styles.icon}>
+        <span className={`glow-orb ${styles.icon}`} style={{ "--glow": glow }}>
           <Icon aria-hidden="true" />
         </span>
       </div>
@@ -72,6 +75,7 @@ function SummaryCards({ summary }) {
     <div className={styles.grid}>
       <StatCard
         featured
+        glow="#d4f75c"
         label={t("cardtotal")}
         icon={WalletIcon}
         value={money(summary.balance)}
@@ -80,18 +84,21 @@ function SummaryCards({ summary }) {
       />
       <StatCard
         label={t("cardIncome")}
+        glow="#34d399"
         icon={TrendingUpIcon}
         value={money(summary.income)}
         footer={<Variation value={summary.variation.income} />}
       />
       <StatCard
         label={t("cardExpense")}
+        glow="#8b6fe8"
         icon={TrendingDownIcon}
         value={money(summary.expense)}
         footer={<Variation value={summary.variation.expense} inverse />}
       />
       <StatCard
         label={t("cardSavings")}
+        glow="#38bdf8"
         icon={PiggyBankIcon}
         value={money(summary.net)}
         valueClassName={summary.net < 0 ? styles.negative : undefined}
