@@ -2,22 +2,33 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import express from "express";
-import { z } from "zod";
+import { rateSettingsSchema } from "../shared/movementSchema.js";
 import { createRepository } from "./repository.js";
+import { createRecurringService } from "./recurring.js";
+import { createBudgetsService } from "./budgets.js";
+import { createRatesService } from "./rates.js";
 import { movementsRouter } from "./routes/movements.js";
-import { buildSummary, currentMonthKey } from "./summary.js";
+import { recurringRouter } from "./routes/recurring.js";
+import { budgetsRouter } from "./routes/budgets.js";
+import { buildSummary } from "./summary.js";
+import { parseCurrency, parseMonth } from "./params.js";
 import { errorHandler, HttpError } from "./errors.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = path.join(__dirname, "..", "dist");
 
-const monthSchema = z
-  .string()
-  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, { error: "errorMonthInvalid" });
-
-export function createApp(db, { serveStatic = false } = {}) {
+/*
+options:
+- serveStatic: sirve el build de Vite (produccion).
+- now: reloj (los tests lo fijan para que las fechas sean predecibles).
+- fetchImpl: fetch para las cotizaciones (los tests lo simulan).
+*/
+export function createApp(db, { serveStatic = false, now, fetchImpl } = {}) {
   const app = express();
   const repo = createRepository(db);
+  const recurring = createRecurringService(db, { now });
+  const budgets = createBudgetsService(db);
+  const rates = createRatesService(db, { now, fetchImpl });
 
   app.disable("x-powered-by");
   app.use(express.json({ limit: "100kb" }));
@@ -26,11 +37,30 @@ export function createApp(db, { serveStatic = false } = {}) {
     res.json({ status: "ok" });
   });
 
+  // Antes de leer datos, se generan los movimientos recurrentes que vencieron.
+  app.use("/api", (req, res, next) => {
+    if (req.method === "GET") recurring.generateDue();
+    next();
+  });
+
   app.use("/api/movements", movementsRouter(repo));
+  app.use("/api/recurring", recurringRouter(recurring));
+  app.use("/api/budgets", budgetsRouter(budgets, rates));
 
   app.get("/api/summary", (req, res) => {
-    const month = req.query.month ? monthSchema.parse(req.query.month) : currentMonthKey();
-    res.json(buildSummary(repo, month));
+    const month = parseMonth(req.query.month);
+    const target = parseCurrency(req.query.currency);
+    res.json(buildSummary(repo, month, { target, rate: rates.getActiveRate() }));
+  });
+
+  app.get("/api/rates", async (req, res) => {
+    await rates.ensureFresh();
+    res.json(rates.getStatus());
+  });
+
+  app.put("/api/rates/settings", (req, res) => {
+    rates.saveSettings(rateSettingsSchema.parse(req.body ?? {}));
+    res.json(rates.getStatus());
   });
 
   app.use("/api", () => {
@@ -46,6 +76,9 @@ export function createApp(db, { serveStatic = false } = {}) {
   }
 
   app.use(errorHandler);
+
+  // index.js lo usa para traer la cotizacion apenas arranca el servidor.
+  app.locals.rates = rates;
 
   return app;
 }

@@ -6,6 +6,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 // Cada pagina se carga bajo demanda (Chart.js solo se baja en el dashboard).
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const History = lazy(() => import("./pages/History"));
+const Recurring = lazy(() => import("./pages/Recurring"));
+const Budgets = lazy(() => import("./pages/Budgets"));
+const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageFallback() {
@@ -26,6 +29,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/history" element={<History />} />
+            <Route path="/recurring" element={<Recurring />} />
+            <Route path="/budgets" element={<Budgets />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

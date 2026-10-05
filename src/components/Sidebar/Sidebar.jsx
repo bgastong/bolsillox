@@ -1,5 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { HistoryIcon, LayoutDashboardIcon } from "lucide-react";
+import {
+  HistoryIcon,
+  LayoutDashboardIcon,
+  PiggyBankIcon,
+  RepeatIcon,
+  SettingsIcon,
+} from "lucide-react";
 import styles from "./Sidebar.module.css";
 import { useLanguage } from "../../hooks/useLanguage";
 import Wordmark from "../Brand/Wordmark";
@@ -19,6 +25,9 @@ import {
 const NAV_ITEMS = [
   { to: "/", labelKey: "home", icon: LayoutDashboardIcon, end: true },
   { to: "/history", labelKey: "history", icon: HistoryIcon },
+  { to: "/recurring", labelKey: "recurringTitle", icon: RepeatIcon },
+  { to: "/budgets", labelKey: "budgetsTitle", icon: PiggyBankIcon },
+  { to: "/settings", labelKey: "settingsTitle", icon: SettingsIcon },
 ];
 
 function AppSidebar() {

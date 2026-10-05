@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import {
   ALL_CATEGORIES,
+  CURRENCIES,
   MOVEMENT_TYPES,
   PAYMENT_METHODS,
   SORT_FIELDS,
@@ -20,6 +21,7 @@ const listQuerySchema = z
     type: z.enum(MOVEMENT_TYPES).optional(),
     category: z.enum(ALL_CATEGORIES).optional(),
     paymentMethod: z.enum(PAYMENT_METHODS).optional(),
+    currency: z.enum(CURRENCIES).optional(),
     from: optionalDate,
     to: optionalDate,
     q: z.string().trim().max(80).optional(),

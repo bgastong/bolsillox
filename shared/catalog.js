@@ -46,3 +46,13 @@ export const SORT_ORDERS = ["asc", "desc"];
 export const TITLE_MAX_LENGTH = 80;
 export const NOTE_MAX_LENGTH = 300;
 export const AMOUNT_MAX = 1_000_000_000;
+
+export const CURRENCIES = ["ARS", "USD"];
+export const DEFAULT_CURRENCY = "ARS";
+
+// Fuentes de cotizacion del dolar. "manual" usa un valor cargado por el usuario.
+export const RATE_SOURCES = ["oficial", "blue", "mep", "manual"];
+export const DEFAULT_RATE_SOURCE = "blue";
+
+// Umbral (en %) a partir del cual un presupuesto se marca "cerca del limite".
+export const BUDGET_WARNING_PERCENT = 80;

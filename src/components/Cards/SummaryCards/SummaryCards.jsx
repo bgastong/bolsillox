@@ -66,7 +66,7 @@ export function SummaryCardsSkeleton() {
 
 function SummaryCards({ summary }) {
   const { t, locale } = useLanguage();
-  const money = (amount) => formatCurrency(amount, locale);
+  const money = (amount) => formatCurrency(amount, locale, { currency: summary.currency });
 
   return (
     <div className={styles.grid}>

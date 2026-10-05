@@ -1,5 +1,6 @@
 import { LanguageProvider } from "./LanguageContext";
 import { ToastProvider } from "./ToastContext";
+import { SettingsProvider } from "./SettingsContext";
 
 /*
 Utilizamos este context para no ensuciar main de muchos providers.
@@ -7,13 +8,15 @@ En ves de poner muchos, utilizamos uno solo.
 <AppProviders>
     <App />
 </AppProviders>
-Toda al app puede usar los idiomas y las notificaciones.
+Toda la app puede usar idiomas, ajustes (moneda/cotizacion) y notificaciones.
 */
 
 function AppProviders({ children }) {
   return (
     <LanguageProvider>
-      <ToastProvider>{children}</ToastProvider>
+      <SettingsProvider>
+        <ToastProvider>{children}</ToastProvider>
+      </SettingsProvider>
     </LanguageProvider>
   );
 }
