@@ -17,10 +17,35 @@ function errorMessage(t, error) {
   return error?.code === "network_error" ? t("errorServer") : t("errorGeneric");
 }
 
+const TEXTS = {
+  movement: {
+    newTitle: "newMovement",
+    editTitle: "editMovement",
+    newDescription: "newMovementDescription",
+    editDescription: "editMovementDescription",
+    created: "movementCreated",
+    updated: "movementUpdated",
+    deleted: "movementDeleted",
+    deleteTitle: "deleteTitle",
+    deleteDescription: "deleteDescription",
+  },
+  recurring: {
+    newTitle: "newRecurring",
+    editTitle: "editRecurring",
+    newDescription: "newRecurringDescription",
+    editDescription: "editRecurringDescription",
+    created: "recurringCreated",
+    updated: "recurringUpdated",
+    deleted: "recurringDeleted",
+    deleteTitle: "deleteRecurringTitle",
+    deleteDescription: "deleteRecurringDescription",
+  },
+};
+
 /*
-Dialogos de crear/editar y eliminar.
-- form: { movement: null | movimiento, key } cuando esta abierto
-- toDelete: movimiento a confirmar
+Dialogos de crear/editar y eliminar, para movimientos y reglas recurrentes.
+- form: { kind, item, key } cuando esta abierto
+- toDelete: { kind, item } a confirmar
 */
 export function MovementDialogs({
   form,
@@ -34,19 +59,48 @@ export function MovementDialogs({
   const { toast } = useToast();
   const [deleting, setDeleting] = useState(false);
 
-  const isEdit = Boolean(form?.movement);
+  const kind = form?.kind ?? "movement";
+  const texts = TEXTS[kind];
+  const isEdit = Boolean(form?.item);
+  const deleteTexts = TEXTS[toDelete?.kind ?? "movement"];
 
-  async function handleSubmit(data) {
+  // Despues de guardar un gasto, avisa si el presupuesto de su categoria
+  // esta cerca del limite o se paso.
+  async function checkBudget(data) {
+    if (data.type !== "expense") return;
+    const month = (data.date ?? data.startDate).slice(0, 7);
     try {
-      if (isEdit) {
-        await api.updateMovement(form.movement.id, data);
-        toast(t("movementUpdated"));
+      const { items } = await api.getBudgets(month);
+      const budget = items.find((item) => item.category === data.category);
+      if (!budget || budget.status === "ok") return;
+      const vars = { category: t(`cat_${budget.category}`), percent: Math.round(budget.percent) };
+      toast(t(budget.status === "over" ? "budgetOverToast" : "budgetWarningToast", vars), {
+        variant: "warning",
+      });
+    } catch {
+      // El aviso es opcional: si falla, no molesta al usuario.
+    }
+  }
+
+  async function handleSubmit(data, { repeat }) {
+    try {
+      if (kind === "recurring") {
+        if (isEdit) await api.updateRecurring(form.item.id, data);
+        else await api.createRecurring(data);
+        toast(t(isEdit ? texts.updated : texts.created));
+      } else if (repeat) {
+        // "Se repite todos los meses": se crea la regla y genera este mes.
+        const { date, ...rest } = data;
+        await api.createRecurring({ ...rest, startDate: date });
+        toast(t("recurringCreated"));
       } else {
-        await api.createMovement(data);
-        toast(t("movementCreated"));
+        if (isEdit) await api.updateMovement(form.item.id, data);
+        else await api.createMovement(data);
+        toast(t(isEdit ? texts.updated : texts.created));
       }
       onFormClose();
       onChange?.();
+      checkBudget(data);
     } catch (error) {
       // Los errores de validacion se muestran en el formulario.
       if (error?.code !== "validation_error") {
@@ -59,8 +113,9 @@ export function MovementDialogs({
   async function handleDelete() {
     setDeleting(true);
     try {
-      await api.deleteMovement(toDelete.id);
-      toast(t("movementDeleted"));
+      if (toDelete.kind === "recurring") await api.deleteRecurring(toDelete.item.id);
+      else await api.deleteMovement(toDelete.item.id);
+      toast(t(deleteTexts.deleted));
       onDeleteClose();
       onChange?.();
     } catch (error) {
@@ -75,18 +130,21 @@ export function MovementDialogs({
       <Dialog open={Boolean(form)} onOpenChange={(open) => !open && onFormClose()}>
         <DialogContent closeLabel={t("close")}>
           <DialogHeader>
-            <DialogTitle>{isEdit ? t("editMovement") : t("newMovement")}</DialogTitle>
+            <DialogTitle>{t(isEdit ? texts.editTitle : texts.newTitle)}</DialogTitle>
             <DialogDescription>
-              {isEdit ? t("editMovementDescription") : t("newMovementDescription")}
+              {t(isEdit ? texts.editDescription : texts.newDescription)}
             </DialogDescription>
           </DialogHeader>
           {form && (
             <MovementForm
               key={form.key}
-              movement={form.movement}
+              item={form.item}
+              mode={kind}
               onSubmit={handleSubmit}
               onCancel={onFormClose}
-              onDelete={isEdit && onRequestDelete ? () => onRequestDelete(form.movement) : undefined}
+              onDelete={
+                isEdit && onRequestDelete ? () => onRequestDelete(form.item, kind) : undefined
+              }
             />
           )}
         </DialogContent>
@@ -98,9 +156,9 @@ export function MovementDialogs({
       >
         <DialogContent className="max-w-md" closeLabel={t("close")}>
           <DialogHeader>
-            <DialogTitle>{t("deleteTitle")}</DialogTitle>
+            <DialogTitle>{t(deleteTexts.deleteTitle)}</DialogTitle>
             <DialogDescription>
-              {t("deleteDescription", { title: toDelete?.title ?? "" })}
+              {t(deleteTexts.deleteDescription, { title: toDelete?.item.title ?? "" })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

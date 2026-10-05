@@ -1,10 +1,11 @@
+import { RepeatIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
 import { getCategoryMeta } from "@/lib/categories";
 import { useLanguage } from "@/hooks/useLanguage";
 
-// Monto con signo: + ingreso (verde) / - gasto (neutro).
-export function AmountText({ type, amount, className }) {
+// Monto con signo: + ingreso (verde) / - gasto (neutro), en su moneda.
+export function AmountText({ type, amount, currency = "ARS", className }) {
   const { locale } = useLanguage();
   const value = type === "expense" ? -amount : amount;
   return (
@@ -15,7 +16,7 @@ export function AmountText({ type, amount, className }) {
         className,
       )}
     >
-      {formatCurrency(value, locale, { signed: true })}
+      {formatCurrency(value, locale, { signed: true, currency })}
     </span>
   );
 }
@@ -74,5 +75,17 @@ export function PageHeader({ title, subtitle, actions }) {
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </header>
+  );
+}
+
+// Icono chico que marca un movimiento generado por una regla recurrente.
+export function RecurringMark({ className }) {
+  const { t } = useLanguage();
+  return (
+    <RepeatIcon
+      className={cn("size-3.5 shrink-0 text-muted-foreground", className)}
+      aria-label={t("generatedByRecurring")}
+      role="img"
+    />
   );
 }

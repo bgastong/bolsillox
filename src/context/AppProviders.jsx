@@ -1,19 +1,22 @@
 import { LanguageProvider } from "./LanguageContext";
 import { ToastProvider } from "./ToastContext";
+import { AuthProvider } from "./AuthContext";
 
 /*
-Utilizamos este context para no ensuciar main de muchos providers.
-En ves de poner muchos, utilizamos uno solo.
+Providers globales en un solo lugar:
 <AppProviders>
     <App />
 </AppProviders>
-Toda al app puede usar los idiomas y las notificaciones.
+Toda la app puede usar idiomas, notificaciones y la sesion del usuario.
+Los ajustes (moneda/cotizacion) necesitan sesion: su provider esta en App.
 */
 
 function AppProviders({ children }) {
   return (
     <LanguageProvider>
-      <ToastProvider>{children}</ToastProvider>
+      <ToastProvider>
+        <AuthProvider>{children}</AuthProvider>
+      </ToastProvider>
     </LanguageProvider>
   );
 }

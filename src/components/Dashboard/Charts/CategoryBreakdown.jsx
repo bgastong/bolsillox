@@ -5,7 +5,7 @@ import { CategoryIcon } from "../../Movements/MovementBits";
 
 // Desglose de gastos por categoria: barra apilada arriba y lista con
 // monto, porcentaje y barra de progreso en el color de cada categoria.
-function CategoryBreakdown({ data }) {
+function CategoryBreakdown({ data, currency = "ARS" }) {
   const { t, locale } = useLanguage();
   const total = data.reduce((sum, item) => sum + item.total, 0);
   const share = (value) => (total ? (value / total) * 100 : 0);
@@ -39,7 +39,7 @@ function CategoryBreakdown({ data }) {
                 <div className="flex items-baseline justify-between gap-2 text-sm">
                   <span className="truncate font-medium">{t(`cat_${item.category}`)}</span>
                   <span className="font-semibold tabular-nums">
-                    {formatCurrency(item.total, locale)}
+                    {formatCurrency(item.total, locale, { currency })}
                   </span>
                 </div>
                 <div className="mt-1.5 flex items-center gap-2">

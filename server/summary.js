@@ -27,28 +27,48 @@ export function percentChange(current, previous) {
   return Math.round(((current - previous) / Math.abs(previous)) * 1000) / 10;
 }
 
-export function buildSummary(repo, monthKey, { months = 6, recent = 5 } = {}) {
+// money: { target: "ARS" | "USD", rate: pesos por dolar o null }
+// Las consultas van en paralelo (con una base remota, cada una tarda).
+export async function buildSummary(
+  repo,
+  userId,
+  monthKey,
+  { months = 6, recent = 5, target = "ARS", rate = null } = {},
+) {
+  const money = { target, rate };
   const current = monthRange(monthKey);
   const previous = monthRange(monthKey, -1);
+  const ranges = [];
+  for (let offset = months - 1; offset >= 0; offset--) ranges.push(monthRange(monthKey, -offset));
 
-  const currentTotals = repo.totalsBetween(current.from, current.to);
-  const previousTotals = repo.totalsBetween(previous.from, previous.to);
-  const allTime = repo.totalsBetween(null, current.to);
-  const previousAllTime = repo.totalsBetween(null, previous.to);
+  const [currentTotals, previousTotals, allTime, previousAllTime, byCategory, recentRows, ...series] =
+    await Promise.all([
+      repo.totalsBetween(userId, current.from, current.to, money),
+      repo.totalsBetween(userId, previous.from, previous.to, money),
+      repo.totalsBetween(userId, null, current.to, money),
+      repo.totalsBetween(userId, null, previous.to, money),
+      repo.expensesByCategory(userId, current.from, current.to, money),
+      repo.list(userId, { to: current.to, sort: "date", order: "desc", limit: recent }),
+      ...ranges.map((range) => repo.totalsBetween(userId, range.from, range.to, money)),
+    ]);
 
-  const balance = allTime.income - allTime.expense;
-  const previousBalance = previousAllTime.income - previousAllTime.expense;
-  const net = currentTotals.income - currentTotals.expense;
+  const round = (value) => Math.round(value * 100) / 100;
+  const balance = round(allTime.income - allTime.expense);
+  const previousBalance = round(previousAllTime.income - previousAllTime.expense);
+  const net = round(currentTotals.income - currentTotals.expense);
 
-  const monthly = [];
-  for (let offset = months - 1; offset >= 0; offset--) {
-    const range = monthRange(monthKey, -offset);
-    const totals = repo.totalsBetween(range.from, range.to);
-    monthly.push({ month: range.key, income: totals.income, expense: totals.expense });
-  }
+  const monthly = ranges.map((range, index) => ({
+    month: range.key,
+    income: series[index].income,
+    expense: series[index].expense,
+  }));
 
   return {
     month: current.key,
+    currency: target,
+    rate,
+    // Movimientos en otra moneda que no se pudieron convertir (sin cotizacion).
+    unconverted: allTime.unconverted,
     balance,
     income: currentTotals.income,
     expense: currentTotals.expense,
@@ -68,8 +88,8 @@ export function buildSummary(repo, monthKey, { months = 6, recent = 5 } = {}) {
       expense: percentChange(currentTotals.expense, previousTotals.expense),
       balance: percentChange(balance, previousBalance),
     },
-    byCategory: repo.expensesByCategory(current.from, current.to),
+    byCategory,
     monthly,
-    recent: repo.list({ to: current.to, sort: "date", order: "desc", limit: recent }),
+    recent: recentRows,
   };
 }

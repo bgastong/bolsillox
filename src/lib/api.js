@@ -2,6 +2,8 @@
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? "/api";
 
+export const UNAUTHORIZED_EVENT = "bolsillox:unauthorized";
+
 export class ApiError extends Error {
   constructor(status, body) {
     super(body?.error ?? `HTTP ${status}`);
@@ -29,7 +31,13 @@ async function request(path, { method = "GET", body, signal } = {}) {
   if (response.status === 204) return null;
 
   const data = await response.json().catch(() => null);
-  if (!response.ok) throw new ApiError(response.status, data);
+  if (!response.ok) {
+    // Sesion vencida o cerrada en otro lado: AuthContext vuelve al login.
+    if (response.status === 401 && !path.startsWith("/auth/")) {
+      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+    }
+    throw new ApiError(response.status, data);
+  }
   return data;
 }
 
@@ -45,11 +53,43 @@ function toQuery(params = {}) {
 }
 
 export const api = {
+  // Cuenta
+  getAuthConfig: (options) => request("/auth/config", options),
+  me: (options) => request("/auth/me", options),
+  register: (data) => request("/auth/register", { method: "POST", body: data }),
+  login: (data) => request("/auth/login", { method: "POST", body: data }),
+  logout: () => request("/auth/logout", { method: "POST" }),
+  deleteAccount: (email) => request("/auth/account", { method: "DELETE", body: { email } }),
+  // Redireccion completa (no fetch): Google vuelve a /api/auth/google/callback.
+  googleLoginUrl: `${BASE_URL}/auth/google`,
+  loadDemoData: () => request("/demo-data", { method: "POST" }),
+
+  // Movimientos
   listMovements: (filters, options) =>
     request(`/movements${toQuery(filters)}`, options),
-  getSummary: (month, options) => request(`/summary${toQuery({ month })}`, options),
   createMovement: (data) => request("/movements", { method: "POST", body: data }),
   updateMovement: (id, data) =>
     request(`/movements/${id}`, { method: "PUT", body: data }),
   deleteMovement: (id) => request(`/movements/${id}`, { method: "DELETE" }),
+
+  // Resumen del dashboard (currency: moneda en la que se ven los totales)
+  getSummary: (month, currency, options) =>
+    request(`/summary${toQuery({ month, currency })}`, options),
+
+  // Recurrentes
+  listRecurring: (options) => request("/recurring", options),
+  createRecurring: (data) => request("/recurring", { method: "POST", body: data }),
+  updateRecurring: (id, data) => request(`/recurring/${id}`, { method: "PUT", body: data }),
+  deleteRecurring: (id) => request(`/recurring/${id}`, { method: "DELETE" }),
+
+  // Presupuestos
+  getBudgets: (month, options) => request(`/budgets${toQuery({ month })}`, options),
+  setBudget: (category, amount) =>
+    request(`/budgets/${category}`, { method: "PUT", body: { amount } }),
+  deleteBudget: (category) => request(`/budgets/${category}`, { method: "DELETE" }),
+
+  // Cotizacion del dolar
+  getRates: (options) => request("/rates", options),
+  saveRateSettings: (settings) =>
+    request("/rates/settings", { method: "PUT", body: settings }),
 };

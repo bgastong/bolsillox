@@ -1,7 +1,15 @@
-import { NavLink } from "react-router-dom";
-import { HistoryIcon, LayoutDashboardIcon } from "lucide-react";
+import { Link, NavLink } from "react-router-dom";
+import {
+  HistoryIcon,
+  LayoutDashboardIcon,
+  PiggyBankIcon,
+  RepeatIcon,
+  SettingsIcon,
+} from "lucide-react";
 import styles from "./Sidebar.module.css";
 import { useLanguage } from "../../hooks/useLanguage";
+import { useAuth } from "../../hooks/useAuth";
+import UserAvatar from "../Account/UserAvatar";
 import Wordmark from "../Brand/Wordmark";
 import {
   Sidebar,
@@ -19,10 +27,14 @@ import {
 const NAV_ITEMS = [
   { to: "/", labelKey: "home", icon: LayoutDashboardIcon, end: true },
   { to: "/history", labelKey: "history", icon: HistoryIcon },
+  { to: "/recurring", labelKey: "recurringTitle", icon: RepeatIcon },
+  { to: "/budgets", labelKey: "budgetsTitle", icon: PiggyBankIcon },
+  { to: "/settings", labelKey: "settingsTitle", icon: SettingsIcon },
 ];
 
 function AppSidebar() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const { isMobile, setOpenMobile } = useSidebar();
 
   // En mobile el sidebar es un sheet: se cierra al navegar.
@@ -83,10 +95,15 @@ function AppSidebar() {
         </SidebarContent>
 
         <SidebarFooter>
-          <div className={styles.footerCard}>
-            <span className={styles.footerDot} aria-hidden="true" />
-            <p className={styles.footerText}>{t("sidebarFooter")}</p>
-          </div>
+          {user && (
+            <Link to="/settings" className={styles.footerCard} aria-label={t("accountLinkLabel", { name: user.name })}>
+              <UserAvatar name={user.name} className="size-9 text-sm" />
+              <span className={styles.footerUser} aria-hidden="true">
+                <span className={styles.footerName}>{user.name}</span>
+                <span className={styles.footerText}>{user.email}</span>
+              </span>
+            </Link>
+          )}
         </SidebarFooter>
       </nav>
     </Sidebar>

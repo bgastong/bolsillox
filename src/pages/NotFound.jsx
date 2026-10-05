@@ -6,8 +6,8 @@ function NotFound() {
   const { t } = useLanguage();
 
   return (
-    <div className="flex flex-col items-center gap-4 py-20 text-center">
-      <p className="m-0 text-6xl font-bold text-muted-foreground">404</p>
+    <div className="relative flex min-h-[60svh] flex-col items-center justify-center gap-4 py-20 text-center">
+      <p className="m-0 font-display text-7xl font-bold tracking-[-0.05em] text-foreground">404</p>
       <h1 className="m-0 text-xl font-semibold">{t("notFoundTitle")}</h1>
       <Button asChild variant="outline">
         <Link to="/">{t("backHome")}</Link>
