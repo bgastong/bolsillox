@@ -58,28 +58,49 @@
   color: var(--sidebar-primary);
 }
 
+/* Usuario con sesion iniciada (lleva a Ajustes) */
 .footerCard {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 4px;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid var(--sidebar-border);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
+  outline: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
-.footerDot {
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-  border-radius: 999px;
-  background: var(--sidebar-primary);
-  box-shadow: 0 0 12px var(--sidebar-primary);
+.footerCard:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.footerCard:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.footerUser {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+
+.footerName {
+  overflow: hidden;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .footerText {
-  margin: 0;
+  overflow: hidden;
   color: var(--muted-foreground);
   font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { CURRENCIES } from "@shared/catalog.js";
 import { issuesToFieldErrors, rateSettingsSchema } from "@shared/movementSchema.js";
+import AccountSection from "@/components/Account/AccountSection";
 import { GitHubIcon } from "@/components/Brand/BrandIcons";
 import { PageHeader } from "@/components/Movements/MovementBits";
 import { Button } from "@/components/ui/button";
@@ -232,6 +233,8 @@ function Settings() {
   return (
     <div className="grid gap-5">
       <PageHeader title={t("settingsTitle")} subtitle={t("settingsSubtitle")} />
+
+      <AccountSection Section={Section} />
 
       <Section
         id="settings-currency"
