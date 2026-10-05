@@ -35,12 +35,10 @@ function Variation({ value, inverse = false }) {
   );
 }
 
-// glow: color del brillo del icono (estilo "orbe de vidrio").
+// glow: color del borde del icono (estilo "orbe de vidrio").
 function StatCard({ label, value, icon: Icon, footer, valueClassName, glow, featured = false }) {
   return (
     <article className={`${styles.card} ${featured ? styles.featured : ""}`}>
-      {/* Arco de luz decorativo en la tarjeta destacada */}
-      {featured && <span className={`horizon ${styles.horizon}`} aria-hidden="true" />}
       <div className={styles.cardHeader}>
         <span>{label}</span>
         <span className={`glow-orb ${styles.icon}`} style={{ "--glow": glow }}>
@@ -72,7 +70,7 @@ function SummaryCards({ summary }) {
   const money = (amount) => formatCurrency(amount, locale, { currency: summary.currency });
 
   return (
-    <div className={styles.grid}>
+    <div className={`${styles.grid} stagger`}>
       <StatCard
         featured
         glow="#d4f75c"

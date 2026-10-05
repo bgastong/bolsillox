@@ -5,6 +5,7 @@ import SummaryCards, {
   SummaryCardsSkeleton,
 } from "@/components/Cards/SummaryCards/SummaryCards";
 import BudgetRow from "@/components/Budgets/BudgetRow";
+import DollarRates from "@/components/Dashboard/DollarRates";
 import CategoryBreakdown from "@/components/Dashboard/Charts/CategoryBreakdown";
 import MonthlyChart from "@/components/Dashboard/Charts/MonthlyChart";
 import ExpenseList from "@/components/Dashboard/ExpenseList/ExpenseList";
@@ -100,6 +101,8 @@ function Dashboard() {
           aria-busy={loading}
         >
           {showSkeleton ? <SummaryCardsSkeleton /> : <SummaryCards summary={summary} />}
+
+          <DollarRates />
 
           {/* En mobile: ultimos movimientos, presupuestos y despues los graficos */}
           <div className="grid gap-6 lg:grid-cols-5">
