@@ -59,7 +59,7 @@ function DollarRates() {
   return (
     <section
       aria-labelledby="dollar-rates-title"
-      className="grid gap-3 rounded-2xl border bg-card p-3.5 sm:p-5"
+      className="sticker grid gap-3 rounded-2xl bg-card p-3.5 sm:p-5"
     >
       <header className="flex items-center justify-between gap-3">
         <div className="grid gap-0.5">

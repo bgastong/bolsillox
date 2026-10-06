@@ -4,8 +4,8 @@
   "description": "Tus finanzas personales",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#09090b",
+  "background_color": "#141211",
+  "theme_color": "#141211",
   "lang": "es",
   "icons": [
     { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" },
