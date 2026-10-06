@@ -35,7 +35,7 @@ function Variation({ value, inverse = false }) {
   );
 }
 
-// glow: color del borde del icono (estilo "orbe de vidrio").
+// glow: color del icono circular.
 function StatCard({ label, value, icon: Icon, footer, valueClassName, glow, featured = false }) {
   return (
     <article className={`${styles.card} ${featured ? styles.featured : ""}`}>
@@ -73,7 +73,7 @@ function SummaryCards({ summary }) {
     <div className={`${styles.grid} stagger`}>
       <StatCard
         featured
-        glow="#d4f75c"
+        glow="var(--primary)"
         label={t("cardtotal")}
         icon={WalletIcon}
         value={money(summary.balance)}

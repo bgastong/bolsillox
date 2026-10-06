@@ -69,7 +69,7 @@ function TableHistory({ movements, onEdit, onDelete }) {
   return (
     <>
       {/* Escritorio: tabla */}
-      <div className="hidden overflow-hidden rounded-2xl border bg-card md:block">
+      <div className="sticker hidden overflow-hidden rounded-2xl bg-card md:block">
         <Table>
           <TableCaption className="sr-only">{t("footerhistory")}</TableCaption>
           <TableHeader>

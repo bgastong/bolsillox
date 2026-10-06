@@ -57,7 +57,7 @@ function Budgets() {
           {data.items.length > 0 && (
             <section
               aria-label={t("budgetsTotal")}
-              className="grid gap-3 rounded-2xl border bg-card p-5"
+              className="sticker grid gap-3 rounded-2xl bg-card p-5"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="m-0 text-sm text-muted-foreground">{t("budgetsTotal")}</p>

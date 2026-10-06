@@ -28,7 +28,7 @@ const RATE_SOURCES = ["blue", "mep", "oficial"];
 
 function Section({ id, title, description, children }) {
   return (
-    <section aria-labelledby={id} className="grid gap-4 rounded-2xl border bg-card p-5 sm:p-6">
+    <section aria-labelledby={id} className="sticker grid gap-4 rounded-2xl bg-card p-5 sm:p-6">
       <div className="grid gap-1">
         <h2 id={id} className="m-0 font-display text-lg font-semibold">
           {title}

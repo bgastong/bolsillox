@@ -1,10 +1,20 @@
 /*
-Efectos visuales inspirados en las referencias de diseño:
-- .bg-grid: grilla sutil que se desvanece (fondo de la app)
-- .glow-orb: boton circular "de vidrio" con un borde del color --glow (sin halo difuso)
+Estilo "sticker" (inspirado en react.gg):
+- .bg-grid: grilla sutil en todo el fondo de la app
+- .sticker: tarjeta con borde marcado y sombra solida desplazada
+- .glow-orb: icono circular con borde, en el color --glow
 - .wheel: selector tipo ruleta con los extremos difuminados
-Todos son decorativos y respetan prefers-reduced-motion (ver index.css).
+Todos respetan prefers-reduced-motion (ver index.css).
 */
+
+/* Titulos de pantallas y secciones: mayusculas y muy gruesos.
+   Fuera de @layer para ganarle a las utilidades de peso (font-semibold). */
+h1,
+h2 {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
 
 /* Grilla de fondo, fija detras de todo el contenido */
 .bg-grid {
@@ -13,54 +23,46 @@ Todos son decorativos y respetan prefers-reduced-motion (ver index.css).
   z-index: -1;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-  background-size: 44px 44px;
+    linear-gradient(rgba(246, 236, 217, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(246, 236, 217, 0.045) 1px, transparent 1px);
+  background-size: 34px 34px;
   background-position: -1px -1px;
-  -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 25%, transparent 75%);
-  mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 25%, transparent 75%);
 }
 
-/* Boton/icono circular de vidrio con brillo de color */
+/* Tarjeta "sticker": borde marcado y sombra solida (sin desenfoque) */
+.sticker {
+  border: 2px solid var(--border-strong);
+  box-shadow: 4px 4px 0 #000;
+}
+
+/* Variante destacada (login y registro): borde crema y sombra naranja */
+.sticker-hero {
+  border-color: var(--cream);
+  box-shadow: 6px 6px 0 var(--primary);
+}
+
+/* Icono circular con borde (el color del icono es --glow) */
 .glow-orb {
-  --glow: #d4f75c;
+  --glow: var(--primary);
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background:
-    radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.02) 62%),
-    radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--glow) 30%, transparent), transparent 70%),
-    #121214;
-  color: #fff;
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--glow) 35%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -10px 18px rgba(0, 0, 0, 0.45);
+  border: 2px solid var(--border-strong);
+  background: var(--accent);
+  color: var(--glow);
   transition:
-    box-shadow 0.25s ease,
+    border-color 0.15s ease,
     transform 0.15s ease;
 }
 
 .glow-orb:hover {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--glow) 60%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.32),
-    inset 0 -10px 18px rgba(0, 0, 0, 0.45);
+  border-color: color-mix(in srgb, var(--glow) 55%, transparent);
 }
 
 .glow-orb:active {
   transform: scale(0.95);
-}
-
-/* Variante destacada (accion principal): borde mas marcado */
-.glow-orb-strong {
-  box-shadow:
-    0 0 0 1.5px color-mix(in srgb, var(--glow) 75%, transparent),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 -10px 18px rgba(0, 0, 0, 0.45);
 }
 
 /* Selector tipo ruleta */
@@ -108,11 +110,12 @@ Todos son decorativos y respetan prefers-reduced-motion (ver index.css).
 .splash-logo {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 4px;
 }
 
+/* La "x" aparece despues de la ultima letra */
 .splash-mark {
-  animation: splash-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: splash-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s both;
 }
 
 .splash-word {
@@ -150,7 +153,7 @@ Todos son decorativos y respetan prefers-reduced-motion (ver index.css).
 @keyframes splash-pop {
   from {
     opacity: 0;
-    transform: scale(0.4) rotate(-20deg);
+    transform: scale(0.3) rotate(-35deg);
   }
   to {
     opacity: 1;

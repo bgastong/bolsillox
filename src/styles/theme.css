@@ -5,16 +5,16 @@
     "Segoe UI", sans-serif;
   --font-logo: "Bricolage Grotesque Variable", var(--font-base);
 
-  --color-bg: #09090b;
-  --color-surface: #111113;
-  --color-input: #18181b;
-  --color-elevated: #1f1f23;
-  --color-text: #fafafa;
-  --color-muted: #9b9ba4;
-  --color-border: rgba(255, 255, 255, 0.07);
-  --color-primary: #d4f75c;
-  --color-primary-hover: #c5ec45;
-  --color-primary-text: #0b0d05;
+  --color-bg: #141211;
+  --color-surface: #1b1816;
+  --color-input: #221e1a;
+  --color-elevated: #2a2521;
+  --color-text: #f6ecd9;
+  --color-muted: #b8ad9a;
+  --color-border: rgba(246, 236, 217, 0.12);
+  --color-primary: #ff7a1a;
+  --color-primary-hover: #ff8a33;
+  --color-primary-text: #1a0d03;
   --color-success: #4ade80;
   --color-warning: #fbbf24;
   --color-danger: #f87171;
@@ -32,12 +32,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family: var(--font-base);
-    /* Brillo sutil arriba para dar profundidad */
-    background:
-      radial-gradient(1200px 500px at 70% -10%, rgba(212, 247, 92, 0.06), transparent 60%),
-      radial-gradient(900px 400px at 0% 0%, rgba(139, 111, 232, 0.07), transparent 60%),
-      var(--color-bg);
-    background-attachment: fixed;
+    background: var(--color-bg);
     color: var(--color-text);
   }
 

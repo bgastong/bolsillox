@@ -22,10 +22,10 @@ function NavItem({ to, end, also = [], icon: Icon, label }) {
       aria-current={alsoActive ? "page" : undefined}
       className={({ isActive }) =>
         cn(
-          "flex min-h-14 min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-2xl text-[10.5px] font-medium tracking-[-0.01em] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "flex min-h-14 min-w-0 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-2xl text-[10.5px] tracking-[-0.01em] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ink)]",
           isActive || alsoActive
-            ? "text-foreground"
-            : "text-muted-foreground active:text-foreground",
+            ? "font-extrabold text-[color:var(--ink)]"
+            : "font-semibold text-[#5c5246] active:text-[color:var(--ink)]",
         )
       }
     >
@@ -35,8 +35,8 @@ function NavItem({ to, end, also = [], icon: Icon, label }) {
           <>
             <span
               className={cn(
-                "flex h-8 w-12 items-center justify-center rounded-full transition-colors",
-                isActive && "bg-primary/15 text-primary",
+                "flex h-8 w-13 items-center justify-center rounded-full transition-colors",
+                isActive && "bg-primary text-[color:var(--ink)] shadow-[0_2px_0_var(--primary-deep)]",
               )}
             >
               <Icon className="size-5" aria-hidden="true" />
@@ -50,8 +50,9 @@ function NavItem({ to, end, also = [], icon: Icon, label }) {
 }
 
 /*
-Navegacion inferior para mobile: queda al alcance del pulgar y el boton
-central abre el formulario de nuevo movimiento desde cualquier pantalla.
+Navegacion inferior para mobile: barra crema que contrasta con la app
+oscura, al alcance del pulgar. El boton central abre el formulario de
+nuevo movimiento desde cualquier pantalla.
 */
 function MobileNav() {
   const { t } = useLanguage();
@@ -60,9 +61,9 @@ function MobileNav() {
   return (
     <nav
       aria-label={t("mainNavigation")}
-      className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 rounded-t-3xl bg-[color:var(--cream)] pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_0_var(--primary)] md:hidden"
     >
-      <div className="mx-auto flex max-w-md items-center gap-1 px-2 py-1.5">
+      <div className="mx-auto flex max-w-md items-center gap-1 px-2 pt-2 pb-2">
         <NavItem to="/" end icon={LayoutDashboardIcon} label={t("home")} />
         <NavItem
           to="/history"
@@ -75,7 +76,7 @@ function MobileNav() {
           type="button"
           onClick={openCreate}
           aria-label={t("newMovement")}
-          className="glow-orb glow-orb-strong mx-1 size-14 shrink-0 touch-manipulation outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="mx-1 flex size-14 shrink-0 touch-manipulation items-center justify-center rounded-[18px] bg-[color:var(--ink)] text-primary shadow-[3px_3px_0_var(--primary)] transition-transform outline-none active:translate-x-[2px] active:translate-y-[2px] active:shadow-[1px_1px_0_var(--primary)] focus-visible:ring-2 focus-visible:ring-[color:var(--ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--cream)]"
         >
           <PlusIcon className="size-6" strokeWidth={2.5} aria-hidden="true" />
         </button>
