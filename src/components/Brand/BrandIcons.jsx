@@ -1,12 +1,11 @@
-import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 /*
-Isotipo de bolsillox: cuadrado redondeado lima con la "x" de la marca.
-Es un SVG vectorial, se ve nitido a cualquier tamaño y densidad de pantalla.
+Isotipo de bolsillox: la "x" de la marca como un sticker naranja inclinado,
+con borde crema y sombra solida. Es un SVG vectorial: se ve nitido a
+cualquier tamaño y densidad de pantalla.
 */
 export function BrandMark({ className, title }) {
-  const id = useId();
   return (
     <svg
       viewBox="0 0 32 32"
@@ -15,25 +14,17 @@ export function BrandMark({ className, title }) {
       aria-hidden={title ? undefined : true}
       aria-label={title}
     >
-      <defs>
-        <linearGradient id={`${id}-bg`} x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#e6ff8a" />
-          <stop offset="1" stopColor="#b9e83a" />
-        </linearGradient>
-        <linearGradient id={`${id}-shine`} x1="16" y1="0" x2="16" y2="16" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.45" />
-          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <rect width="32" height="32" rx="9" fill={`url(#${id}-bg)`} />
-      <rect x="0.5" y="0.5" width="31" height="15.5" rx="8.5" fill={`url(#${id}-shine)`} />
-      <path
-        d="M11 11 21 21M21 11 11 21"
-        stroke="#0b0d05"
-        strokeWidth="3.4"
-        strokeLinecap="round"
-        fill="none"
-      />
+      <g transform="rotate(-9 16 16)">
+        <rect x="5.5" y="5.5" width="23" height="23" rx="5" fill="#000" />
+        <rect x="4" y="4" width="23" height="23" rx="5" fill="#ff7a1a" stroke="#f6ecd9" strokeWidth="2" />
+        <path
+          d="M10.5 10.5l10 10M20.5 10.5l-10 10"
+          stroke="#1a0d03"
+          strokeWidth="3.2"
+          strokeLinecap="round"
+          fill="none"
+        />
+      </g>
     </svg>
   );
 }

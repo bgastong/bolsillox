@@ -16,8 +16,8 @@ function shouldShow() {
 }
 
 /*
-Animacion de entrada: el isotipo aparece con un rebote, se escribe
-"bolsillox" y la pantalla se desvanece mostrando la app.
+Animacion de entrada: se escribe "bolsillo", la "x" sticker se pega con
+un rebote y la pantalla se desvanece mostrando la app.
 Es decorativa: queda oculta para lectores de pantalla y no bloquea el foco.
 */
 function Splash() {
@@ -34,17 +34,15 @@ function Splash() {
       }}
     >
       <div className="splash-logo">
-        <BrandMark className="splash-mark size-14" />
         <span className="splash-word font-display font-extrabold tracking-[-0.045em]">
           {"bolsillo".split("").map((letter, index) => (
             <span key={index} style={{ "--i": index }}>
               {letter}
             </span>
           ))}
-          <span className="text-primary" style={{ "--i": 8 }}>
-            x
-          </span>
         </span>
+        {/* La "x" sticker se pega al final */}
+        <BrandMark className="splash-mark size-14" />
       </div>
       <span className="splash-bar" />
     </div>

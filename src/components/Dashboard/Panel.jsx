@@ -5,7 +5,7 @@ function Panel({ title, hint, action, children, className }) {
   return (
     <section
       className={cn(
-        "flex min-w-0 flex-col gap-5 rounded-2xl border bg-card p-5 text-card-foreground sm:p-6",
+        "sticker flex min-w-0 flex-col gap-5 rounded-2xl bg-card p-5 text-card-foreground sm:p-6",
         className,
       )}
     >
