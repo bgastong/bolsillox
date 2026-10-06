@@ -119,7 +119,7 @@ function Recurring() {
         <div className="grid gap-4 transition-opacity" style={{ opacity: loading ? 0.6 : 1 }}>
           <section
             aria-label={t("recurringMonthlyTotal")}
-            className="grid grid-cols-2 gap-3 rounded-2xl border bg-card p-4 sm:p-5"
+            className="sticker grid grid-cols-2 gap-3 rounded-2xl bg-card p-4 sm:p-5"
           >
             <div className="grid gap-1">
               <p className="m-0 text-xs text-muted-foreground">{t("recurringFixedIncome")}</p>

@@ -9,9 +9,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-[0_0_0_1px_rgba(212,247,92,0.2),0_8px_24px_-8px_rgba(212,247,92,0.45)] hover:bg-primary/90",
+        // Pildora naranja con sombra solida (se "aprieta" al tocarla).
+        default:
+          "rounded-full bg-primary font-extrabold tracking-[0.02em] text-primary-foreground uppercase shadow-[0_3px_0_var(--primary-deep)] hover:bg-[#ff8a33] active:not-aria-[haspopup]:translate-y-[2px] active:not-aria-[haspopup]:scale-100 active:not-aria-[haspopup]:shadow-[0_1px_0_var(--primary-deep)]",
         outline:
-          "border-input bg-white/[0.02] hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-input/30",
+          "rounded-full border-2 border-[color:var(--border-strong)] bg-transparent font-bold hover:border-[color:var(--cream)] hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:

@@ -1,15 +1,19 @@
 import { cn } from "@/lib/utils";
 import { BrandMark } from "./BrandIcons";
 
-// Logo completo: isotipo + "bolsillo" con la "x" en el color de marca.
-function Wordmark({ className, markClassName }) {
+// Logo completo: "bolsillo" y la "x" como sticker (el isotipo).
+function Wordmark({ className }) {
   return (
-    <span className={cn("inline-flex items-center gap-2.5 select-none", className)}>
-      <BrandMark className={markClassName} />
-      <span className="inline-flex items-baseline font-display text-[1.45rem] leading-none font-extrabold tracking-[-0.045em] text-foreground">
-        bolsillo
-        <span className="text-primary">x</span>
-      </span>
+    <span
+      className={cn(
+        "inline-flex items-center font-display text-[1.45rem] leading-none font-extrabold tracking-[-0.045em] text-foreground select-none",
+        className,
+      )}
+      aria-label="bolsillox"
+      role="img"
+    >
+      <span aria-hidden="true">bolsillo</span>
+      <BrandMark className="ml-0.5 size-[1.3em]" />
     </span>
   );
 }

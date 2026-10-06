@@ -30,7 +30,7 @@ function Navbar() {
         )}
         {showBrand && (
           <Link to="/" className={styles.brand} aria-label={t("home")}>
-            <Wordmark markClassName="size-7" />
+            <Wordmark />
           </Link>
         )}
       </div>

@@ -19,7 +19,7 @@ export function AuthLayout({ title, subtitle, children, footer }) {
     <div className="relative flex min-h-svh flex-col px-4 pt-[max(16px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
       <div className="bg-grid" aria-hidden="true" />
       <header className="flex items-center justify-between">
-        <Wordmark markClassName="size-7" />
+        <Wordmark />
         <div role="group" aria-label={t("language")} className="flex rounded-lg border p-0.5">
           {LANGUAGES.map((code) => (
             <button
@@ -41,7 +41,7 @@ export function AuthLayout({ title, subtitle, children, footer }) {
 
       <main id="main-content" className="flex flex-1 items-center justify-center py-8">
         <div className="page-enter w-full max-w-sm">
-          <div className="grid gap-6 rounded-3xl border bg-card/90 p-6 shadow-2xl shadow-black/40 sm:p-8">
+          <div className="sticker sticker-hero grid gap-6 rounded-3xl bg-card p-6 sm:p-8">
             <div className="grid gap-1.5">
               <h1 className="m-0 font-display text-2xl font-bold tracking-[-0.03em]">{title}</h1>
               {subtitle && <p className="m-0 text-sm text-muted-foreground">{subtitle}</p>}
