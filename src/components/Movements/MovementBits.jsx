@@ -11,7 +11,7 @@ export function AmountText({ type, amount, currency = "ARS", className }) {
   return (
     <span
       className={cn(
-        "font-semibold tabular-nums whitespace-nowrap",
+        "font-medium tabular-nums whitespace-nowrap",
         type === "income" ? "text-income" : "text-expense",
         className,
       )}
@@ -21,24 +21,20 @@ export function AmountText({ type, amount, currency = "ARS", className }) {
   );
 }
 
-// Icono de la categoria sobre un fondo tintado con su color.
+// Icono de la categoria en una ficha neutra: en este estilo el color se
+// reserva para el dinero (verde entra, rojo sale).
 export function CategoryIcon({ category, className }) {
   const { t } = useLanguage();
-  const { color, icon: Icon } = getCategoryMeta(category);
+  const { icon: Icon } = getCategoryMeta(category);
   return (
     <span
       title={t(`cat_${category}`)}
       className={cn(
-        "inline-flex size-10 shrink-0 items-center justify-center rounded-xl",
+        "inline-flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-white/[0.07] bg-white/[0.04] text-[color:var(--text-2)]",
         className,
       )}
-      style={{
-        color,
-        background: `color-mix(in srgb, ${color} 14%, transparent)`,
-        boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${color} 22%, transparent)`,
-      }}
     >
-      <Icon className="size-[18px]" aria-hidden="true" />
+      <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
     </span>
   );
 }
@@ -54,8 +50,9 @@ export function CategoryBadge({ category, className }) {
         className,
       )}
       style={{
-        color: `color-mix(in srgb, ${color} 85%, white)`,
-        background: `color-mix(in srgb, ${color} 12%, transparent)`,
+        color: "var(--text-2)",
+        background: "rgba(255, 255, 255, 0.04)",
+        boxShadow: "inset 0 0 0 1px rgba(255, 255, 255, 0.07)",
       }}
     >
       <span className="size-1.5 rounded-full" style={{ background: color }} aria-hidden="true" />
@@ -68,7 +65,7 @@ export function PageHeader({ title, subtitle, actions }) {
   return (
     <header className="mb-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="grid gap-1.5">
-        <h1 className="m-0 font-display text-3xl font-bold tracking-[-0.035em] sm:text-4xl">
+        <h1 className="m-0 text-[26px] font-medium tracking-[-0.035em] sm:text-[30px]">
           {title}
         </h1>
         {subtitle && <p className="m-0 text-sm text-muted-foreground">{subtitle}</p>}

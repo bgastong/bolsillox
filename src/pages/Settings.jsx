@@ -28,9 +28,9 @@ const RATE_SOURCES = ["blue", "mep", "oficial"];
 
 function Section({ id, title, description, children }) {
   return (
-    <section aria-labelledby={id} className="sticker grid gap-4 rounded-2xl bg-card p-5 sm:p-6">
+    <section aria-labelledby={id} className="surface grid gap-4 rounded-2xl bg-card p-5 sm:p-6">
       <div className="grid gap-1">
-        <h2 id={id} className="m-0 font-display text-lg font-semibold">
+        <h2 id={id} className="m-0 text-lg font-medium">
           {title}
         </h2>
         {description && <p className="m-0 text-sm text-muted-foreground">{description}</p>}
@@ -142,7 +142,7 @@ function RateSettings() {
               }
               trailing={
                 data && (
-                  <span className="font-display text-base font-semibold tabular-nums">
+                  <span className="text-base font-medium tabular-nums">
                     {formatCurrency(data.sell, locale)}
                   </span>
                 )
@@ -158,7 +158,7 @@ function RateSettings() {
           detail={t("rateManualHint")}
           trailing={
             rates?.manualRate && (
-              <span className="font-display text-base font-semibold tabular-nums">
+              <span className="text-base font-medium tabular-nums">
                 {formatCurrency(rates.manualRate, locale)}
               </span>
             )

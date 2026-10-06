@@ -7,7 +7,8 @@ bolsillox es una aplicacion web para registrar y visualizar tus finanzas persona
 - **Cuentas:** registro e inicio de sesion con email y contraseña o con Google. Sesion en una cookie `httpOnly` (30 dias), contraseñas con scrypt, limite de intentos, proteccion CSRF y opcion de borrar la cuenta con todos sus datos. Las cuentas nuevas arrancan vacias y pueden cargar datos de ejemplo con un boton.
 - **Movimientos (CRUD):** crear, editar y eliminar ingresos y gastos desde un formulario en un dialogo.
 - **Validaciones en front y back:** el mismo schema de [zod](https://zod.dev) (`shared/movementSchema.js`) valida el formulario y la API. Titulo requerido, monto mayor a 0, fecha valida, categoria acorde al tipo y metodo de pago de la lista. Los errores se muestran traducidos.
-- **Dashboard:** saldo acumulado, ingresos y gastos del mes con variacion contra el mes anterior, tasa de ahorro, grafico de ingresos vs. gastos (ultimos 6 meses), gastos por categoria y ultimos movimientos. Se puede navegar entre meses.
+- **Dashboard:** saldo acumulado, ingresos y gastos del mes con variacion contra el mes anterior y tendencia de 6 meses, cuanto se gasto y ahorro de lo que entro, flujo de caja (ultimos 6 meses), gastos por categoria con su variacion, actividad reciente agrupada por dia, presupuestos, proximos vencimientos y cotizacion del dolar. Se puede navegar entre meses.
+- **Buscador (⌘K / Ctrl+K):** busca movimientos, crea uno nuevo o salta a cualquier pantalla con el teclado. `N` abre un movimiento nuevo.
 - **Historial:** busqueda por texto, filtros por tipo, categoria, metodo de pago y rango de fechas, y orden por fecha, monto o titulo. Los filtros quedan en la URL.
 - **Pesos y dolares:** cada movimiento puede ser en ARS o USD. La cotizacion (oficial, blue o MEP) se toma de [dolarapi.com](https://dolarapi.com), se guarda en cache 30 minutos y, si la API no responde, se usa el ultimo valor o una cotizacion manual. Los totales se pueden ver en pesos o en dolares.
 - **Recurrentes:** el sueldo, el alquiler o las suscripciones se cargan una vez ("se repite todos los meses") y se generan solos el dia indicado. Se pueden pausar, editar o darles fecha de fin; si borras un movimiento generado, no se vuelve a crear.
@@ -15,12 +16,12 @@ bolsillox es una aplicacion web para registrar y visualizar tus finanzas persona
 - **Ajustes:** cuenta (cerrar sesion, borrar cuenta), moneda de los totales, fuente de la cotizacion, idioma y enlace al repositorio.
 - **Idiomas:** espanol / ingles (se recuerda la eleccion). Montos en ARS con `Intl.NumberFormat` y fechas segun el idioma.
 - **Pensada para el celular:** navegacion inferior con boton "+" para cargar desde cualquier pantalla, formularios como hoja inferior con botones siempre visibles, areas tactiles de 44px, inputs de 16px (sin zoom en iOS), filas que se tocan enteras para editar y soporte de zonas seguras (notch). Se puede agregar a la pantalla de inicio (manifest).
-- **Accesibilidad:** sin violaciones en axe-core (WCAG 2.1 AA), enlace "saltar al contenido", foco visible, anuncios para lectores de pantalla, tabla alternativa para el grafico, categorias identificadas por color + icono + nombre y respeto de "reducir movimiento".
+- **Accesibilidad:** sin violaciones en axe-core (WCAG 2.1 AA), enlace "saltar al contenido", foco visible, anuncios para lectores de pantalla, tabla alternativa para el grafico, categorias identificadas por icono + nombre, montos con signo (no solo color) y respeto de "reducir movimiento".
 - **Estados de carga, error y vacio** y notificaciones al guardar.
 
 ## Tecnologias
 
-- **Frontend:** React 19, Vite, React Router, Tailwind CSS 4, shadcn/ui (Radix UI), Chart.js, lucide-react. Fuentes Geist y Bricolage Grotesque (empaquetadas con Fontsource).
+- **Frontend:** React 19, Vite, React Router, Tailwind CSS 4, shadcn/ui (Radix UI), Chart.js, lucide-react. Fuentes Geist y Geist Mono (empaquetadas con Fontsource).
 - **Backend:** Node.js, Express 5, Postgres (`pg`; en desarrollo y tests, [PGlite](https://pglite.dev): Postgres embebido, sin instalar nada), zod.
 - **Calidad:** ESLint, tests de la API con `node:test` (contra PGlite y contra Postgres 16 en el CI).
 

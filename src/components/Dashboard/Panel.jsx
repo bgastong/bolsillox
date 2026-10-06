@@ -1,18 +1,19 @@
 import { cn } from "@/lib/utils";
 
 // Contenedor de las secciones del dashboard (graficos, listas).
-function Panel({ title, hint, action, children, className }) {
+function Panel({ title, hint, action, children, className, titleId }) {
   return (
     <section
+      aria-labelledby={titleId}
       className={cn(
-        "sticker flex min-w-0 flex-col gap-5 rounded-2xl bg-card p-5 text-card-foreground sm:p-6",
+        "surface flex min-w-0 flex-col gap-4 rounded-[14px] p-4 text-card-foreground sm:p-[18px]",
         className,
       )}
     >
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex min-h-7 items-start justify-between gap-3">
         <div className="grid gap-0.5">
-          <h2 className="m-0 font-display text-lg font-semibold tracking-[-0.02em]">{title}</h2>
-          {hint && <p className="m-0 text-xs text-muted-foreground">{hint}</p>}
+          <h2 id={titleId} className="m-0 text-[13.5px] font-medium tracking-[-0.01em]">{title}</h2>
+          {hint && <p className="m-0 text-xs text-[color:var(--text-4)]">{hint}</p>}
         </div>
         {action}
       </header>

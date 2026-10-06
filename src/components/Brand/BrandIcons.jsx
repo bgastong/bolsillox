@@ -1,31 +1,39 @@
 import { cn } from "@/lib/utils";
 
 /*
-Isotipo de bolsillox: la "x" de la marca como un sticker naranja inclinado,
-con borde crema y sombra solida. Es un SVG vectorial: se ve nitido a
-cualquier tamaño y densidad de pantalla.
+Isotipo de bolsillox ("Pila"): tres monedas apiladas en capas de luz.
+Usa currentColor, asi sirve sobre fondo claro u oscuro. Es un SVG
+vectorial: se ve nitido a cualquier tamaño y densidad de pantalla.
 */
 export function BrandMark({ className, title }) {
   return (
     <svg
-      viewBox="0 0 32 32"
+      viewBox="0 0 64 64"
+      fill="currentColor"
       className={cn("size-8 shrink-0", className)}
       role={title ? "img" : undefined}
       aria-hidden={title ? undefined : true}
       aria-label={title}
     >
-      <g transform="rotate(-9 16 16)">
-        <rect x="5.5" y="5.5" width="23" height="23" rx="5" fill="#000" />
-        <rect x="4" y="4" width="23" height="23" rx="5" fill="#ff7a1a" stroke="#f6ecd9" strokeWidth="2" />
-        <path
-          d="M10.5 10.5l10 10M20.5 10.5l-10 10"
-          stroke="#1a0d03"
-          strokeWidth="3.2"
-          strokeLinecap="round"
-          fill="none"
-        />
-      </g>
+      <rect x="10" y="40" width="44" height="13" rx="6.5" opacity=".35" />
+      <rect x="14" y="26" width="40" height="13" rx="6.5" opacity=".65" />
+      <rect x="10" y="12" width="44" height="13" rx="6.5" />
     </svg>
+  );
+}
+
+// Isotipo dentro de su "ficha" clara (icono de la app).
+export function BrandTile({ className }) {
+  return (
+    <span
+      className={cn(
+        "inline-grid size-7 shrink-0 place-items-center rounded-[8px] bg-[linear-gradient(180deg,#fff,#b9bec7)] text-[#08090a] shadow-[inset_0_-1px_0_rgba(0,0,0,0.25),0_1px_2px_rgba(0,0,0,0.4)]",
+        className,
+      )}
+      aria-hidden="true"
+    >
+      <BrandMark className="size-[64%]" />
+    </span>
   );
 }
 

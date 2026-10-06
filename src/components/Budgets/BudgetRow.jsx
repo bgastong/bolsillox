@@ -1,7 +1,6 @@
 import { ChevronRightIcon, CircleAlertIcon, CircleCheckIcon, TriangleAlertIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
-import { getCategoryMeta } from "@/lib/categories";
 import { useLanguage } from "@/hooks/useLanguage";
 import { CategoryIcon } from "../Movements/MovementBits";
 
@@ -31,9 +30,8 @@ export function BudgetStatus({ item, className }) {
 
 // Barra de progreso accesible (role="progressbar").
 export function BudgetBar({ item, label }) {
-  const { color } = getCategoryMeta(item.category);
-  const barColor =
-    item.status === "over" ? "var(--destructive)" : item.status === "warning" ? "#fbbf24" : color;
+  const over = item.status === "over";
+  const barColor = item.status === "warning" ? "var(--foreground)" : "var(--text-3)";
   return (
     <div
       role="progressbar"
@@ -42,11 +40,14 @@ export function BudgetBar({ item, label }) {
       aria-valuemax={100}
       aria-valuenow={Math.min(Math.round(item.percent), 100)}
       aria-valuetext={`${Math.round(item.percent)}%`}
-      className="h-2 overflow-hidden rounded-full bg-white/[0.06]"
+      className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]"
     >
       <div
-        className="h-full rounded-full transition-[width] duration-500"
-        style={{ width: `${Math.max(Math.min(item.percent, 100), 2)}%`, background: barColor }}
+        className={cn("grow-x h-full rounded-full transition-[width] duration-500", over && "bar-over")}
+        style={{
+          width: `${Math.max(Math.min(item.percent, 100), 2)}%`,
+          background: over ? undefined : barColor,
+        }}
       />
     </div>
   );
@@ -71,7 +72,7 @@ function BudgetRow({ item, onClick, compact = false }) {
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <BudgetStatus item={item} />
           <span className="text-xs tabular-nums">
-            <span className="font-semibold">{formatCurrency(item.spent, locale)}</span>
+            <span className={item.status === "over" ? "text-expense" : undefined}>{formatCurrency(item.spent, locale)}</span>
             <span className="text-muted-foreground"> / {formatCurrency(item.amount, locale)}</span>
           </span>
         </div>
