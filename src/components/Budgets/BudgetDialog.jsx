@@ -63,7 +63,7 @@ function BudgetForm({ category, current, onDone, onCancel }) {
         <div className="relative">
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-display text-lg font-semibold text-muted-foreground"
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-lg font-medium text-muted-foreground"
           >
             $
           </span>
@@ -82,7 +82,7 @@ function BudgetForm({ category, current, onDone, onCancel }) {
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? "budget-amount-error" : "budget-amount-hint"}
             disabled={saving}
-            className="pl-7 font-display text-lg font-semibold tabular-nums"
+            className="pl-7 text-lg font-medium tabular-nums"
           />
         </div>
         {error ? (

@@ -68,7 +68,7 @@ function HistoryFilters({
   return (
     <section
       aria-label={t("filters")}
-      className="sticker grid gap-3 rounded-2xl bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
+      className="surface grid gap-3 rounded-2xl bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
     >
       <FilterField id="filter-q" label={t("search")} className="sm:col-span-2">
         <div className="flex gap-2">

@@ -1,9 +1,12 @@
 import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import { PlusIcon, SparklesIcon, TriangleAlertIcon } from "lucide-react";
-import SummaryCards, {
-  SummaryCardsSkeleton,
-} from "@/components/Cards/SummaryCards/SummaryCards";
+import { ArrowRightIcon, PlusIcon, SparklesIcon, TriangleAlertIcon } from "lucide-react";
+import {
+  BalanceCard,
+  FlowCard,
+  SummaryHeroSkeleton,
+} from "@/components/Dashboard/SummaryHero";
+import UpcomingPayments from "@/components/Dashboard/UpcomingPayments";
 import BudgetRow from "@/components/Budgets/BudgetRow";
 import DollarRates from "@/components/Dashboard/DollarRates";
 import CategoryBreakdown from "@/components/Dashboard/Charts/CategoryBreakdown";
@@ -11,12 +14,11 @@ import MonthlyChart from "@/components/Dashboard/Charts/MonthlyChart";
 import ExpenseList from "@/components/Dashboard/ExpenseList/ExpenseList";
 import Panel from "@/components/Dashboard/Panel";
 import MonthPicker from "@/components/MonthPicker/MonthPicker";
-import { PageHeader } from "@/components/Movements/MovementBits";
 import { EmptyState, ErrorState } from "@/components/States/States";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { currentMonthKey, formatMonth } from "@/lib/format";
+import { currentMonthKey } from "@/lib/format";
 import { useApiData } from "@/hooks/useApiData";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -54,14 +56,14 @@ function WelcomeCard({ onCreate, onDemoLoaded }) {
   return (
     <section
       aria-labelledby="welcome-title"
-      className="grid gap-4 rounded-2xl border border-primary/25 bg-primary/[0.05] p-5 sm:p-6"
+      className="surface grid gap-4 rounded-[14px] p-5 sm:p-6"
     >
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-foreground">
           <SparklesIcon className="size-5" aria-hidden="true" />
         </span>
         <div className="grid gap-1">
-          <h2 id="welcome-title" className="m-0 font-display text-lg font-semibold tracking-[-0.02em]">
+          <h2 id="welcome-title" className="m-0 text-lg font-medium tracking-[-0.02em]">
             {t("welcomeTitle", { name: user?.name ?? "" })}
           </h2>
           <p className="m-0 text-sm text-muted-foreground">{t("welcomeText")}</p>
@@ -86,14 +88,18 @@ function PanelSkeleton({ className = "h-64" }) {
 
 function PanelLink({ to, children }) {
   return (
-    <Button asChild variant="link" className="-mt-2.5 -mr-3">
-      <Link to={to}>{children}</Link>
-    </Button>
+    <Link
+      to={to}
+      className="-mt-1 -mr-2 inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-[12.5px] text-[color:var(--text-3)] outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {children}
+      <ArrowRightIcon className="size-3.5" aria-hidden="true" />
+    </Link>
   );
 }
 
 function Dashboard() {
-  const { t, locale } = useLanguage();
+  const { t } = useLanguage();
   const [month, setMonth] = useState(currentMonthKey);
   const { openCreate, openEdit, notifyChange, version } = useMovements();
   const { currency, rate } = useSettings();
@@ -121,27 +127,24 @@ function Dashboard() {
   const showSkeleton = loading && !summary;
 
   return (
-    <div className="grid gap-6">
-      <PageHeader
-        title={t("dashboardTitle")}
-        subtitle={t("dashboardSubtitle", { month: formatMonth(month, locale) })}
-        actions={
-          <>
-            <MonthPicker month={month} onChange={setMonth} />
-            <Button onClick={openCreate} className="max-md:hidden">
-              <PlusIcon data-icon="inline-start" />
-              {t("newMovement")}
-            </Button>
-          </>
-        }
-      />
+    <div className="grid gap-4">
+      {/* El titulo queda para lectores de pantalla: arriba ya esta la marca */}
+      <h1 className="sr-only">{t("dashboardTitle")}</h1>
+      <header className="flex items-center justify-between gap-3">
+        <MonthPicker month={month} onChange={setMonth} />
+        <Button onClick={openCreate} className="max-md:hidden">
+          <PlusIcon data-icon="inline-start" />
+          {t("newMovement")}
+          <kbd className="kbd ml-1 border-black/15 bg-transparent text-black/45">N</kbd>
+        </Button>
+      </header>
 
       {isEmptyAccount && <WelcomeCard onCreate={openCreate} onDemoLoaded={notifyChange} />}
 
       {summary?.unconverted > 0 && (
         <p
           role="alert"
-          className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-200"
+          className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-amber-400/25 bg-amber-400/[0.07] px-4 py-3 text-sm text-amber-200"
         >
           <TriangleAlertIcon className="size-4 shrink-0" aria-hidden="true" />
           <span className="flex-1">{t("rateMissingSummary", { count: summary.unconverted })}</span>
@@ -158,71 +161,83 @@ function Dashboard() {
         <DollarRates />
       ) : (
         <div
-          className="grid gap-6 transition-opacity"
+          className="stagger grid gap-3 transition-opacity sm:gap-4 lg:grid-cols-12"
           style={{ opacity: loading && summary ? 0.6 : 1 }}
           aria-busy={loading}
         >
-          {showSkeleton ? <SummaryCardsSkeleton /> : <SummaryCards summary={summary} />}
+          {showSkeleton ? (
+            <SummaryHeroSkeleton />
+          ) : (
+            <>
+              <BalanceCard summary={summary} className="lg:col-span-8" />
+              <FlowCard summary={summary} className="lg:col-span-4" />
+            </>
+          )}
 
-          <DollarRates />
+          <Panel
+            className="order-last lg:order-none lg:col-span-8"
+            title={t("cashflowTitle")}
+            titleId="cashflow-title"
+            hint={t("chartMonthlyHint")}
+            action={
+              <span className="flex gap-3.5 text-xs text-[color:var(--text-3)]" aria-hidden="true">
+                <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded bg-income" />{t("incomes")}</span>
+                <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded bg-expense" />{t("expenses")}</span>
+              </span>
+            }
+          >
+            {showSkeleton ? (
+              <PanelSkeleton className="h-60 sm:h-64" />
+            ) : hasMonthlyData ? (
+              <MonthlyChart data={summary.monthly} currency={summary.currency} />
+            ) : (
+              <EmptyState message={t("chartEmpty")} />
+            )}
+          </Panel>
 
-          {/* En mobile: ultimos movimientos, presupuestos y despues los graficos */}
-          <div className="grid gap-6 lg:grid-cols-5">
+          <Panel
+            className="lg:col-span-4"
+            title={t("chartByCategory")}
+            titleId="categories-title"
+            action={<span className="text-xs text-[color:var(--text-4)]">{t("vsLastMonth")}</span>}
+          >
+            {showSkeleton ? (
+              <PanelSkeleton />
+            ) : summary.byCategory.length ? (
+              <CategoryBreakdown data={summary.byCategory} currency={summary.currency} />
+            ) : (
+              <EmptyState message={t("chartEmpty")} />
+            )}
+          </Panel>
+
+          <Panel
+            className="lg:col-span-8 lg:self-start"
+            title={t("recentMovements")}
+            titleId="recent-title"
+            action={<PanelLink to="/history">{t("viewAll")}</PanelLink>}
+          >
+            {showSkeleton ? (
+              <div className="grid gap-3">
+                {Array.from({ length: 4 }, (_, index) => (
+                  <PanelSkeleton key={index} className="h-12" />
+                ))}
+              </div>
+            ) : summary.recent.length ? (
+              <ExpenseList movements={summary.recent} onEdit={openEdit} />
+            ) : (
+              <EmptyState message={t("emptyMovements")}>
+                <Button size="sm" onClick={openCreate}>
+                  <PlusIcon data-icon="inline-start" />
+                  {t("newMovement")}
+                </Button>
+              </EmptyState>
+            )}
+          </Panel>
+
+          <div className="grid content-start gap-3 sm:gap-4 lg:col-span-4">
             <Panel
-              className="order-4 lg:order-1 lg:col-span-3"
-              title={t("chartMonthly")}
-              hint={t("chartMonthlyHint")}
-            >
-              {showSkeleton ? (
-                <PanelSkeleton className="h-64 sm:h-72" />
-              ) : hasMonthlyData ? (
-                <MonthlyChart data={summary.monthly} currency={summary.currency} />
-              ) : (
-                <EmptyState message={t("chartEmpty")} />
-              )}
-            </Panel>
-
-            <Panel
-              className="order-3 lg:order-2 lg:col-span-2"
-              title={t("chartByCategory")}
-              hint={t("chartByCategoryHint")}
-            >
-              {showSkeleton ? (
-                <PanelSkeleton />
-              ) : summary.byCategory.length ? (
-                <CategoryBreakdown data={summary.byCategory} currency={summary.currency} />
-              ) : (
-                <EmptyState message={t("chartEmpty")} />
-              )}
-            </Panel>
-
-            <Panel
-              className="order-1 lg:order-3 lg:col-span-3"
-              title={t("recentMovements")}
-              action={<PanelLink to="/history">{t("viewAll")}</PanelLink>}
-            >
-              {showSkeleton ? (
-                <div className="grid gap-3">
-                  {Array.from({ length: 4 }, (_, index) => (
-                    <PanelSkeleton key={index} className="h-12" />
-                  ))}
-                </div>
-              ) : summary.recent.length ? (
-                <ExpenseList movements={summary.recent} onEdit={openEdit} />
-              ) : (
-                <EmptyState message={t("emptyMovements")}>
-                  <Button size="sm" onClick={openCreate}>
-                    <PlusIcon data-icon="inline-start" />
-                    {t("newMovement")}
-                  </Button>
-                </EmptyState>
-              )}
-            </Panel>
-
-            <Panel
-              className="order-2 lg:order-4 lg:col-span-2"
               title={t("budgetsTitle")}
-              hint={t("budgetsPanelHint")}
+              titleId="budgets-title"
               action={<PanelLink to="/budgets">{t("viewAll")}</PanelLink>}
             >
               {!budgets ? (
@@ -232,7 +247,7 @@ function Dashboard() {
                   ))}
                 </div>
               ) : budgets.items.length ? (
-                <ul className="m-0 flex list-none flex-col gap-5 p-0">
+                <ul className="m-0 flex list-none flex-col gap-4 p-0">
                   {budgets.items.slice(0, DASHBOARD_BUDGETS).map((item) => (
                     <li key={item.category}>
                       <BudgetRow item={item} compact />
@@ -247,6 +262,10 @@ function Dashboard() {
                 </EmptyState>
               )}
             </Panel>
+
+            <UpcomingPayments />
+
+            <DollarRates />
           </div>
         </div>
       )}

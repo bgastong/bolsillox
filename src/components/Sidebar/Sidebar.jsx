@@ -4,11 +4,13 @@ import {
   LayoutDashboardIcon,
   PiggyBankIcon,
   RepeatIcon,
+  SearchIcon,
   SettingsIcon,
 } from "lucide-react";
 import styles from "./Sidebar.module.css";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useAuth } from "../../hooks/useAuth";
+import { useCommandPalette } from "../../hooks/useCommandPalette";
 import UserAvatar from "../Account/UserAvatar";
 import Wordmark from "../Brand/Wordmark";
 import {
@@ -36,6 +38,8 @@ function AppSidebar() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const { isMobile, setOpenMobile } = useSidebar();
+  const palette = useCommandPalette();
+  const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
 
   // En mobile el sidebar es un sheet: se cierra al navegar.
   function handleNavigate() {
@@ -54,19 +58,28 @@ function AppSidebar() {
             to="/"
             onClick={handleNavigate}
             aria-label={t("home")}
-            className="flex min-h-11 w-fit items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            className={styles.brand}
           >
             <Wordmark />
           </NavLink>
-          <p className={styles.tagline}>{t("appTagline")}</p>
+          <button
+            type="button"
+            className={styles.search}
+            onClick={() => {
+              handleNavigate();
+              palette.open();
+            }}
+          >
+            <SearchIcon aria-hidden="true" />
+            <span>{t("searchOrCreate")}</span>
+            <kbd className="kbd">{isMac ? "⌘K" : "Ctrl K"}</kbd>
+          </button>
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel className={styles.groupLabel}>
-              {t("menu")}
-            </SidebarGroupLabel>
-            <SidebarMenu className="gap-1">
+          <SidebarGroup className="pt-0">
+            <SidebarGroupLabel className="sr-only">{t("menu")}</SidebarGroupLabel>
+            <SidebarMenu className="gap-0.5">
               {NAV_ITEMS.map(({ to, labelKey, icon: Icon, end }) => (
                 <SidebarMenuItem key={to}>
                   <NavLink

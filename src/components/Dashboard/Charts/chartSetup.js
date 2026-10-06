@@ -2,33 +2,50 @@ import {
   BarElement,
   CategoryScale,
   Chart as ChartJS,
+  Filler,
   Legend,
   LinearScale,
+  LineElement,
+  PointElement,
   Tooltip,
 } from "chart.js";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Filler,
+  Tooltip,
+  Legend,
+);
 
 ChartJS.defaults.font.family =
-  '"Geist Variable", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-ChartJS.defaults.color = "#a69c8c";
+  '"Geist Mono Variable", ui-monospace, "Geist Variable", system-ui, sans-serif';
+ChartJS.defaults.font.size = 11;
+ChartJS.defaults.color = "#5d6168";
 
-// Paleta validada para daltonismo contra la superficie de las tarjetas (#1b1816):
-// contraste 5.2:1 (ingresos) y 4.7:1 (gastos).
+// Verde entra, rojo sale (los mismos tonos que los montos).
 export const SERIES_COLORS = {
-  income: "#199e70",
-  expense: "#8b6fe8",
+  income: "#3ecf8e",
+  expense: "#f2555a",
 };
 
-export const GRID_COLOR = "rgba(246, 236, 217, 0.06)";
+export const GRID_COLOR = "rgba(255, 255, 255, 0.055)";
 
 export const tooltipStyle = {
-  backgroundColor: "#221e1a",
-  borderColor: "rgba(246, 236, 217, 0.18)",
-  borderWidth: 2,
-  titleColor: "#f6ecd9",
-  bodyColor: "#d9cfbd",
-  padding: 10,
+  backgroundColor: "rgba(20, 21, 24, 0.96)",
+  borderColor: "rgba(255, 255, 255, 0.1)",
+  borderWidth: 1,
+  titleColor: "#8a8f98",
+  titleFont: { family: '"Geist Variable", system-ui, sans-serif', weight: 400, size: 12 },
+  bodyColor: "#f7f8f8",
+  bodyFont: { family: '"Geist Mono Variable", ui-monospace, monospace', size: 12 },
+  padding: 12,
   cornerRadius: 10,
-  boxPadding: 4,
+  boxPadding: 6,
+  boxWidth: 8,
+  boxHeight: 2,
+  usePointStyle: false,
 };
