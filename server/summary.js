@@ -33,7 +33,7 @@ export async function buildSummary(
   repo,
   userId,
   monthKey,
-  { months = 6, recent = 5, target = "ARS", rate = null } = {},
+  { months = 6, recent = 7, target = "ARS", rate = null } = {},
 ) {
   const money = { target, rate };
   const current = monthRange(monthKey);
@@ -41,21 +41,38 @@ export async function buildSummary(
   const ranges = [];
   for (let offset = months - 1; offset >= 0; offset--) ranges.push(monthRange(monthKey, -offset));
 
-  const [currentTotals, previousTotals, allTime, previousAllTime, byCategory, recentRows, ...series] =
-    await Promise.all([
-      repo.totalsBetween(userId, current.from, current.to, money),
-      repo.totalsBetween(userId, previous.from, previous.to, money),
-      repo.totalsBetween(userId, null, current.to, money),
-      repo.totalsBetween(userId, null, previous.to, money),
-      repo.expensesByCategory(userId, current.from, current.to, money),
-      repo.list(userId, { to: current.to, sort: "date", order: "desc", limit: recent }),
-      ...ranges.map((range) => repo.totalsBetween(userId, range.from, range.to, money)),
-    ]);
+  const [
+    currentTotals,
+    previousTotals,
+    allTime,
+    previousAllTime,
+    currentByCategory,
+    previousByCategory,
+    recentRows,
+    ...series
+  ] = await Promise.all([
+    repo.totalsBetween(userId, current.from, current.to, money),
+    repo.totalsBetween(userId, previous.from, previous.to, money),
+    repo.totalsBetween(userId, null, current.to, money),
+    repo.totalsBetween(userId, null, previous.to, money),
+    repo.expensesByCategory(userId, current.from, current.to, money),
+    repo.expensesByCategory(userId, previous.from, previous.to, money),
+    repo.list(userId, { to: current.to, sort: "date", order: "desc", limit: recent }),
+    ...ranges.map((range) => repo.totalsBetween(userId, range.from, range.to, money)),
+  ]);
 
   const round = (value) => Math.round(value * 100) / 100;
   const balance = round(allTime.income - allTime.expense);
   const previousBalance = round(previousAllTime.income - previousAllTime.expense);
   const net = round(currentTotals.income - currentTotals.expense);
+
+  // Gasto de cada categoria este mes y el anterior (para mostrar la variacion).
+  const previousByKey = new Map(previousByCategory.map((item) => [item.category, item.total]));
+  const byCategory = currentByCategory.map((item) => ({
+    ...item,
+    previous: previousByKey.get(item.category) ?? 0,
+    variation: percentChange(item.total, previousByKey.get(item.category) ?? 0),
+  }));
 
   const monthly = ranges.map((range, index) => ({
     month: range.key,

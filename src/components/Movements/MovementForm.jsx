@@ -228,7 +228,7 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
         <div className="relative">
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 font-display text-lg font-semibold text-muted-foreground sm:text-base"
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-lg font-medium text-muted-foreground sm:text-base"
           >
             {values.currency === "USD" ? "US$" : "$"}
           </span>
@@ -242,7 +242,7 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
             placeholder="0"
             aria-label={`${t("amount")} (${values.currency})`}
             className={cn(
-              "font-display text-lg font-semibold tabular-nums sm:text-base",
+              "text-lg font-medium tabular-nums sm:text-base",
               values.currency === "USD" ? "pl-14" : "pl-7",
             )}
           />

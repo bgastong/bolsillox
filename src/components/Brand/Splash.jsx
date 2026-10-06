@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrandMark } from "./BrandIcons";
+import { BrandTile } from "./BrandIcons";
 
 const SEEN_KEY = "bolsillox.splashSeen";
 
@@ -16,8 +16,8 @@ function shouldShow() {
 }
 
 /*
-Animacion de entrada: se escribe "bolsillo", la "x" sticker se pega con
-un rebote y la pantalla se desvanece mostrando la app.
+Animacion de entrada: aparece la ficha del logo, se escribe "bolsillox"
+y la pantalla se desvanece mostrando la app.
 Es decorativa: queda oculta para lectores de pantalla y no bloquea el foco.
 */
 function Splash() {
@@ -34,15 +34,14 @@ function Splash() {
       }}
     >
       <div className="splash-logo">
-        <span className="splash-word font-display font-extrabold tracking-[-0.045em]">
-          {"bolsillo".split("").map((letter, index) => (
-            <span key={index} style={{ "--i": index }}>
+        <BrandTile className="splash-mark size-12 rounded-[13px]" />
+        <span className="splash-word font-semibold tracking-[-0.045em]">
+          {"bolsillox".split("").map((letter, index) => (
+            <span key={index} style={{ "--i": index, color: index === 8 ? "var(--text-4)" : undefined }}>
               {letter}
             </span>
           ))}
         </span>
-        {/* La "x" sticker se pega al final */}
-        <BrandMark className="splash-mark size-14" />
       </div>
       <span className="splash-bar" />
     </div>
