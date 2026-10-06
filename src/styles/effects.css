@@ -1,56 +1,70 @@
 /*
-Estilo "sticker" (inspirado en react.gg):
-- .bg-grid: grilla sutil en todo el fondo de la app
-- .sticker: tarjeta con borde marcado y sombra solida desplazada
-- .glow-orb: icono circular con borde, en el color --glow
+Estilo "carbón" (inspirado en Linear y Vercel):
+- .bg-glow: luz tenue arriba de todo, fija detras del contenido
+- .surface: tarjeta con borde de 1px, degradado sutil y brillo que sigue al cursor
+- .glow-orb: icono circular con borde (el color del icono es --glow)
 - .wheel: selector tipo ruleta con los extremos difuminados
 Todos respetan prefers-reduced-motion (ver index.css).
 */
 
-/* Titulos de pantallas y secciones: mayusculas y muy gruesos.
-   Fuera de @layer para ganarle a las utilidades de peso (font-semibold). */
-h1,
-h2 {
-  text-transform: uppercase;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-/* Grilla de fondo, fija detras de todo el contenido */
-.bg-grid {
+/* Luz de fondo, fija detras de todo el contenido */
+.bg-glow {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image:
-    linear-gradient(rgba(246, 236, 217, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(246, 236, 217, 0.045) 1px, transparent 1px);
-  background-size: 34px 34px;
-  background-position: -1px -1px;
+  background: radial-gradient(ellipse 60% 420px at 50% -120px, rgba(255, 255, 255, 0.06), transparent 70%);
 }
 
-/* Tarjeta "sticker": borde marcado y sombra solida (sin desenfoque) */
-.sticker {
-  border: 2px solid var(--border-strong);
-  box-shadow: 4px 4px 0 #000;
+/* Tarjeta: borde de 1px, degradado apenas visible y luz interna arriba */
+.surface {
+  position: relative;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.012)), var(--background);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.25s ease;
 }
 
-/* Variante destacada (login y registro): borde crema y sombra naranja */
-.sticker-hero {
-  border-color: var(--cream);
-  box-shadow: 6px 6px 0 var(--primary);
+.surface:hover {
+  border-color: rgba(255, 255, 255, 0.11);
+}
+
+/* Brillo que sigue al cursor (las coordenadas las pone useSurfaceGlow) */
+.surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.04), transparent 60%);
+}
+
+.surface:hover::after {
+  opacity: 1;
+}
+
+/* Variante destacada (login y registro) */
+.surface-hero {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 60px rgba(0, 0, 0, 0.55);
 }
 
 /* Icono circular con borde (el color del icono es --glow) */
 .glow-orb {
-  --glow: var(--primary);
+  --glow: var(--foreground);
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 2px solid var(--border-strong);
-  background: var(--accent);
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--glow);
   transition:
     border-color 0.15s ease,
@@ -58,11 +72,90 @@ h2 {
 }
 
 .glow-orb:hover {
-  border-color: color-mix(in srgb, var(--glow) 55%, transparent);
+  border-color: color-mix(in srgb, var(--glow) 45%, transparent);
 }
 
 .glow-orb:active {
   transform: scale(0.95);
+}
+
+/* Chip de variacion (+4,2%): verde, rojo o neutro */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-2);
+}
+
+.chip-good {
+  background: var(--income-soft);
+  color: var(--income);
+}
+
+.chip-bad {
+  background: var(--expense-soft);
+  color: var(--expense);
+}
+
+/* Teclas (atajos) */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-4);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Barra que se llena de izquierda a derecha al aparecer */
+.grow-x {
+  transform-origin: left;
+  animation: grow-x 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both;
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Presupuesto excedido: barra rayada en rojo */
+.bar-over {
+  background: repeating-linear-gradient(-45deg, var(--expense) 0 4px, #c9393e 4px 8px);
+}
+
+/* Punto "en vivo" que late */
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--income);
+  animation: live-pulse 2.4s infinite;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(62, 207, 142, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(62, 207, 142, 0);
+  }
 }
 
 /* Selector tipo ruleta */
@@ -110,17 +203,17 @@ h2 {
 .splash-logo {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 14px;
 }
 
-/* La "x" aparece despues de la ultima letra */
+/* La ficha del logo aparece primero, con un leve rebote */
 .splash-mark {
-  animation: splash-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s both;
+  animation: splash-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s both;
 }
 
 .splash-word {
   display: inline-flex;
-  font-size: 2.6rem;
+  font-size: 2.4rem;
   line-height: 1;
   color: var(--foreground);
 }
@@ -135,7 +228,7 @@ h2 {
   width: 120px;
   height: 3px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
   position: relative;
 }
@@ -153,7 +246,7 @@ h2 {
 @keyframes splash-pop {
   from {
     opacity: 0;
-    transform: scale(0.3) rotate(-35deg);
+    transform: scale(0.6) translateY(6px);
   }
   to {
     opacity: 1;
@@ -221,5 +314,20 @@ h2 {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Linea que se dibuja sola (sparklines: usar pathLength="1") */
+.draw-line {
+  stroke-dasharray: 1;
+  animation: draw-line 1.3s cubic-bezier(0.2, 0.7, 0.2, 1) 0.25s both;
+}
+
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
   }
 }

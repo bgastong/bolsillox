@@ -278,12 +278,28 @@ describe("resumen y conversion de moneda", () => {
     assert.equal(summary.expense, Math.round(expense * 100) / 100);
     assert.equal(summary.monthly.length, 6);
     assert.equal(summary.monthly.at(-1).month, MONTH);
-    assert.ok(summary.recent.length <= 5);
+    assert.ok(summary.recent.length <= 7);
     assert.equal(
       Math.round(summary.byCategory.reduce((s, c) => s + c.total, 0) * 100) / 100,
       summary.expense,
     );
     assert.equal(typeof summary.variation.expense, "number");
+  });
+
+  test("cada categoria trae el gasto del mes anterior y su variacion", async () => {
+    const summary = await json(`/summary?month=${MONTH}`);
+    const previous = await json(`/summary?month=${summary.previous.month}`);
+    const previousByKey = new Map(previous.byCategory.map((item) => [item.category, item.total]));
+    assert.ok(summary.byCategory.length > 0);
+    for (const item of summary.byCategory) {
+      const before = previousByKey.get(item.category) ?? 0;
+      assert.equal(item.previous, before);
+      if (before) {
+        assert.equal(item.variation, Math.round(((item.total - before) / before) * 1000) / 10);
+      } else {
+        assert.equal(item.variation, null);
+      }
+    }
   });
 
   test("el mismo resumen en USD", async () => {

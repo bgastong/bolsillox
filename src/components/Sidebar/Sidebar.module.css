@@ -9,29 +9,81 @@
 }
 
 .header {
-  gap: 6px;
-  padding: 22px 20px 12px;
+  gap: 10px;
+  padding: 12px 10px 6px;
 }
 
-.tagline {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 0.8rem;
+.brand {
+  display: flex;
+  min-height: 40px;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: 8px;
+  outline: none;
+  transition: background-color 0.15s ease;
 }
 
-.groupLabel {
-  padding: 0 12px;
-  color: #8f8f99;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+.brand:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.brand:focus-visible {
+  box-shadow: 0 0 0 2px var(--sidebar-ring);
+}
+
+/* Boton que abre el buscador (⌘K) */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 34px;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--sidebar-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-4);
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.search:hover {
+  border-color: rgba(255, 255, 255, 0.11);
+  color: var(--text-3);
+}
+
+.search:focus-visible {
+  box-shadow: 0 0 0 2px var(--sidebar-ring);
+}
+
+.search svg {
+  width: 15px;
+  height: 15px;
+}
+
+.search kbd {
+  margin-left: auto;
 }
 
 .menuButton {
   position: relative;
-  height: 40px;
-  padding: 0 12px;
-  font-size: 0.9rem;
-  color: var(--muted-foreground);
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: 0.875rem;
+  color: var(--text-3);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.menuButton svg {
+  width: 16px;
+  height: 16px;
 }
 
 .menuButton:hover {
@@ -40,22 +92,19 @@
 
 .menuButton[data-active="true"] {
   color: var(--sidebar-accent-foreground);
+  font-weight: 400;
 }
 
-/* Indicador lima del item activo */
+/* Indicador del item activo: una linea blanca a la izquierda */
 .menuButton[data-active="true"]::before {
   content: "";
   position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 3px;
-  border-radius: 999px;
+  left: -8px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
   background: var(--sidebar-primary);
-}
-
-.menuButton[data-active="true"] svg {
-  color: var(--sidebar-primary);
 }
 
 /* Usuario con sesion iniciada (lleva a Ajustes) */
@@ -66,8 +115,8 @@
   margin: 4px;
   padding: 10px;
   border: 1px solid var(--sidebar-border);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.015);
   outline: none;
   transition:
     background-color 0.15s ease,
@@ -75,8 +124,8 @@
 }
 
 .footerCard:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .footerCard:focus-visible {
@@ -91,16 +140,16 @@
 
 .footerName {
   overflow: hidden;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.83rem;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .footerText {
   overflow: hidden;
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
+  color: var(--text-4);
+  font-size: 0.73rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

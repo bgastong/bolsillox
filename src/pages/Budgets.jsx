@@ -57,7 +57,7 @@ function Budgets() {
           {data.items.length > 0 && (
             <section
               aria-label={t("budgetsTotal")}
-              className="sticker grid gap-3 rounded-2xl bg-card p-5"
+              className="surface grid gap-3 rounded-2xl bg-card p-5"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="m-0 text-sm text-muted-foreground">{t("budgetsTotal")}</p>
@@ -65,7 +65,7 @@ function Budgets() {
                   {Math.round(data.totals.percent)}%
                 </p>
               </div>
-              <p className="m-0 font-display text-2xl font-bold tracking-[-0.03em] tabular-nums sm:text-3xl">
+              <p className="m-0 text-2xl font-medium tracking-[-0.03em] tabular-nums sm:text-3xl">
                 {formatCurrency(data.totals.spent, locale)}
                 <span className="text-base font-medium text-muted-foreground">
                   {" "}
@@ -94,7 +94,7 @@ function Budgets() {
           )}
 
           <section aria-labelledby="budgets-active" className="grid gap-3">
-            <h2 id="budgets-active" className="m-0 font-display text-lg font-semibold">
+            <h2 id="budgets-active" className="m-0 text-lg font-medium">
               {t("budgetsActive")}
             </h2>
             {data.items.length ? (
@@ -116,7 +116,7 @@ function Budgets() {
           {unbudgeted.length > 0 && (
             <section aria-labelledby="budgets-add" className="grid gap-3">
               <div className="grid gap-1">
-                <h2 id="budgets-add" className="m-0 font-display text-lg font-semibold">
+                <h2 id="budgets-add" className="m-0 text-lg font-medium">
                   {t("budgetsAdd")}
                 </h2>
                 <p className="m-0 text-sm text-muted-foreground">{t("budgetsAddHint")}</p>
