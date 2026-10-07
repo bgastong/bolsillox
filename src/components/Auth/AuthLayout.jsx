@@ -1,6 +1,6 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Link } from "react-router-dom";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
 import Wordmark from "@/components/Brand/Wordmark";
 import { GoogleIcon } from "@/components/Brand/BrandIcons";
 import { ThemeToggle } from "@/components/Theme/ThemeControls";
@@ -78,31 +78,59 @@ export function AuthLayout({ title, subtitle, children, footer }) {
   );
 }
 
-// Boton de Google + separador "o". Solo aparece si el servidor tiene Google configurado.
+// Separador "o" + boton de Google, debajo del formulario. Solo aparece si el
+// servidor tiene Google configurado.
 export function GoogleButton() {
   const { t } = useLanguage();
   const { config } = useAuth();
+  const [connecting, setConnecting] = useState(false);
+
+  // Si se vuelve atras desde Google, el navegador restaura la pagina tal cual
+  // (bfcache): sin esto quedaria "Conectando..." para siempre.
+  useEffect(() => {
+    const reset = (event) => event.persisted && setConnecting(false);
+    window.addEventListener("pageshow", reset);
+    return () => window.removeEventListener("pageshow", reset);
+  }, []);
 
   if (!config.google) return null;
 
   return (
-    <>
-      <a
-        href={api.googleLoginUrl}
-        className="inline-flex h-12 w-full touch-manipulation items-center justify-center gap-3 rounded-xl border border-input bg-white text-[15px] font-medium text-zinc-900 transition-colors outline-none hover:bg-zinc-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:h-11 sm:text-sm"
-      >
-        <GoogleIcon />
-        {t("continueWithGoogle")}
-      </a>
-      <p className="-mt-3 m-0 text-center text-xs leading-relaxed text-muted-foreground">
-        {t("googleTermsPrefix")} <LegalLinks />.
-      </p>
+    <div className="grid gap-3">
       <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
         <span className="h-px flex-1 bg-border" />
-        {t("orWithEmail")}
+        {t("or")}
         <span className="h-px flex-1 bg-border" />
       </div>
-    </>
+      <a
+        href={api.googleLoginUrl}
+        aria-busy={connecting || undefined}
+        onClick={(event) => {
+          if (connecting) {
+            event.preventDefault();
+            return;
+          }
+          setConnecting(true);
+        }}
+        className={cn(
+          "group inline-flex h-12 w-full touch-manipulation items-center justify-center gap-3 rounded-xl border border-fg/12 bg-fg/[0.03] text-[15px] font-medium text-foreground shadow-[inset_0_1px_0_rgb(var(--fg-rgb)/0.04)] transition-[background-color,border-color,transform] duration-150 outline-none select-none hover:border-fg/20 hover:bg-fg/[0.07] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.99] sm:h-11 sm:text-sm",
+          connecting && "cursor-progress text-muted-foreground",
+        )}
+      >
+        {/* El logo va en un circulo blanco: se ve igual en el tema claro y en el oscuro. */}
+        <span className="flex size-6 items-center justify-center rounded-full bg-white shadow-[0_0_0_1px_rgb(0_0_0/0.06)] transition-transform duration-200 group-hover:scale-105">
+          {connecting ? (
+            <Loader2Icon className="size-3.5 animate-spin text-zinc-500" aria-hidden="true" />
+          ) : (
+            <GoogleIcon className="size-3.5" />
+          )}
+        </span>
+        {connecting ? t("connectingGoogle") : t("continueWithGoogle")}
+      </a>
+      <p className="m-0 text-center text-xs leading-relaxed text-[color:var(--text-4)]">
+        {t("googleTermsPrefix")} <LegalLinks subtle />.
+      </p>
+    </div>
   );
 }
 
@@ -158,7 +186,7 @@ export function FormAlert({ children }) {
   return (
     <p
       role="alert"
-      className="m-0 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-red-200"
+      className="m-0 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
     >
       {children}
     </p>
