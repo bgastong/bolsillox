@@ -25,6 +25,7 @@ const Budgets = lazy(pages.budgets);
 const Settings = lazy(pages.settings);
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Login = lazy(() => import("./pages/Login"));
+const Landing = lazy(() => import("./pages/Landing"));
 const Register = lazy(() => import("./pages/Register"));
 
 function prefetchPages() {
@@ -76,6 +77,14 @@ function RequireAuth({ children }) {
   const location = useLocation();
   if (status === "loading") return <FullScreenLoader />;
   if (status === "guest") {
+    // Sin sesion, la raiz muestra la pagina de inicio (con botones para entrar).
+    if (location.pathname === "/") {
+      return (
+        <Suspense fallback={<FullScreenLoader />}>
+          <Landing />
+        </Suspense>
+      );
+    }
     // Si la sesion vencio, despues del login vuelve a la pantalla donde estaba.
     return <Navigate to="/login" replace state={loggedOut ? undefined : { from: location }} />;
   }
