@@ -11,7 +11,7 @@ const buttonVariants = cva(
       variant: {
         // Blanco sobre negro, con un leve brillo interno.
         default:
-          "bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_8px_rgba(0,0,0,0.4)] hover:bg-white",
+          "bg-primary text-primary-foreground shadow-[var(--button-shadow)] hover:bg-primary/90",
         outline:
           "border-[color:var(--border-strong)] bg-fg/[0.03] text-[color:var(--text-2)] hover:border-fg/20 hover:bg-fg/[0.07] hover:text-foreground aria-expanded:bg-fg/[0.07] aria-expanded:text-foreground",
         secondary:

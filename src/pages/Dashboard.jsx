@@ -174,7 +174,7 @@ function Dashboard() {
         <Button onClick={openCreate} className="max-md:hidden">
           <PlusIcon data-icon="inline-start" />
           {t("newMovement")}
-          <kbd className="kbd ml-1 border-black/15 bg-transparent text-black/45">N</kbd>
+          <kbd className="kbd ml-1 border-current bg-transparent text-current opacity-45">N</kbd>
         </Button>
       </header>
 
