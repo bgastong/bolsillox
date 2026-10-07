@@ -26,6 +26,10 @@ const Settings = lazy(pages.settings);
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Login = lazy(() => import("./pages/Login"));
 const Landing = lazy(() => import("./pages/Landing"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
 const Register = lazy(() => import("./pages/Register"));
 
 function prefetchPages() {
@@ -131,6 +135,11 @@ function App() {
       <Routes>
         <Route path="/login" element={<GuestOnly><Login /></GuestOnly>} />
         <Route path="/register" element={<GuestOnly><Register /></GuestOnly>} />
+        <Route path="/verificar" element={<GuestOnly><VerifyEmail /></GuestOnly>} />
+        <Route path="/recuperar" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
+        {/* Paginas legales: con o sin sesion */}
+        <Route path="/terminos" element={<Suspense fallback={<FullScreenLoader />}><Terms /></Suspense>} />
+        <Route path="/privacidad" element={<Suspense fallback={<FullScreenLoader />}><Privacy /></Suspense>} />
         <Route path="*" element={<RequireAuth><AppShell /></RequireAuth>} />
       </Routes>
     </BrowserRouter>

@@ -72,6 +72,31 @@ Después del nuevo deploy aparece el botón **Continuar con Google** en el login
 
 Para probarlo en tu compu, poné las mismas dos variables en tu `.env` y corré `npm run dev`.
 
+## 5. Emails con código (verificación y recuperar contraseña)
+
+Al crear una cuenta, bolsillox manda un código de 6 dígitos para confirmar el email. Lo mismo pasa con "¿Olvidaste tu contraseña?" y al cambiar el email. Los emails salen por **Resend**: el plan gratis alcanza (3.000 emails por mes) y funciona en el plan gratis de Render, que no permite enviar por SMTP.
+
+1. Creá una cuenta en [resend.com](https://resend.com).
+2. En **API Keys**, creá una clave con permiso **Sending access** y copiala. Empieza con `re_`.
+3. En Render, en **Environment**, agregá **RESEND_API_KEY** con esa clave.
+4. Para mandar desde tu propio dominio, por ejemplo `hola@tudominio.com`:
+   - En Resend, entrá a **Domains**, agregá tu dominio y cargá en tu proveedor de dominio los registros DNS que te indica.
+   - Cuando aparezca como verificado, agregá en Render **EMAIL_FROM** con el remitente. Por ejemplo: `bolsillox <hola@tudominio.com>`.
+
+   Sin dominio propio, Resend solo deja mandar emails de prueba a tu propia dirección. Sirve para probar, pero no para usuarios reales.
+
+Sin `RESEND_API_KEY` la app sigue funcionando: las cuentas nuevas entran sin código y "¿Olvidaste tu contraseña?" no aparece. En tu compu, sin la clave, el código se muestra en la terminal de `npm run dev`.
+
+Las cuentas creadas antes de activar esto no tienen que confirmar nada.
+
+## 6. Términos y privacidad
+
+Los textos están en `src/lib/legalContent.js`. Antes de publicar:
+
+1. Completá tus datos en `OWNER`: nombre o razón social, CUIT/CUIL, domicilio, email de contacto y ciudad.
+2. Hacelos revisar por un abogado.
+3. Si después cambiás los textos, actualizá la fecha en `shared/legal.js`. Cada persona queda registrada con la versión que aceptó.
+
 ## Problemas comunes
 
 | Qué pasa | Qué revisar |
@@ -82,3 +107,4 @@ Para probarlo en tu compu, poné las mismas dos variables en tu `.env` y corré 
 | Google dice `redirect_uri_mismatch` | Que la URI cargada en Google sea exactamente `PUBLIC_URL` + `/api/auth/google/callback`. |
 | Google vuelve al login con un error | Que `PUBLIC_URL` esté completa y que la app de Google esté publicada (o tu email agregado como usuario de prueba). |
 | No aparece el botón de Google | Que estén cargadas las dos variables `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`. |
+| No llegan los códigos por email | Que `RESEND_API_KEY` esté cargada y que el dominio de `EMAIL_FROM` esté verificado en Resend. Revisá los logs de Render: ahí aparece el error de Resend. También fijate en spam. |

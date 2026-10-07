@@ -4,7 +4,7 @@ bolsillox es una aplicacion web para registrar y visualizar tus finanzas persona
 
 ## Funcionalidades
 
-- **Cuentas:** registro e inicio de sesion con email y contraseña o con Google. Sesion en una cookie `httpOnly` (30 dias), contraseñas con scrypt, limite de intentos, proteccion CSRF y opcion de borrar la cuenta con todos sus datos. Las cuentas nuevas arrancan vacias y pueden cargar datos de ejemplo con un boton.
+- **Cuentas:** registro e inicio de sesion con email y contraseña o con Google. Al registrarse se confirma el email con un codigo de 6 digitos (Resend); con un codigo tambien se recupera la contraseña y se cambia el email. Desde Ajustes se pueden cambiar nombre, email y contraseña. Sesion en una cookie `httpOnly` (30 dias), contraseñas con scrypt, limite de intentos, proteccion CSRF y opcion de borrar la cuenta con todos sus datos. Las cuentas nuevas arrancan vacias y pueden cargar datos de ejemplo con un boton.
 - **Movimientos (CRUD):** crear, editar y eliminar ingresos y gastos desde un formulario en un dialogo.
 - **Validaciones en front y back:** el mismo schema de [zod](https://zod.dev) (`shared/movementSchema.js`) valida el formulario y la API. Titulo requerido, monto mayor a 0, fecha valida, categoria acorde al tipo y metodo de pago de la lista. Los errores se muestran traducidos.
 - **Dashboard:** saldo acumulado, ingresos y gastos del mes con variacion contra el mes anterior y tendencia de 6 meses, cuanto se gasto y ahorro de lo que entro, flujo de caja (ultimos 6 meses), gastos por categoria con su variacion, actividad reciente agrupada por dia, presupuestos, proximos vencimientos y cotizacion del dolar. Se puede navegar entre meses.
@@ -17,6 +17,7 @@ bolsillox es una aplicacion web para registrar y visualizar tus finanzas persona
 - **Idiomas:** espanol / ingles (se recuerda la eleccion). Montos en ARS con `Intl.NumberFormat` y fechas segun el idioma.
 - **Pensada para el celular:** navegacion inferior con boton "+" para cargar desde cualquier pantalla, formularios como hoja inferior con botones siempre visibles, areas tactiles de 44px, inputs de 16px (sin zoom en iOS), filas que se tocan enteras para editar y soporte de zonas seguras (notch). Se puede agregar a la pantalla de inicio (manifest).
 - **Accesibilidad:** sin violaciones en axe-core (WCAG 2.1 AA), enlace "saltar al contenido", foco visible, anuncios para lectores de pantalla, tabla alternativa para el grafico, categorias identificadas por icono + nombre, montos con signo (no solo color) y respeto de "reducir movimiento".
+- **Legal:** Terminos y condiciones y Politica de privacidad (Ley 25.326), aceptacion obligatoria al registrarse con fecha y version guardadas.
 - **Estados de carga, error y vacio** y notificaciones al guardar.
 
 ## Tecnologias

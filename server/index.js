@@ -3,6 +3,7 @@ import { createApp } from "./app.js";
 import { createAuthService } from "./auth.js";
 import { openDatabase, seedUser } from "./db.js";
 import { googleConfigFromEnv } from "./google.js";
+import { mailerFromEnv } from "./mailer.js";
 import { sql } from "./sql.js";
 
 /*
@@ -12,6 +13,8 @@ Variables de entorno (ver DEPLOY.md):
 - PGLITE_DIR: otra carpeta para PGlite.
 - GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET: activan "Continuar con Google".
 - PUBLIC_URL: URL publica (por ejemplo https://bolsillox.onrender.com).
+- RESEND_API_KEY / EMAIL_FROM: envio de codigos por email (verificacion y
+  recuperar contraseña). En desarrollo, sin clave, el codigo sale por consola.
 - NODE_ENV=production o --production: sirve el build y usa cookies seguras.
 */
 const PORT = Number(process.env.PORT) || 3001;
@@ -40,6 +43,7 @@ const app = createApp(db, {
   trustProxy: isProduction,
   google: googleConfigFromEnv(),
   publicUrl: process.env.PUBLIC_URL?.replace(/\/$/, "") || null,
+  mailer: mailerFromEnv({ isProduction }),
 });
 
 const server = app.listen(PORT, () => {
