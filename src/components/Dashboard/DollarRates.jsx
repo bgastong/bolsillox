@@ -18,11 +18,11 @@ function RateRow({ label, sell, buy, active }) {
   const { t, locale } = useLanguage();
 
   return (
-    <li className="flex min-h-11 items-center justify-between gap-3 border-t border-white/[0.065] py-2 first:border-t-0">
+    <li className="flex min-h-11 items-center justify-between gap-3 border-t border-fg/[0.065] py-2 first:border-t-0">
       <span className="flex items-center gap-2 text-sm">
         {label}
         {active && (
-          <span className="rounded-[5px] border border-white/10 px-1.5 py-px text-[10.5px] text-[color:var(--text-3)]">
+          <span className="rounded-[5px] border border-fg/10 px-1.5 py-px text-[10.5px] text-[color:var(--text-3)]">
             {t("rateInUseShort")}
           </span>
         )}
@@ -92,7 +92,7 @@ function DollarRates({ className }) {
           ))}
         </ul>
       ) : (
-        <p className="m-0 flex items-center gap-2 text-sm text-amber-200">
+        <p className="m-0 flex items-center gap-2 text-sm text-warn-strong">
           <TriangleAlertIcon className="size-4 shrink-0" aria-hidden="true" />
           {t("rateUnavailableShort")}
         </p>

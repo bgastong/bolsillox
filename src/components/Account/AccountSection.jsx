@@ -134,7 +134,7 @@ function AccountSection({ Section }) {
           {t(user.hasPassword ? "changePasswordTitle" : "setPasswordTitle")}
         </Button>
       </div>
-      <div className="flex flex-col gap-2 border-t border-white/[0.06] pt-4 sm:flex-row">
+      <div className="flex flex-col gap-2 border-t border-fg/[0.06] pt-4 sm:flex-row">
         <Button variant="outline" onClick={logout} className="h-11 sm:h-9">
           <LogOutIcon data-icon="inline-start" />
           {t("logout")}

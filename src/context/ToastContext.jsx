@@ -10,7 +10,7 @@ const WARNING_DURATION_MS = 6000;
 const VARIANTS = {
   success: { icon: CircleCheckIcon, className: "text-income" },
   error: { icon: CircleAlertIcon, className: "text-destructive" },
-  warning: { icon: TriangleAlertIcon, className: "text-amber-400" },
+  warning: { icon: TriangleAlertIcon, className: "text-warn" },
 };
 
 /*

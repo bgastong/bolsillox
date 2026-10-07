@@ -120,7 +120,7 @@ function HistoryFilters({
       <div
         role="radiogroup"
         aria-label={t("type")}
-        className="grid grid-cols-3 gap-1 rounded-xl bg-white/[0.04] p-1 sm:hidden"
+        className="grid grid-cols-3 gap-1 rounded-xl bg-fg/[0.04] p-1 sm:hidden"
       >
         {[
           { value: "", label: t("all") },

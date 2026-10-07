@@ -4,17 +4,20 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import {
   HistoryIcon,
   LayoutDashboardIcon,
+  MoonIcon,
   PiggyBankIcon,
   PlusIcon,
   RepeatIcon,
   SearchIcon,
   SettingsIcon,
+  SunIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMovements } from "@/hooks/useMovements";
+import { useTheme } from "@/hooks/useTheme";
 import { CommandPaletteContext } from "@/context/CommandPaletteValue";
 import { AmountText, CategoryIcon } from "../Movements/MovementBits";
 
@@ -65,6 +68,7 @@ function CommandPalette({ children }) {
   const { t, locale } = useLanguage();
   const navigate = useNavigate();
   const { openCreate, openCreateRecurring, openEdit } = useMovements();
+  const { resolvedTheme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -115,6 +119,9 @@ function CommandPalette({ children }) {
     const actions = [
       { id: "new", label: t("cmdNewMovement"), icon: PlusIcon, run: openCreate, hint: "N" },
       { id: "new-recurring", label: t("cmdNewRecurring"), icon: RepeatIcon, run: openCreateRecurring },
+      resolvedTheme === "dark"
+        ? { id: "theme", label: t("themeToLight"), icon: SunIcon, run: () => setTheme("light") }
+        : { id: "theme", label: t("themeToDark"), icon: MoonIcon, run: () => setTheme("dark") },
     ].filter((item) => match(item.label));
     const pages = PAGES.map((page) => ({
       id: page.to,
@@ -133,7 +140,7 @@ function CommandPalette({ children }) {
       { title: t("cmdMovements"), items: found },
       { title: t("cmdGoTo"), items: pages },
     ].filter((group) => group.items.length);
-  }, [query, movements, t, navigate, openCreate, openCreateRecurring, openEdit]);
+  }, [query, movements, t, navigate, openCreate, openCreateRecurring, openEdit, resolvedTheme, setTheme]);
 
   const flat = groups.flatMap((group) => group.items);
   const current = Math.min(active, Math.max(flat.length - 1, 0));
@@ -169,10 +176,10 @@ function CommandPalette({ children }) {
           <DialogPrimitive.Content
             aria-describedby={undefined}
             onKeyDown={handleKeyDown}
-            className="fixed top-[12svh] left-1/2 z-50 w-[min(620px,calc(100vw-24px))] -translate-x-1/2 overflow-hidden rounded-2xl border border-white/10 bg-[rgba(18,19,21,0.97)] shadow-[0_24px_80px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.98] data-open:slide-in-from-top-2 data-closed:animate-out data-closed:fade-out-0"
+            className="fixed top-[12svh] left-1/2 z-50 w-[min(620px,calc(100vw-24px))] -translate-x-1/2 overflow-hidden rounded-2xl border border-fg/10 bg-[color:var(--elevated)] shadow-[var(--hero-shadow)] outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.98] data-open:slide-in-from-top-2 data-closed:animate-out data-closed:fade-out-0"
           >
             <DialogPrimitive.Title className="sr-only">{t("cmdLabel")}</DialogPrimitive.Title>
-            <div className="flex h-14 items-center gap-3 border-b border-white/[0.07] px-4">
+            <div className="flex h-14 items-center gap-3 border-b border-fg/[0.07] px-4">
               <SearchIcon className="size-4 shrink-0 text-[color:var(--text-3)]" aria-hidden="true" />
               <input
                 autoFocus
@@ -215,7 +222,7 @@ function CommandPalette({ children }) {
                         onClick={() => choose(item)}
                         className={cn(
                           "mx-1.5 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2.5 text-sm text-[color:var(--text-2)]",
-                          selected && "bg-white/[0.06] text-foreground",
+                          selected && "bg-fg/[0.06] text-foreground",
                         )}
                       >
                         {item.movement ? (
@@ -248,7 +255,7 @@ function CommandPalette({ children }) {
               ))}
             </div>
 
-            <div className="flex gap-4 border-t border-white/[0.07] px-4 py-2.5 text-[11.5px] text-[color:var(--text-4)] max-sm:hidden">
+            <div className="flex gap-4 border-t border-fg/[0.07] px-4 py-2.5 text-[11.5px] text-[color:var(--text-4)] max-sm:hidden">
               <span className="flex items-center gap-1.5"><kbd className="kbd">↑</kbd><kbd className="kbd">↓</kbd>{t("cmdNavigate")}</span>
               <span className="flex items-center gap-1.5"><kbd className="kbd">↵</kbd>{t("cmdSelect")}</span>
               <span className="flex items-center gap-1.5"><kbd className="kbd">esc</kbd>{t("cmdClose")}</span>

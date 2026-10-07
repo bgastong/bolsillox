@@ -68,7 +68,7 @@ function ExpenseList({ movements, onEdit }) {
                   type="button"
                   onClick={() => onEdit(movement)}
                   aria-label={movementLabel(movement, t, locale)}
-                  className="group flex min-h-14 w-full touch-manipulation items-center gap-3 rounded-[10px] px-2 py-2 text-left transition-colors outline-none hover:bg-white/[0.035] focus-visible:ring-2 focus-visible:ring-ring active:bg-white/[0.05]"
+                  className="group flex min-h-14 w-full touch-manipulation items-center gap-3 rounded-[10px] px-2 py-2 text-left transition-colors outline-none hover:bg-fg/[0.035] focus-visible:ring-2 focus-visible:ring-ring active:bg-fg/[0.05]"
                 >
                   <CategoryIcon category={movement.category} />
                   <div className="min-w-0 flex-1">
@@ -81,7 +81,7 @@ function ExpenseList({ movements, onEdit }) {
                     </p>
                   </div>
                   {movement.paymentMethod && (
-                    <span className="hidden shrink-0 rounded-md border border-white/[0.07] px-1.5 py-0.5 text-[11.5px] text-[color:var(--text-3)] sm:inline">
+                    <span className="hidden shrink-0 rounded-md border border-fg/[0.07] px-1.5 py-0.5 text-[11.5px] text-[color:var(--text-3)] sm:inline">
                       {t(`pm_${movement.paymentMethod}`)}
                     </span>
                   )}
