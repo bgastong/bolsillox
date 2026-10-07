@@ -33,7 +33,8 @@ export function useAuthForm({ schema, initialValues, onSubmit, initialFormError 
       value: values[name],
       error: errors[name],
       onChange(event) {
-        const nextValues = { ...values, [name]: event.target.value };
+        const { type, checked, value } = event.target;
+        const nextValues = { ...values, [name]: type === "checkbox" ? checked : value };
         setValues(nextValues);
         // Si el campo tenia error, se revalida en vivo para sacarlo al corregirlo.
         if (errors[name]) setErrors((prev) => ({ ...prev, [name]: fieldErrors(nextValues)[name] }));

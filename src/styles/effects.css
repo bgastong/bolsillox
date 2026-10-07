@@ -461,3 +461,23 @@ Todos respetan prefers-reduced-motion (ver index.css).
     opacity: 0;
   }
 }
+
+/* "+$ ..." que sube y se desvanece en el saldo en vivo de la pagina de inicio */
+.live-increment {
+  animation: live-increment 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes live-increment {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  20% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
