@@ -34,7 +34,7 @@ function hostOf(url) {
 options:
 - serveStatic: sirve el build de Vite (produccion).
 - secureCookies: cookies solo por HTTPS (produccion).
-- trustProxy: detras de un proxy (Render) para leer la IP y el protocolo reales.
+- trustProxy: detras de un proxy (Vercel o Render) para leer la IP y el protocolo reales.
 - google: { clientId, clientSecret } para el login con Google (o null).
 - publicUrl: URL publica de la app (para la vuelta de Google).
 - now: reloj (los tests lo fijan para que las fechas sean predecibles).
