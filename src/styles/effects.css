@@ -7,28 +7,51 @@ Estilo "carbón" (inspirado en Linear y Vercel):
 Todos respetan prefers-reduced-motion (ver index.css).
 */
 
+/* Sombras y brillos de las tarjetas segun el tema */
+:root {
+  --surface-highlight: rgba(255, 255, 255, 0.045);
+  --surface-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --hero-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --preview-shadow: 0 40px 120px rgba(0, 0, 0, 0.65);
+  --float-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --button-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --tile-bg: linear-gradient(180deg, #ffffff, #b9bec7);
+  --tile-fg: #08090a;
+}
+
+[data-theme="light"] {
+  --surface-highlight: rgba(255, 255, 255, 0.9);
+  --surface-shadow: 0 1px 2px rgba(16, 18, 22, 0.04), 0 1px 1px rgba(16, 18, 22, 0.03);
+  --hero-shadow: 0 20px 50px rgba(16, 18, 22, 0.1);
+  --preview-shadow: 0 30px 90px rgba(16, 18, 22, 0.14);
+  --float-shadow: 0 10px 30px rgba(16, 18, 22, 0.12);
+  --button-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 1px 2px rgba(16, 18, 22, 0.18);
+  --tile-bg: linear-gradient(180deg, #2a2c30, #0b0c0e);
+  --tile-fg: #ffffff;
+}
+
 /* Luz de fondo, fija detras de todo el contenido */
 .bg-glow {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(ellipse 60% 420px at 50% -120px, rgba(255, 255, 255, 0.06), transparent 70%);
+  background: radial-gradient(ellipse 60% 420px at 50% -120px, rgb(var(--fg-rgb) / 0.06), transparent 70%);
 }
 
 /* Tarjeta: borde de 1px, degradado apenas visible y luz interna arriba */
 .surface {
   position: relative;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.012)), var(--background);
+  background: linear-gradient(180deg, rgb(var(--fg-rgb) / 0.028), rgb(var(--fg-rgb) / 0.012)), var(--surface-base);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.045),
-    0 1px 2px rgba(0, 0, 0, 0.3);
+    inset 0 1px 0 var(--surface-highlight),
+    var(--surface-shadow);
   transition: border-color 0.25s ease;
 }
 
 .surface:hover {
-  border-color: rgba(255, 255, 255, 0.11);
+  border-color: rgb(var(--fg-rgb) / 0.11);
 }
 
 /* Brillo que sigue al cursor (las coordenadas las pone useSurfaceGlow) */
@@ -40,7 +63,7 @@ Todos respetan prefers-reduced-motion (ver index.css).
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s ease;
-  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.04), transparent 60%);
+  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgb(var(--fg-rgb) / 0.04), transparent 60%);
 }
 
 .surface:hover::after {
@@ -49,10 +72,10 @@ Todos respetan prefers-reduced-motion (ver index.css).
 
 /* Variante destacada (login y registro) */
 .surface-hero {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: rgb(var(--fg-rgb) / 0.1);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 24px 60px rgba(0, 0, 0, 0.55);
+    inset 0 1px 0 var(--surface-highlight),
+    var(--hero-shadow);
 }
 
 /* Icono circular con borde (el color del icono es --glow) */
@@ -64,7 +87,7 @@ Todos respetan prefers-reduced-motion (ver index.css).
   justify-content: center;
   border-radius: 999px;
   border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgb(var(--fg-rgb) / 0.03);
   color: var(--glow);
   transition:
     border-color 0.15s ease,
@@ -91,7 +114,7 @@ Todos respetan prefers-reduced-motion (ver index.css).
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgb(var(--fg-rgb) / 0.05);
   color: var(--text-2);
 }
 
@@ -111,12 +134,12 @@ Todos respetan prefers-reduced-motion (ver index.css).
   align-items: center;
   height: 18px;
   padding: 0 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgb(var(--fg-rgb) / 0.1);
   border-radius: 5px;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--text-4);
-  background: rgba(255, 255, 255, 0.02);
+  background: rgb(var(--fg-rgb) / 0.02);
 }
 
 /* Barra que se llena de izquierda a derecha al aparecer */
@@ -228,7 +251,7 @@ Todos respetan prefers-reduced-motion (ver index.css).
   width: 120px;
   height: 3px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(var(--fg-rgb) / 0.08);
   overflow: hidden;
   position: relative;
 }
@@ -344,7 +367,7 @@ Todos respetan prefers-reduced-motion (ver index.css).
   z-index: -1;
   background:
     radial-gradient(ellipse 40% 50% at 70% 45%, rgba(62, 207, 142, 0.07), transparent 70%),
-    radial-gradient(ellipse 50% 60% at 50% 30%, rgba(255, 255, 255, 0.06), transparent 70%);
+    radial-gradient(ellipse 50% 60% at 50% 30%, rgb(var(--fg-rgb) / 0.06), transparent 70%);
 }
 
 /* Vista previa del producto, apenas inclinada; se endereza al pasar el mouse */
@@ -378,11 +401,15 @@ Todos respetan prefers-reduced-motion (ver index.css).
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.35s ease-out;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.55) 1px, transparent 1.4px);
+  background-image: radial-gradient(circle, rgb(var(--fg-rgb) / var(--dots-alpha, 0.55)) 1px, transparent 1.4px);
   background-size: 20px 20px;
   background-position: -1px -1px;
   -webkit-mask-image: radial-gradient(circle 190px at var(--dots-x, 50%) var(--dots-y, 30%), #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 100%);
   mask-image: radial-gradient(circle 190px at var(--dots-x, 50%) var(--dots-y, 30%), #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 100%);
+}
+
+[data-theme="light"] .cursor-dots {
+  --dots-alpha: 0.4;
 }
 
 .cursor-dots[data-active="true"] {

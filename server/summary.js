@@ -49,6 +49,7 @@ export async function buildSummary(
     currentByCategory,
     previousByCategory,
     recentRows,
+    latestRows,
     ...series
   ] = await Promise.all([
     repo.totalsBetween(userId, current.from, current.to, money),
@@ -58,6 +59,8 @@ export async function buildSummary(
     repo.expensesByCategory(userId, current.from, current.to, money),
     repo.expensesByCategory(userId, previous.from, previous.to, money),
     repo.list(userId, { to: current.to, sort: "date", order: "desc", limit: recent }),
+    // El movimiento mas reciente de toda la cuenta (sin importar el mes elegido).
+    repo.list(userId, { sort: "date", order: "desc", limit: 1 }),
     ...ranges.map((range) => repo.totalsBetween(userId, range.from, range.to, money)),
   ]);
 
@@ -108,5 +111,9 @@ export async function buildSummary(
     byCategory,
     monthly,
     recent: recentRows,
+    // Si la cuenta tiene algun movimiento y el ultimo mes con datos: sirven
+    // para distinguir una cuenta nueva de un mes que quedo vacio.
+    hasMovements: latestRows.length > 0,
+    latestMonth: latestRows[0]?.date.slice(0, 7) ?? null,
   };
 }

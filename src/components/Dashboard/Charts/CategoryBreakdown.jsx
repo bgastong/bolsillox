@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 import { CategoryIcon } from "../../Movements/MovementBits";
 
 // Grises para la barra apilada (de la categoria mas grande a la mas chica).
-const SHADES = ["#e6e8eb", "#b4b9c2", "#8a8f98", "#5d6168", "#45494f", "#33363b"];
+// Son el color del texto con menos opacidad, asi funcionan en los dos temas.
+const SHADES = [0.9, 0.68, 0.5, 0.34, 0.24, 0.16].map((alpha) => `rgb(var(--fg-rgb) / ${alpha})`);
 
 // Variacion contra el mes anterior: gastar mas es malo (rojo), menos es bueno (verde).
 function CategoryVariation({ value }) {
@@ -55,7 +56,7 @@ function CategoryBreakdown({ data, currency = "ARS" }) {
           return (
             <li
               key={item.category}
-              className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.03]"
+              className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-fg/[0.03]"
             >
               <CategoryIcon category={item.category} className="size-8 rounded-lg" />
               <div className="min-w-0 flex-1">
@@ -65,7 +66,7 @@ function CategoryBreakdown({ data, currency = "ARS" }) {
                     {formatCurrency(item.total, locale, { currency })}
                   </span>
                 </div>
-                <div className="mt-2 h-[3px] overflow-hidden rounded-full bg-white/[0.06]">
+                <div className="mt-2 h-[3px] overflow-hidden rounded-full bg-fg/[0.06]">
                   <div
                     className="grow-x h-full rounded-full"
                     style={{

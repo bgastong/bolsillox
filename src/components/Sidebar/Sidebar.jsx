@@ -13,6 +13,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useCommandPalette } from "../../hooks/useCommandPalette";
 import UserAvatar from "../Account/UserAvatar";
 import Wordmark from "../Brand/Wordmark";
+import { ThemeSegmented } from "../Theme/ThemeControls";
 import {
   Sidebar,
   SidebarContent,
@@ -108,6 +109,7 @@ function AppSidebar() {
         </SidebarContent>
 
         <SidebarFooter>
+          <ThemeSegmented className="mx-1" />
           {user && (
             <Link to="/settings" className={styles.footerCard} aria-label={t("accountLinkLabel", { name: user.name })}>
               <UserAvatar name={user.name} className="size-9 text-sm" />

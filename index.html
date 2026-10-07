@@ -8,7 +8,24 @@
     />
     <meta name="description" content="bolsillox: registrá tus ingresos y gastos y mirá tus finanzas personales." />
     <meta name="theme-color" content="#08090a" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="color-scheme" content="dark light" />
+    <!-- Aplica el tema guardado antes de pintar (evita el parpadeo). Ver src/lib/theme.js -->
+    <script>
+      (function () {
+        var theme = "dark";
+        try {
+          var saved = localStorage.getItem("bolsillox.theme");
+          if (saved === "light" || saved === "dark" || saved === "system") theme = saved;
+        } catch (e) {}
+        if (theme === "system") {
+          theme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        var root = document.documentElement;
+        root.dataset.theme = theme;
+        root.classList.toggle("dark", theme === "dark");
+        root.style.colorScheme = theme;
+      })();
+    </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

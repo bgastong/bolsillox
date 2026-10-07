@@ -24,7 +24,7 @@
 }
 
 .brand:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgb(var(--fg-rgb) / 0.04);
 }
 
 .brand:focus-visible {
@@ -41,7 +41,7 @@
   padding: 0 8px 0 10px;
   border: 1px solid var(--sidebar-border);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgb(var(--fg-rgb) / 0.02);
   color: var(--text-4);
   font-size: 0.85rem;
   cursor: pointer;
@@ -52,7 +52,7 @@
 }
 
 .search:hover {
-  border-color: rgba(255, 255, 255, 0.11);
+  border-color: rgb(var(--fg-rgb) / 0.11);
   color: var(--text-3);
 }
 
@@ -116,7 +116,7 @@
   padding: 10px;
   border: 1px solid var(--sidebar-border);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.015);
+  background: rgb(var(--fg-rgb) / 0.015);
   outline: none;
   transition:
     background-color 0.15s ease,
@@ -124,8 +124,8 @@
 }
 
 .footerCard:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  border-color: rgb(var(--fg-rgb) / 0.12);
+  background: rgb(var(--fg-rgb) / 0.04);
 }
 
 .footerCard:focus-visible {

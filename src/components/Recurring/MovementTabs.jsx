@@ -12,7 +12,7 @@ function MovementTabs() {
   ];
 
   return (
-    <nav aria-label={t("movementViews")} className="grid grid-cols-2 gap-1 rounded-xl bg-white/[0.04] p-1 sm:inline-grid sm:w-auto">
+    <nav aria-label={t("movementViews")} className="grid grid-cols-2 gap-1 rounded-xl bg-fg/[0.04] p-1 sm:inline-grid sm:w-auto">
       {tabs.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}

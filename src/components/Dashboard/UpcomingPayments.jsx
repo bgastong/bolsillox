@@ -24,7 +24,7 @@ function CalendarDate({ date }) {
   return (
     <span
       aria-hidden="true"
-      className="flex size-10 shrink-0 flex-col items-center justify-center rounded-[9px] border border-white/[0.07] bg-white/[0.02] leading-none"
+      className="flex size-10 shrink-0 flex-col items-center justify-center rounded-[9px] border border-fg/[0.07] bg-fg/[0.02] leading-none"
     >
       <span className="font-mono text-[9px] font-medium tracking-[0.06em] text-expense uppercase">{month}</span>
       <span className="mt-[3px] font-mono text-[15px] font-medium">{String(value.getDate()).padStart(2, "0")}</span>
@@ -76,7 +76,7 @@ function UpcomingPayments({ className }) {
           {upcoming.map((rule) => {
             const days = daysUntil(rule.nextDate);
             return (
-              <li key={rule.id} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/[0.03]">
+              <li key={rule.id} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-fg/[0.03]">
                 <CalendarDate date={rule.nextDate} />
                 <div className="min-w-0 flex-1">
                   <p className="m-0 truncate text-sm">{rule.title}</p>

@@ -27,7 +27,7 @@ export function BrandTile({ className }) {
   return (
     <span
       className={cn(
-        "inline-grid size-7 shrink-0 place-items-center rounded-[8px] bg-[linear-gradient(180deg,#fff,#b9bec7)] text-[#08090a] shadow-[inset_0_-1px_0_rgba(0,0,0,0.25),0_1px_2px_rgba(0,0,0,0.4)]",
+        "inline-grid size-7 shrink-0 place-items-center rounded-[8px] bg-[image:var(--tile-bg)] text-[color:var(--tile-fg)] shadow-[inset_0_-1px_0_rgba(0,0,0,0.25),0_1px_2px_rgba(0,0,0,0.25)]",
         className,
       )}
       aria-hidden="true"

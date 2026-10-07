@@ -77,7 +77,7 @@ function Segmented({ label, options, value, onChange, className, size = "md" }) 
     <div
       role="radiogroup"
       aria-label={label}
-      className={cn("grid gap-1 rounded-xl bg-white/[0.04] p-1", className)}
+      className={cn("grid gap-1 rounded-xl bg-fg/[0.04] p-1", className)}
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       {options.map(({ value: optionValue, label: optionLabel, icon: Icon, activeClass }) => {
@@ -177,7 +177,7 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
   return (
     <form noValidate onSubmit={handleSubmit} className="grid gap-4">
       {!isRecurring && item?.recurringId && (
-        <p className="m-0 flex items-start gap-2 rounded-xl bg-white/[0.04] px-3 py-2.5 text-sm text-muted-foreground">
+        <p className="m-0 flex items-start gap-2 rounded-xl bg-fg/[0.04] px-3 py-2.5 text-sm text-muted-foreground">
           <RepeatIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           {t("generatedOccurrenceHint")}
         </p>
@@ -307,7 +307,7 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
                   "inline-flex h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none sm:h-9 sm:px-3",
                   active
                     ? "font-medium text-foreground"
-                    : "border-input text-muted-foreground hover:border-white/20 hover:text-foreground",
+                    : "border-input text-muted-foreground hover:border-fg/20 hover:text-foreground",
                   errors.category && !active && "border-destructive/50",
                 )}
                 style={
@@ -358,7 +358,7 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
       {((!isRecurring && isNew) || (isRecurring && !isNew)) && (
         <label
           htmlFor="movement-toggle"
-          className="flex cursor-pointer items-center gap-3 rounded-xl border bg-white/[0.02] p-3.5"
+          className="flex cursor-pointer items-center gap-3 rounded-xl border bg-fg/[0.02] p-3.5"
         >
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <RepeatIcon className="size-[18px]" aria-hidden="true" />
