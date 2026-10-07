@@ -11,7 +11,8 @@ asi al volver a entrar va al inicio y no a la ultima pantalla.
 */
 export function AuthProvider({ children }) {
   const [state, setState] = useState({ status: "loading", user: null });
-  const [config, setConfig] = useState({ google: false });
+  // google: login con Google disponible; email: se pueden enviar codigos.
+  const [config, setConfig] = useState({ google: false, email: false });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -38,10 +39,35 @@ export function AuthProvider({ children }) {
     return user;
   }, []);
 
+  /*
+  Registro. Si el servidor manda un codigo por email, devuelve
+  { verificationRequired: true, email } y la sesion empieza al confirmarlo.
+  */
   const register = useCallback(async (data) => {
-    const user = await api.register(data);
+    const result = await api.register(data);
+    if (result.verificationRequired) return result;
+    const user = { ...result };
+    delete user.verificationRequired;
+    setState({ status: "authenticated", user });
+    return { verificationRequired: false, user };
+  }, []);
+
+  // Confirmar el email o recuperar la contraseña tambien inician sesion.
+  const verifyEmail = useCallback(async (data) => {
+    const user = await api.verifyEmail(data);
     setState({ status: "authenticated", user });
     return user;
+  }, []);
+
+  const resetPassword = useCallback(async (data) => {
+    const user = await api.resetPassword(data);
+    setState({ status: "authenticated", user });
+    return user;
+  }, []);
+
+  // Despues de cambiar nombre, email o contraseña.
+  const updateUser = useCallback((user) => {
+    setState((prev) => ({ ...prev, user }));
   }, []);
 
   const logout = useCallback(async () => {
@@ -58,8 +84,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ ...state, config, login, register, logout, deleteAccount }),
-    [state, config, login, register, logout, deleteAccount],
+    () => ({
+      ...state,
+      config,
+      login,
+      register,
+      verifyEmail,
+      resetPassword,
+      updateUser,
+      logout,
+      deleteAccount,
+    }),
+    [state, config, login, register, verifyEmail, resetPassword, updateUser, logout, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

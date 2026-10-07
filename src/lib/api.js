@@ -60,6 +60,15 @@ export const api = {
   login: (data) => request("/auth/login", { method: "POST", body: data }),
   logout: () => request("/auth/logout", { method: "POST" }),
   deleteAccount: (email) => request("/auth/account", { method: "DELETE", body: { email } }),
+  // Codigos por email: confirmar la cuenta, recuperar la contraseña, cambiar el email.
+  verifyEmail: (data) => request("/auth/verify-email", { method: "POST", body: data }),
+  resendVerification: (data) => request("/auth/resend-verification", { method: "POST", body: data }),
+  forgotPassword: (data) => request("/auth/forgot-password", { method: "POST", body: data }),
+  resetPassword: (data) => request("/auth/reset-password", { method: "POST", body: data }),
+  updateProfile: (data) => request("/auth/me", { method: "PATCH", body: data }),
+  changePassword: (data) => request("/auth/change-password", { method: "POST", body: data }),
+  changeEmail: (data) => request("/auth/change-email", { method: "POST", body: data }),
+  confirmEmailChange: (data) => request("/auth/confirm-email-change", { method: "POST", body: data }),
   // Redireccion completa (no fetch): Google vuelve a /api/auth/google/callback.
   googleLoginUrl: `${BASE_URL}/auth/google`,
   loadDemoData: () => request("/demo-data", { method: "POST" }),

@@ -108,6 +108,27 @@ const MIGRATIONS = [
     fetched_at TEXT NOT NULL
   );
   `,
+  // v2: verificacion de email con codigo, aceptacion de terminos y codigos
+  // de un solo uso (verificar email, recuperar contraseña, cambiar email).
+  `
+  -- true mientras la cuenta nueva no confirmo su email con el codigo.
+  -- Las cuentas creadas antes de esta version quedan en false (no se bloquean).
+  ALTER TABLE users ADD COLUMN pending_verification BOOLEAN NOT NULL DEFAULT FALSE;
+  ALTER TABLE users ADD COLUMN terms_version TEXT;
+  ALTER TABLE users ADD COLUMN terms_accepted_at TIMESTAMPTZ;
+
+  -- Un codigo vigente por usuario y proposito. Se guarda el hash, no el codigo.
+  CREATE TABLE email_codes (
+    user_id    INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    purpose    TEXT        NOT NULL CHECK (purpose IN ('verify_email', 'reset_password', 'change_email')),
+    code_hash  TEXT        NOT NULL,
+    new_email  TEXT,
+    attempts   INTEGER     NOT NULL DEFAULT 0,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL,
+    PRIMARY KEY (user_id, purpose)
+  );
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.

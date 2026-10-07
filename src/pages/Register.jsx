@@ -1,20 +1,26 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { PASSWORD_MIN_LENGTH, registerSchema } from "@shared/authSchema.js";
 import { AuthField, AuthLayout, FormAlert, GoogleButton } from "@/components/Auth/AuthLayout";
+import { TermsCheckbox } from "@/components/Auth/LegalLinks";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthForm } from "@/hooks/useAuthForm";
 import { useLanguage } from "@/hooks/useLanguage";
 
 function Register() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { register: createAccount } = useAuth();
+  const navigate = useNavigate();
   const { formRef, register, handleSubmit, formError, submitting } = useAuthForm({
     schema: registerSchema,
-    initialValues: { name: "", email: "", password: "" },
+    initialValues: { name: "", email: "", password: "", acceptTerms: false },
     async onSubmit(data) {
       try {
-        await createAccount(data);
+        const result = await createAccount({ ...data, language });
+        // Llega un codigo por email: se confirma en /verificar.
+        if (result.verificationRequired) {
+          navigate(`/verificar?email=${encodeURIComponent(result.email)}`, { replace: true });
+        }
       } catch (error) {
         // Email ya registrado: se muestra en el campo email.
         if (error.code === "email_taken") error.fieldErrors = { email: "errorEmailTaken" };
@@ -56,6 +62,7 @@ function Register() {
           hint={t("passwordHint", { count: PASSWORD_MIN_LENGTH })}
           {...register("password")}
         />
+        <TermsCheckbox {...register("acceptTerms")} />
         <Button type="submit" size="lg" className="mt-1 h-12 w-full sm:h-11" disabled={submitting}>
           {submitting ? t("creatingAccount") : t("createAccount")}
         </Button>

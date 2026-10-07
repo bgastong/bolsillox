@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Wordmark from "@/components/Brand/Wordmark";
 import { GoogleIcon } from "@/components/Brand/BrandIcons";
+import { LegalLinks } from "./LegalLinks";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
@@ -38,6 +39,7 @@ export function LanguageToggle() {
 
 // Pantalla de cuenta (login / registro): logo, tarjeta centrada y selector de idioma.
 export function AuthLayout({ title, subtitle, children, footer }) {
+  const { t } = useLanguage();
   return (
     <div className="relative flex min-h-svh flex-col px-4 pt-[max(16px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
       <div className="bg-glow" aria-hidden="true" />
@@ -58,6 +60,14 @@ export function AuthLayout({ title, subtitle, children, footer }) {
             {children}
           </div>
           {footer && <p className="mt-6 text-center text-sm text-muted-foreground">{footer}</p>}
+          <p className="mt-4 flex justify-center gap-4 text-xs text-muted-foreground">
+            <Link to="/terminos" className="underline-offset-4 hover:text-foreground hover:underline">
+              {t("footerTerms")}
+            </Link>
+            <Link to="/privacidad" className="underline-offset-4 hover:text-foreground hover:underline">
+              {t("footerPrivacy")}
+            </Link>
+          </p>
         </div>
       </main>
     </div>
@@ -80,6 +90,9 @@ export function GoogleButton() {
         <GoogleIcon />
         {t("continueWithGoogle")}
       </a>
+      <p className="-mt-3 m-0 text-center text-xs leading-relaxed text-muted-foreground">
+        {t("googleTermsPrefix")} <LegalLinks />.
+      </p>
       <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
         <span className="h-px flex-1 bg-border" />
         {t("orWithEmail")}

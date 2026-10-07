@@ -89,7 +89,7 @@ export async function startTestServer(options = {}) {
     const email = `user${userCount}@test.com`;
     const res = await request("/auth/register", {
       method: "POST",
-      body: { name, email, password: "contraseña-segura" },
+      body: { name, email, password: "contraseña-segura", acceptTerms: true },
     });
     if (res.status !== 201) throw new Error(`registro fallo: ${res.status}`);
     const cookie = sessionCookie(res);

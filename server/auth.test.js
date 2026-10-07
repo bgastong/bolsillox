@@ -26,7 +26,9 @@ before(async () => {
 
 after(() => api.stop());
 
-const register = (body) => api.request("/auth/register", { method: "POST", body });
+// Sin envio de emails configurado (como en este servidor), el registro entra directo.
+const register = (body) =>
+  api.request("/auth/register", { method: "POST", body: { acceptTerms: true, ...body } });
 const login = (body) => api.request("/auth/login", { method: "POST", body });
 
 const expense = {
@@ -76,6 +78,12 @@ describe("registro e inicio de sesion", () => {
     assert.equal(fields.name, "errorNameRequired");
     assert.equal(fields.email, "errorEmailInvalid");
     assert.equal(fields.password, "errorPasswordShort");
+  });
+
+  test("hay que aceptar los terminos", async () => {
+    const res = await register({ name: "Ana", email: "terminos@mail.com", password: "12345678", acceptTerms: false });
+    assert.equal(res.status, 400);
+    assert.equal((await res.json()).fields.acceptTerms, "errorAcceptTerms");
   });
 
   test("email repetido da 409 (sin importar mayusculas)", async () => {
@@ -265,7 +273,7 @@ describe("login con Google", () => {
   }
 
   test("la config avisa que Google esta disponible", async () => {
-    assert.deepEqual(await (await api.request("/auth/config")).json(), { google: true });
+    assert.deepEqual(await (await api.request("/auth/config")).json(), { google: true, email: false });
   });
 
   test("crea la cuenta y la sesion", async () => {
@@ -325,7 +333,7 @@ describe("login con Google", () => {
   test("sin credenciales de Google, la opcion no esta", async () => {
     const plain = await startTestServer();
     try {
-      assert.deepEqual(await (await plain.request("/auth/config")).json(), { google: false });
+      assert.deepEqual(await (await plain.request("/auth/config")).json(), { google: false, email: false });
       assert.equal((await plain.request("/auth/google", { redirect: "manual" })).status, 404);
     } finally {
       await plain.stop();
