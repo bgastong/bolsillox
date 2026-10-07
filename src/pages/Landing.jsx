@@ -14,10 +14,19 @@ import {
   UtensilsIcon,
 } from "lucide-react";
 import Wordmark from "@/components/Brand/Wordmark";
+import CursorDots from "@/components/Brand/CursorDots";
 import { LanguageToggle } from "@/components/Auth/AuthLayout";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useCountUp } from "@/hooks/useCountUp";
+
+// Numero de ejemplo que cuenta desde 0 al abrir la pagina.
+function Counter({ value, duration = 1400 }) {
+  const { locale } = useLanguage();
+  const current = useCountUp(value, duration);
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(Math.round(current));
+}
 
 const FEATURES = [
   { icon: LayoutDashboardIcon, title: "landingF1Title", text: "landingF1Text" },
@@ -81,7 +90,8 @@ function ProductPreview() {
         <div className="surface rounded-xl p-4 sm:col-span-7">
           <p className="m-0 text-[11px] text-[color:var(--text-3)]">{t("balanceAvailable")}</p>
           <p className="m-0 mt-1.5 font-mono text-[32px] leading-none tracking-[-0.05em] sm:text-[38px]">
-            <span className="text-[color:var(--text-4)]">$</span>1.284.350
+            <span className="text-[color:var(--text-4)]">$</span>
+            <Counter value={1284350} />
           </p>
           <div className="mt-5 flex h-1.5 gap-[3px] overflow-hidden rounded-full">
             <span className="grow-x h-full w-[58%] rounded-[2px] bg-expense" />
@@ -92,12 +102,12 @@ function ProductPreview() {
         <div className="surface grid grid-cols-2 rounded-xl sm:col-span-5 sm:grid-cols-1">
           <div className="p-3.5">
             <p className="m-0 text-[11px] text-[color:var(--text-3)]">{t("incomes")}</p>
-            <p className="m-0 mt-1 font-mono text-base text-income">+ 890.000</p>
+            <p className="m-0 mt-1 font-mono text-base text-income">+ <Counter value={890000} /></p>
             <span className="chip chip-good mt-1.5"><ArrowUpRightIcon className="size-3" />4,2%</span>
           </div>
           <div className="border-l border-white/[0.06] p-3.5 sm:border-t sm:border-l-0">
             <p className="m-0 text-[11px] text-[color:var(--text-3)]">{t("expenses")}</p>
-            <p className="m-0 mt-1 font-mono text-base text-expense">− 512.800</p>
+            <p className="m-0 mt-1 font-mono text-base text-expense">− <Counter value={512800} /></p>
             <span className="chip chip-good mt-1.5"><ArrowDownRightIcon className="size-3" />11,6%</span>
           </div>
         </div>
@@ -113,7 +123,7 @@ function ProductPreview() {
             {[37.5, 75, 112.5].map((y) => (
               <line key={y} x1="0" x2="520" y1={y} y2={y} stroke="rgba(255,255,255,.05)" strokeDasharray="2 5" />
             ))}
-            <path d={`${previewPath(INCOME)} L520,150 L0,150Z`} fill="url(#landing-income)" />
+            <path d={`${previewPath(INCOME)} L520,150 L0,150Z`} fill="url(#landing-income)" className="rise-y" />
             <path d={previewPath(INCOME)} fill="none" stroke="#3ecf8e" strokeWidth="2" pathLength="1" className="draw-line" vectorEffect="non-scaling-stroke" />
             <path d={previewPath(EXPENSE)} fill="none" stroke="#f2555a" strokeWidth="2" pathLength="1" className="draw-line" vectorEffect="non-scaling-stroke" style={{ animationDelay: "0.4s" }} />
           </svg>
@@ -146,6 +156,7 @@ function Landing() {
     <div className="relative min-h-svh overflow-x-clip">
       <div className="bg-glow" aria-hidden="true" />
       <div className="landing-beam" aria-hidden="true" />
+      <CursorDots />
 
       <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(8,9,10,0.7)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
