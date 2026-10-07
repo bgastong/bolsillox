@@ -1,7 +1,7 @@
 /*
 Envio de emails (codigos de verificacion y de recuperacion).
 - Con RESEND_API_KEY se envian con Resend (https://resend.com) por HTTPS:
-  funciona en el plan gratis de Render, que no deja salir por SMTP.
+  funciona en Vercel y en el plan gratis de Render, que no deja salir por SMTP.
 - En desarrollo, sin clave, el email se muestra en la consola.
 - En produccion sin clave queda desactivado: las cuentas nuevas no piden
   codigo y "Olvide mi contraseña" no esta disponible (nadie queda bloqueado).

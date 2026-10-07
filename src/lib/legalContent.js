@@ -179,7 +179,7 @@ export const PRIVACY = [
       "Para funcionar, el Servicio usa proveedores que procesan datos solo por nuestra cuenta y siguiendo nuestras instrucciones:",
       {
         list: [
-          "Render (alojamiento del servidor).",
+          "Vercel (alojamiento de la web y del servidor).",
           "Neon (base de datos).",
           "Resend (envío de emails con códigos).",
           "Google, solo si elegís entrar con tu cuenta de Google.",
