@@ -129,6 +129,22 @@ const MIGRATIONS = [
     PRIMARY KEY (user_id, purpose)
   );
   `,
+  // v3: limite de intentos compartido entre instancias (Vercel) y tareas de limpieza.
+  `
+  -- key = hash SHA-256 de "limite:IP|email..." (no se guardan IP ni emails en claro).
+  CREATE TABLE rate_limits (
+    key      TEXT        PRIMARY KEY,
+    count    INTEGER     NOT NULL,
+    reset_at TIMESTAMPTZ NOT NULL
+  );
+  CREATE INDEX idx_rate_limits_reset ON rate_limits (reset_at);
+
+  -- Ultima vez que corrio cada tarea de mantenimiento (una sola instancia la corre).
+  CREATE TABLE maintenance_runs (
+    task   TEXT        PRIMARY KEY,
+    ran_at TIMESTAMPTZ NOT NULL
+  );
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.

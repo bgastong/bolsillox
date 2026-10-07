@@ -86,7 +86,7 @@ export const TERMS = [
     id: "disponibilidad",
     title: "7. Servicio gratuito y disponibilidad",
     blocks: [
-      'El Servicio es gratuito y se ofrece "tal como está". Hacemos lo posible para que funcione bien, pero puede tener interrupciones, demoras (por ejemplo, el servidor puede tardar en responder después de un tiempo sin uso) o errores.',
+      'El Servicio es gratuito y se ofrece "tal como está". Hacemos lo posible para que funcione bien, pero puede tener interrupciones, demoras o errores.',
       "Podemos agregar, cambiar o discontinuar funciones. Si decidimos dar de baja el Servicio, lo avisaremos con una anticipación razonable.",
     ],
   },
@@ -151,7 +151,8 @@ export const PRIVACY = [
         list: [
           "Datos de la cuenta: nombre, email, contraseña (guardada con un hash irreversible, nunca en texto plano) y, si entrás con Google, el identificador de tu cuenta de Google.",
           "La información que cargás: movimientos (título, monto, moneda, fecha, categoría, medio de pago y notas), presupuestos, movimientos recurrentes y preferencias (moneda y cotización).",
-          "Datos técnicos de seguridad: la fecha en que aceptaste estos documentos, las sesiones abiertas y, temporalmente, la dirección IP para limitar intentos de acceso.",
+          "Datos técnicos de seguridad: la fecha en que aceptaste estos documentos, las sesiones abiertas y, temporalmente, un código irreversible (hash) derivado de la dirección IP para limitar intentos de acceso.",
+          "Datos técnicos de errores: si la página o el servidor fallan, registramos el detalle técnico del error, la pantalla donde ocurrió y el tipo de navegador. No incluye la información que cargaste.",
         ],
       },
       "No te pedimos datos bancarios, números de tarjeta ni claves de tus cuentas, y no recolectamos datos sensibles. Te recomendamos no cargarlos en las notas.",
@@ -166,6 +167,7 @@ export const PRIVACY = [
           "Prestarte el Servicio: guardar tus movimientos y mostrarte resúmenes y gráficos.",
           "Mantener tu cuenta segura: confirmar tu email, recuperar la contraseña y prevenir accesos indebidos.",
           "Enviarte emails necesarios para usar el Servicio (por ejemplo, códigos de verificación). No enviamos publicidad.",
+          "Detectar y corregir errores, y medir de forma agregada y anónima cuántas visitas recibe el sitio.",
         ],
       },
       "No vendemos, alquilamos ni cedemos tus datos, y no los usamos para armar perfiles comerciales ni para publicidad.",
@@ -196,6 +198,7 @@ export const PRIVACY = [
     blocks: [
       "Guardamos tus datos mientras tengas la cuenta. Si la borrás, se eliminan de inmediato de nuestra base de datos. Las copias de seguridad de nuestros proveedores se eliminan según sus propios plazos, que suelen ser de pocos días.",
       "Los códigos enviados por email vencen a los 15 minutos y se borran al usarlos.",
+      "Si creás una cuenta y no confirmás tu email, la cuenta se borra automáticamente a los 7 días.",
     ],
   },
   {
@@ -225,12 +228,13 @@ export const PRIVACY = [
     id: "cookies",
     title: "8. Cookies y almacenamiento del navegador",
     blocks: [
-      "Usamos solo lo indispensable para que el Servicio funcione. No usamos cookies de publicidad ni de analítica.",
+      "Usamos solo lo indispensable para que el Servicio funcione. No usamos cookies de publicidad ni de seguimiento.",
       {
         list: [
           "Una cookie de sesión (bx_session), para mantenerte con la sesión iniciada. Dura hasta 30 días o hasta que cierres sesión.",
           "Una cookie temporal durante el inicio de sesión con Google, que se borra al terminar.",
           "El almacenamiento local de tu navegador, para recordar el idioma y el tema que elegiste.",
+          "Estadísticas de visitas con Vercel Web Analytics, que no usa cookies ni identifica a las personas: solo cuenta visitas por página, país y tipo de dispositivo, de forma agregada.",
         ],
       },
     ],

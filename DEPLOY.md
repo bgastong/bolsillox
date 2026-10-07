@@ -36,6 +36,7 @@ Es la contraseña de tu base: no la subas al repo ni la compartas. No hace falta
    | `PUBLIC_URL` | `https://bolsillox.com.ar` (tu dominio, sin `/` al final) |
    | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | si usás el login con Google (paso 5) |
    | `RESEND_API_KEY`, `EMAIL_FROM` | si usás los códigos por email (paso 6) |
+   | `ALERT_EMAIL` | tu email, para recibir avisos de errores (paso 7) |
 
 5. Tocá **Deploy**. Tarda uno o dos minutos. Al terminar te da una dirección de prueba, por ejemplo `https://bolsillox.vercel.app`.
 
@@ -108,7 +109,22 @@ Sin `RESEND_API_KEY` la app sigue funcionando: las cuentas nuevas entran sin có
 
 Las cuentas creadas antes de activar esto no tienen que confirmar nada.
 
-## 7. Términos y privacidad
+## 7. Avisos de errores y estadísticas
+
+**Avisos de errores por email.** Si algo falla en el servidor (un error 500) o en la página, te llega un email con el detalle técnico. Usa el mismo Resend de los códigos.
+
+1. En Vercel, cargá `ALERT_EMAIL` con tu email y hacé **Redeploy**.
+2. El mismo error se avisa como mucho una vez por hora, y como mucho llegan 20 emails por hora.
+3. Los avisos no incluyen lo que cargan las personas: solo la ruta, el id de usuario y el error. Sin `ALERT_EMAIL`, los errores quedan solo en **Vercel → Logs**.
+
+**Estadísticas de visitas (Vercel Web Analytics).** Cuenta visitas por página, país y dispositivo, sin cookies.
+
+1. En Vercel, abrí el proyecto → **Analytics** → **Enable**.
+2. Con el próximo deploy empiezan a aparecer los datos en esa misma pestaña.
+
+**Limpieza automática.** Cada 6 horas la app borra sola las cuentas que no confirmaron el email en 7 días, y las sesiones, códigos y límites de intentos vencidos. No hay que configurar nada.
+
+## 8. Términos y privacidad
 
 Los textos están en `src/lib/legalContent.js`. Antes de publicar:
 
@@ -116,7 +132,7 @@ Los textos están en `src/lib/legalContent.js`. Antes de publicar:
 2. Hacelos revisar por un abogado.
 3. Si después cambiás los textos, actualizá la fecha en `shared/legal.js`. Cada persona queda registrada con la versión que aceptó.
 
-## 8. Apagar Render (si venías de ahí)
+## 9. Apagar Render (si venías de ahí)
 
 Cuando tu dominio ya ande en Vercel y hayas probado entrar con tu cuenta:
 
@@ -136,4 +152,5 @@ Cuando tu dominio ya ande en Vercel y hayas probado entrar con tu cuenta:
 | Google dice `redirect_uri_mismatch` | Que la URI cargada en Google sea exactamente `PUBLIC_URL` + `/api/auth/google/callback`. |
 | Google vuelve al login con un error | Que `PUBLIC_URL` sea tu dominio y que la app de Google esté publicada (o tu email agregado como usuario de prueba). |
 | No aparece el botón de Google | Que estén cargadas las dos variables `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`. |
+| No llegan los avisos de errores | Que `ALERT_EMAIL` y `RESEND_API_KEY` estén cargadas. Revisá spam. |
 | No llegan los códigos por email | Que `RESEND_API_KEY` esté cargada y que el dominio de `EMAIL_FROM` esté verificado en Resend. En Vercel, **Logs** muestra el error de Resend; en Resend, **Emails** muestra cada envío. También fijate en spam. |
