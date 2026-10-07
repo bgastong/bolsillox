@@ -41,14 +41,16 @@ const FEATURES = [
 ];
 
 // Botones de cuenta: "Crear cuenta" (principal) e "Iniciar sesion".
+// En el celular van uno debajo del otro y a todo el ancho, asi no cambian de
+// lugar segun lo que mida el texto en cada idioma.
 function AuthButtons({ size = "default", primaryLabel, secondaryLabel, className }) {
   return (
-    <div className={cn("flex flex-wrap items-center gap-2.5", className)}>
-      <Link to="/register" className={cn(buttonVariants({ size }))}>
+    <div className={cn("grid w-full gap-2.5 sm:flex sm:w-auto sm:flex-wrap sm:items-center", className)}>
+      <Link to="/register" className={cn(buttonVariants({ size }), "w-full sm:w-auto")}>
         {primaryLabel}
         <ArrowRightIcon data-icon="inline-end" aria-hidden="true" />
       </Link>
-      <Link to="/login" className={cn(buttonVariants({ variant: "outline", size }))}>
+      <Link to="/login" className={cn(buttonVariants({ variant: "outline", size }), "w-full sm:w-auto")}>
         {secondaryLabel}
       </Link>
     </div>
@@ -143,15 +145,18 @@ function Landing() {
           <Link to="/" aria-label="bolsillox" className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Wordmark />
           </Link>
-          <nav aria-label={t("mainNavigation")} className="flex items-center gap-2">
-            <span className="max-sm:hidden">
+          {/* En el celular solo van los dos botones de cuenta; el tema y el idioma
+              pasan al pie para que la barra no se salga de la pantalla. */}
+          <nav aria-label={t("mainNavigation")} className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <span className="flex items-center gap-2 max-sm:hidden">
               <LanguageToggle />
+              <ThemeToggle />
             </span>
-            <ThemeToggle />
-            <Link to="/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-              {t("landingNavLogin")}
+            <Link to="/login" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "max-sm:h-11 max-sm:px-3")}>
+              <span className="sm:hidden">{t("landingNavLoginShort")}</span>
+              <span className="max-sm:hidden">{t("landingNavLogin")}</span>
             </Link>
-            <Link to="/register" className={cn(buttonVariants({ size: "sm" }), "max-[380px]:hidden")}>
+            <Link to="/register" className={cn(buttonVariants({ size: "sm" }), "max-sm:h-11 max-sm:px-4")}>
               {t("landingNavRegister")}
             </Link>
           </nav>
@@ -219,7 +224,7 @@ function Landing() {
             <p className="m-0 max-w-md text-[color:var(--text-3)]">{t("landingFinalText")}</p>
             <AuthButtons
               size="lg"
-              className="justify-center"
+              className="max-w-sm justify-self-stretch mx-auto sm:justify-self-center sm:justify-center"
               primaryLabel={t("landingCtaPrimary")}
               secondaryLabel={t("landingNavLogin")}
             />
@@ -228,26 +233,22 @@ function Landing() {
       </main>
 
       <footer className="border-t border-fg/[0.06]">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 pb-[max(24px,env(safe-area-inset-bottom))] text-sm text-[color:var(--text-4)] sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 pb-[max(24px,env(safe-area-inset-bottom))] text-sm text-[color:var(--text-4)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p className="m-0">{t("footerRights", { year: new Date().getFullYear() })}</p>
-          <div className="flex flex-wrap items-center gap-4">
-            <Link to="/terminos" className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline">
-              {t("footerTerms")}
-            </Link>
-            <Link to="/privacidad" className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline">
-              {t("footerPrivacy")}
-            </Link>
-            <span className="sm:hidden">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Link to="/terminos" className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline">
+                {t("footerTerms")}
+              </Link>
+              <Link to="/privacidad" className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline">
+                {t("footerPrivacy")}
+              </Link>
+            </div>
+            {/* Tema e idioma en el celular: alineados a la derecha, no se mueven al cambiar de idioma. */}
+            <div className="flex items-center gap-2 sm:hidden">
+              <ThemeToggle />
               <LanguageToggle />
-            </span>
-            <a
-              href="https://github.com/bgastong/bolsillox"
-              target="_blank"
-              rel="noreferrer"
-              className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline"
-            >
-              GitHub
-            </a>
+            </div>
           </div>
         </div>
       </footer>
