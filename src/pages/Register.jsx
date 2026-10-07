@@ -42,7 +42,6 @@ function Register() {
         </>
       }
     >
-      <GoogleButton />
       <form ref={formRef} onSubmit={handleSubmit} noValidate className="grid gap-4">
         <FormAlert>{formError && t(formError)}</FormAlert>
         <AuthField label={t("yourName")} autoComplete="name" {...register("name")} />
@@ -67,6 +66,7 @@ function Register() {
           {submitting ? t("creatingAccount") : t("createAccount")}
         </Button>
       </form>
+      <GoogleButton />
     </AuthLayout>
   );
 }

@@ -3,9 +3,12 @@ import { useLanguage } from "@/hooks/useLanguage";
 
 // "los Términos y condiciones y la Política de privacidad" con links (abren en otra pestaña
 // para no perder lo que se esta completando).
-export function LegalLinks() {
+// subtle: links mas livianos, para notas al pie (debajo del boton de Google).
+export function LegalLinks({ subtle = false }) {
   const { t } = useLanguage();
-  const linkClass = "font-medium text-foreground underline underline-offset-2 hover:no-underline";
+  const linkClass = subtle
+    ? "text-muted-foreground underline decoration-fg/25 underline-offset-2 transition-colors hover:text-foreground hover:decoration-fg/60"
+    : "font-medium text-foreground underline underline-offset-2 hover:no-underline";
   return (
     <>
       <Link to="/terminos" target="_blank" className={linkClass}>
