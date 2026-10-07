@@ -331,3 +331,106 @@ Todos respetan prefers-reduced-motion (ver index.css).
     stroke-dashoffset: 0;
   }
 }
+
+/* Pagina de inicio: haz de luz detras de la portada */
+.landing-beam {
+  position: absolute;
+  top: -240px;
+  left: 50%;
+  width: min(1100px, 140vw);
+  height: 720px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 40% 50% at 70% 45%, rgba(62, 207, 142, 0.07), transparent 70%),
+    radial-gradient(ellipse 50% 60% at 50% 30%, rgba(255, 255, 255, 0.06), transparent 70%);
+}
+
+/* Vista previa del producto, apenas inclinada; se endereza al pasar el mouse */
+.landing-tilt {
+  perspective: 1600px;
+}
+
+.landing-preview {
+  transform: rotateY(-8deg) rotateX(4deg);
+  transform-origin: left center;
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: page-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+.landing-preview:hover {
+  transform: none;
+}
+
+@media (max-width: 1023px) {
+  .landing-preview {
+    transform: none;
+  }
+}
+
+/* Puntitos que siguen al cursor (CursorDots): grilla visible solo en un
+   circulo alrededor del mouse, con borde difuminado. */
+.cursor-dots {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease-out;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.55) 1px, transparent 1.4px);
+  background-size: 20px 20px;
+  background-position: -1px -1px;
+  -webkit-mask-image: radial-gradient(circle 190px at var(--dots-x, 50%) var(--dots-y, 30%), #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 100%);
+  mask-image: radial-gradient(circle 190px at var(--dots-x, 50%) var(--dots-y, 30%), #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 100%);
+}
+
+.cursor-dots[data-active="true"] {
+  opacity: 1;
+}
+
+/* En pantallas tactiles el circulo es un poco mas chico y tenue */
+@media (hover: none), (pointer: coarse) {
+  .cursor-dots {
+    background-size: 18px 18px;
+    transition-duration: 0.6s;
+    -webkit-mask-image: radial-gradient(circle 140px at var(--dots-x, 50%) var(--dots-y, 30%), #000 0%, rgba(0, 0, 0, 0.4) 45%, transparent 100%);
+    mask-image: radial-gradient(circle 140px at var(--dots-x, 50%) var(--dots-y, 30%), #000 0%, rgba(0, 0, 0, 0.4) 45%, transparent 100%);
+  }
+}
+
+/* Area del grafico que sube desde abajo al aparecer */
+.rise-y {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: rise-y 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both;
+}
+
+@keyframes rise-y {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+/* Onda que late alrededor del punto final del grafico en vivo */
+.live-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: live-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes live-ping {
+  from {
+    transform: scale(0.5);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
