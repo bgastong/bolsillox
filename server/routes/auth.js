@@ -29,19 +29,17 @@ La sesion vive en una cookie httpOnly (el JavaScript de la pagina no la ve).
 */
 export function authRouter(
   auth,
-  { secureCookies, google, publicUrl, fetchImpl, now, limits = {}, mailer },
+  { db, secureCookies, google, publicUrl, fetchImpl, now, limits = {}, mailer },
 ) {
   const router = Router();
   // Intentos de login por IP + email cada 15 minutos y registros por IP por hora.
-  const loginLimiter = createRateLimiter({ limit: limits.login ?? 10, windowMs: 15 * 60 * 1000 });
-  const registerLimiter = createRateLimiter({
-    limit: limits.register ?? 20,
-    windowMs: 60 * 60 * 1000,
-  });
+  const limiter = (name, limit, windowMs) => createRateLimiter({ db, name, limit, windowMs, now });
+  const loginLimiter = limiter("login", limits.login ?? 10, 15 * 60 * 1000);
+  const registerLimiter = limiter("register", limits.register ?? 20, 60 * 60 * 1000);
 
   // Codigos: intentos por IP + email cada 15 minutos y emails enviados por IP por hora.
-  const codeLimiter = createRateLimiter({ limit: limits.code ?? 10, windowMs: 15 * 60 * 1000 });
-  const sendLimiter = createRateLimiter({ limit: limits.send ?? 10, windowMs: 60 * 60 * 1000 });
+  const codeLimiter = limiter("code", limits.code ?? 10, 15 * 60 * 1000);
+  const sendLimiter = limiter("send", limits.send ?? 10, 60 * 60 * 1000);
 
   function requireUser(req) {
     if (!req.user) throw new HttpError(401, "unauthorized");
@@ -86,7 +84,7 @@ export function authRouter(
   manda un codigo (la sesion empieza al confirmarlo). Sin emails, entra directo.
   */
   router.post("/register", async (req, res) => {
-    registerLimiter.consume(req.ip);
+    await registerLimiter.consume(req.ip);
     const { language, ...data } = registerSchema.parse(req.body ?? {});
     const verify = mailer.enabled;
     const user = await auth.register(data, { verify });
@@ -94,7 +92,7 @@ export function authRouter(
       startSession(res, await auth.createSession(user.id));
       return res.status(201).json({ ...user, verificationRequired: false });
     }
-    sendLimiter.consume(req.ip);
+    await sendLimiter.consume(req.ip);
     const pending = await auth.verificationCodeFor(user.email).catch((error) => {
       // Re-registro dentro del minuto: el codigo anterior sigue sirviendo.
       if (error.code === "code_cooldown") return null;
@@ -106,7 +104,7 @@ export function authRouter(
 
   router.post("/verify-email", async (req, res) => {
     const data = verifyEmailSchema.parse(req.body ?? {});
-    codeLimiter.consume(`${req.ip}|${data.email}`);
+    await codeLimiter.consume(`${req.ip}|${data.email}`);
     const user = await auth.verifyEmail(data);
     startSession(res, await auth.createSession(user.id));
     res.json(user);
@@ -116,7 +114,7 @@ export function authRouter(
   router.post("/resend-verification", async (req, res) => {
     requireMailer();
     const { email, language } = requestCodeSchema.parse(req.body ?? {});
-    sendLimiter.consume(req.ip);
+    await sendLimiter.consume(req.ip);
     const pending = await auth.verificationCodeFor(email);
     if (pending) await sendCode(email, "verify_email", pending.code, language);
     res.status(204).end();
@@ -126,7 +124,7 @@ export function authRouter(
   router.post("/forgot-password", async (req, res) => {
     requireMailer();
     const { email, language } = requestCodeSchema.parse(req.body ?? {});
-    sendLimiter.consume(req.ip);
+    await sendLimiter.consume(req.ip);
     const found = await auth.resetCodeFor(email).catch((error) => {
       // Si ya se pidio hace menos de un minuto, no se manda otro (y no se avisa).
       if (error.code === "code_cooldown") return null;
@@ -138,7 +136,7 @@ export function authRouter(
 
   router.post("/reset-password", async (req, res) => {
     const data = resetPasswordSchema.parse(req.body ?? {});
-    codeLimiter.consume(`${req.ip}|${data.email}`);
+    await codeLimiter.consume(`${req.ip}|${data.email}`);
     const user = await auth.resetPassword(data);
     startSession(res, await auth.createSession(user.id));
     res.json(user);
@@ -154,7 +152,7 @@ export function authRouter(
   router.post("/change-password", async (req, res) => {
     const user = requireUser(req);
     const data = changePasswordSchema.parse(req.body ?? {});
-    codeLimiter.consume(`${req.ip}|pw|${user.id}`);
+    await codeLimiter.consume(`${req.ip}|pw|${user.id}`);
     res.json(await auth.changePassword(user.id, data, req.sessionToken));
   });
 
@@ -162,8 +160,8 @@ export function authRouter(
     const user = requireUser(req);
     requireMailer();
     const { language, ...data } = changeEmailSchema.parse(req.body ?? {});
-    codeLimiter.consume(`${req.ip}|email|${user.id}`);
-    sendLimiter.consume(req.ip);
+    await codeLimiter.consume(`${req.ip}|email|${user.id}`);
+    await sendLimiter.consume(req.ip);
     const code = await auth.requestEmailChange(user.id, data);
     await sendCode(data.email, "change_email", code, language);
     res.status(204).end();
@@ -172,16 +170,16 @@ export function authRouter(
   router.post("/confirm-email-change", async (req, res) => {
     const user = requireUser(req);
     const data = confirmCodeSchema.parse(req.body ?? {});
-    codeLimiter.consume(`${req.ip}|confirm|${user.id}`);
+    await codeLimiter.consume(`${req.ip}|confirm|${user.id}`);
     res.json(await auth.confirmEmailChange(user.id, data));
   });
 
   router.post("/login", async (req, res) => {
     const data = loginSchema.parse(req.body ?? {});
     const key = `${req.ip}|${data.email}`;
-    loginLimiter.consume(key);
+    await loginLimiter.consume(key);
     const user = await auth.login(data);
-    loginLimiter.reset(key);
+    await loginLimiter.reset(key);
     startSession(res, await auth.createSession(user.id));
     res.json(user);
   });

@@ -18,6 +18,10 @@ import { buildSummary } from "./summary.js";
 import { parseCurrency, parseMonth } from "./params.js";
 import { errorHandler, HttpError } from "./errors.js";
 import { disabledMailer } from "./mailer.js";
+import { createErrorReporter } from "./alerts.js";
+import { createMaintenance } from "./maintenance.js";
+import { createRateLimiter } from "./rateLimit.js";
+import { clientErrorSchema } from "./clientErrors.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = path.join(__dirname, "..", "dist");
@@ -41,6 +45,7 @@ options:
 - fetchImpl: fetch para cotizaciones y Google (los tests lo simulan).
 - authLimits: { login, register, code, send } limites de intentos (los tests los suben).
 - mailer: envio de emails con codigos (ver mailer.js). Sin el, no se piden codigos.
+- alertEmail: a donde avisar los errores inesperados (ver alerts.js). Sin el, solo van a los logs.
 */
 export function createApp(
   db,
@@ -54,6 +59,7 @@ export function createApp(
     fetchImpl = globalThis.fetch,
     authLimits,
     mailer = disabledMailer,
+    alertEmail = null,
   } = {},
 ) {
   const app = express();
@@ -62,6 +68,15 @@ export function createApp(
   const recurring = createRecurringService(db, { now });
   const budgets = createBudgetsService(db);
   const rates = createRatesService(db, { now, fetchImpl });
+  const maintenance = createMaintenance(db, { now });
+  const reporter = createErrorReporter({ mailer, to: alertEmail, now });
+  const clientErrorLimiter = createRateLimiter({
+    db,
+    name: "client_error",
+    limit: 20,
+    windowMs: 60 * 60 * 1000,
+    now,
+  });
 
   app.disable("x-powered-by");
   if (trustProxy) app.set("trust proxy", 1);
@@ -85,6 +100,25 @@ export function createApp(
     next();
   });
 
+  // Limpieza periodica de la base (cuentas sin confirmar, sesiones vencidas...).
+  app.use("/api", async (req, res, next) => {
+    await maintenance.runIfDue();
+    next();
+  });
+
+  // Errores de la pagina (los manda src/lib/errorReporting.js). No pide sesion.
+  app.post("/api/client-errors", async (req, res) => {
+    await clientErrorLimiter.consume(req.ip);
+    const { message, stack, url } = clientErrorSchema.parse(req.body ?? {});
+    await reporter.report({
+      source: "web",
+      message,
+      stack,
+      details: { página: url, navegador: req.get("user-agent")?.slice(0, 200) },
+    });
+    res.status(204).end();
+  });
+
   // Lee la cookie de sesion y deja el usuario en req.user (o null).
   app.use("/api", async (req, res, next) => {
     req.cookies = parseCookies(req.get("cookie"));
@@ -103,7 +137,7 @@ export function createApp(
 
   app.use(
     "/api/auth",
-    authRouter(auth, { secureCookies, google, publicUrl, fetchImpl, now, limits: authLimits, mailer }),
+    authRouter(auth, { db, secureCookies, google, publicUrl, fetchImpl, now, limits: authLimits, mailer }),
   );
 
   // De aca en adelante todo requiere haber iniciado sesion.
@@ -175,6 +209,14 @@ export function createApp(
 
   // index.js lo usa para traer la cotizacion apenas arranca el servidor.
   app.locals.rates = rates;
+  // errorHandler avisa con esto los errores inesperados (500).
+  app.locals.reportError = (error, req) =>
+    reporter.report({
+      source: "api",
+      message: error?.message ?? String(error),
+      stack: error?.stack,
+      details: { ruta: `${req.method} ${req.originalUrl.split("?")[0]}`, usuario: req.user?.id },
+    });
 
   return app;
 }
