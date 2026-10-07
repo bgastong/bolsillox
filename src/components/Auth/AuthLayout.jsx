@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { Link } from "react-router-dom";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Wordmark from "@/components/Brand/Wordmark";
+import CursorDots from "@/components/Brand/CursorDots";
 import { GoogleIcon } from "@/components/Brand/BrandIcons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +42,7 @@ export function AuthLayout({ title, subtitle, children, footer }) {
   return (
     <div className="relative flex min-h-svh flex-col px-4 pt-[max(16px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
       <div className="bg-glow" aria-hidden="true" />
+      <CursorDots />
       <header className="flex items-center justify-between">
         <Link to="/" aria-label="bolsillox" className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <Wordmark />

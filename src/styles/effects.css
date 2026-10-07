@@ -368,3 +368,41 @@ Todos respetan prefers-reduced-motion (ver index.css).
     transform: none;
   }
 }
+
+/* Puntitos que siguen al cursor (CursorDots): grilla visible solo en un
+   circulo alrededor del mouse, con borde difuminado. */
+.cursor-dots {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease-out;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.55) 1px, transparent 1.4px);
+  background-size: 20px 20px;
+  background-position: -1px -1px;
+  -webkit-mask-image: radial-gradient(circle 190px at var(--dots-x, 50%) var(--dots-y, 30%), #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 100%);
+  mask-image: radial-gradient(circle 190px at var(--dots-x, 50%) var(--dots-y, 30%), #000 0%, rgba(0, 0, 0, 0.45) 45%, transparent 100%);
+}
+
+.cursor-dots[data-active="true"] {
+  opacity: 1;
+}
+
+/* Area del grafico que sube desde abajo al aparecer */
+.rise-y {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: rise-y 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both;
+}
+
+@keyframes rise-y {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
