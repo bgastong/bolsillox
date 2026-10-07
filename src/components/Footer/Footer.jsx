@@ -10,10 +10,7 @@ function Footer() {
       <p>{t("footerRights", { year: new Date().getFullYear() })}</p>
       <p>
         <Link to="/terminos">{t("footerTerms")}</Link> ·{" "}
-        <Link to="/privacidad">{t("footerPrivacy")}</Link> · {t("footerText")} ·{" "}
-        <a href="https://github.com/bgastong/bolsillox" target="_blank" rel="noreferrer">
-          GitHub
-        </a>
+        <Link to="/privacidad">{t("footerPrivacy")}</Link> · {t("footerText")}
       </p>
     </footer>
   );

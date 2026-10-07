@@ -10,7 +10,6 @@ export const translations = {
     activeFilters: "{{count}} activos",
     activeFilters_one: "1 activo",
     close: "Cerrar",
-    githubLink: "Ver el código en GitHub (abre en una pestaña nueva)",
     month: "Mes",
     language: "Idioma",
     selectLanguage: "Seleccionar idioma",
@@ -303,10 +302,6 @@ export const translations = {
     // Ajustes
     settingsTitle: "Ajustes",
     settingsSubtitle: "Cuenta, moneda, cotización e idioma",
-    aboutTitle: "Acerca de",
-    aboutDescription: "bolsillox es un proyecto de código abierto.",
-    aboutGithub: "Ver el código en GitHub",
-    opensNewTab: "(abre en una pestaña nueva)",
 
     // Validaciones nuevas
     errorCurrencyInvalid: "Elegí pesos o dólares.",
@@ -318,6 +313,7 @@ export const translations = {
     // Cuenta
     // Pagina de inicio (sin sesion)
     landingNavLogin: "Iniciar sesión",
+    landingNavLoginShort: "Entrar",
     landingNavRegister: "Crear cuenta",
     landingEyebrow: "Finanzas personales, sin vueltas",
     landingTitle: "Tu plata, clara.",
@@ -455,7 +451,6 @@ export const translations = {
     tapToEdit: "Tap to edit",
     activeFilters: "{{count}} active",
     close: "Close",
-    githubLink: "View the code on GitHub (opens in a new tab)",
     month: "Month",
     language: "Language",
     selectLanguage: "Select language",
@@ -737,10 +732,6 @@ export const translations = {
 
     settingsTitle: "Settings",
     settingsSubtitle: "Account, currency, exchange rate and language",
-    aboutTitle: "About",
-    aboutDescription: "bolsillox is an open source project.",
-    aboutGithub: "View the code on GitHub",
-    opensNewTab: "(opens in a new tab)",
 
     errorCurrencyInvalid: "Choose pesos or dollars.",
     errorEndBeforeStart: "The end date must be after the start date.",
@@ -751,6 +742,7 @@ export const translations = {
     // Account
     // Landing page (signed out)
     landingNavLogin: "Sign in",
+    landingNavLoginShort: "Sign in",
     landingNavRegister: "Create account",
     landingEyebrow: "Personal finance, made simple",
     landingTitle: "Your money, clear.",
