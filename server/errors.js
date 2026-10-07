@@ -9,9 +9,10 @@ export class HttpError extends Error {
   }
 }
 
-// Middleware final: traduce errores conocidos a respuestas JSON.
+// Middleware final: traduce errores conocidos a respuestas JSON. Los
+// inesperados (500) se avisan con app.locals.reportError (ver alerts.js).
 // eslint-disable-next-line no-unused-vars
-export function errorHandler(err, req, res, next) {
+export async function errorHandler(err, req, res, next) {
   if (err instanceof ZodError) {
     return res.status(400).json({
       error: "validation_error",
@@ -25,6 +26,8 @@ export function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: "invalid_json" });
   }
 
-  console.error(err);
+  const report = req.app.locals.reportError;
+  if (report) await report(err, req);
+  else console.error(err);
   return res.status(500).json({ error: "internal_error" });
 }
