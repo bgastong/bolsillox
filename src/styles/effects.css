@@ -389,6 +389,16 @@ Todos respetan prefers-reduced-motion (ver index.css).
   opacity: 1;
 }
 
+/* En pantallas tactiles el circulo es un poco mas chico y tenue */
+@media (hover: none), (pointer: coarse) {
+  .cursor-dots {
+    background-size: 18px 18px;
+    transition-duration: 0.6s;
+    -webkit-mask-image: radial-gradient(circle 140px at var(--dots-x, 50%) var(--dots-y, 30%), #000 0%, rgba(0, 0, 0, 0.4) 45%, transparent 100%);
+    mask-image: radial-gradient(circle 140px at var(--dots-x, 50%) var(--dots-y, 30%), #000 0%, rgba(0, 0, 0, 0.4) 45%, transparent 100%);
+  }
+}
+
 /* Area del grafico que sube desde abajo al aparecer */
 .rise-y {
   transform-box: fill-box;
