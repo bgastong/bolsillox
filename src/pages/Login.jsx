@@ -43,7 +43,6 @@ function Login() {
         </>
       }
     >
-      <GoogleButton />
       <form ref={formRef} onSubmit={handleSubmit} noValidate className="grid gap-4">
         <FormAlert>{formError && t(formError)}</FormAlert>
         <AuthField
@@ -73,6 +72,7 @@ function Login() {
           {submitting ? t("signingIn") : t("signIn")}
         </Button>
       </form>
+      <GoogleButton />
     </AuthLayout>
   );
 }
