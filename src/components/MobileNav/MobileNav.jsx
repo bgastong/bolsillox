@@ -47,7 +47,7 @@ function MobileNav() {
   return (
     <nav
       aria-label={t("mainNavigation")}
-      className="fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] z-30 rounded-[20px] border border-white/10 bg-[rgba(18,19,21,0.82)] shadow-[0_10px_30px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl md:hidden"
+      className="fixed inset-x-3 bottom-[calc(10px+env(safe-area-inset-bottom))] z-30 rounded-[20px] border border-fg/10 bg-[color:var(--elevated)] shadow-[var(--float-shadow)] backdrop-blur-xl md:hidden"
     >
       <div className="mx-auto flex max-w-md items-center gap-1 px-1.5 py-1.5">
         <NavItem to="/" end icon={LayoutDashboardIcon} label={t("home")} />
@@ -62,7 +62,7 @@ function MobileNav() {
           type="button"
           onClick={openCreate}
           aria-label={t("newMovement")}
-          className="mx-1 flex size-12 shrink-0 touch-manipulation items-center justify-center rounded-[14px] bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_4px_14px_rgba(0,0,0,0.5)] transition-transform outline-none active:scale-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="mx-1 flex size-12 shrink-0 touch-manipulation items-center justify-center rounded-[14px] bg-primary text-primary-foreground shadow-[var(--float-shadow)] transition-transform outline-none active:scale-95 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <PlusIcon className="size-[22px]" strokeWidth={2.25} aria-hidden="true" />
         </button>

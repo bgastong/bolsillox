@@ -302,6 +302,22 @@ describe("resumen y conversion de moneda", () => {
     }
   });
 
+  test("un mes sin movimientos no parece una cuenta nueva", async () => {
+    const summary = await json("/summary?month=2001-01");
+    assert.equal(summary.count, 0);
+    assert.equal(summary.recent.length, 0);
+    assert.equal(summary.hasMovements, true);
+    const [latest] = await json("/movements?sort=date&order=desc&limit=1");
+    assert.equal(summary.latestMonth, latest.date.slice(0, 7));
+  });
+
+  test("una cuenta nueva no tiene movimientos", async () => {
+    const { cookie: fresh } = await api.signup();
+    const summary = await (await api.request(`/summary?month=${MONTH}`, { cookie: fresh })).json();
+    assert.equal(summary.hasMovements, false);
+    assert.equal(summary.latestMonth, null);
+  });
+
   test("el mismo resumen en USD", async () => {
     const summary = await json(`/summary?month=${MONTH}&currency=USD`);
     const rows = await monthRows();

@@ -78,7 +78,7 @@ function Budgets() {
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={Math.min(Math.round(data.totals.percent), 100)}
-                className="h-2.5 overflow-hidden rounded-full bg-white/[0.06]"
+                className="h-2.5 overflow-hidden rounded-full bg-fg/[0.06]"
               >
                 <div
                   className="h-full rounded-full bg-primary transition-[width] duration-500"
@@ -127,7 +127,7 @@ function Budgets() {
                     <button
                       type="button"
                       onClick={() => setTarget({ category, current: null })}
-                      className="flex min-h-14 w-full touch-manipulation items-center gap-3 rounded-2xl border border-dashed bg-transparent px-3 py-2.5 text-left text-sm transition-colors outline-none hover:border-white/20 hover:bg-white/[0.02] focus-visible:ring-2 focus-visible:ring-ring active:bg-white/[0.04]"
+                      className="flex min-h-14 w-full touch-manipulation items-center gap-3 rounded-2xl border border-dashed bg-transparent px-3 py-2.5 text-left text-sm transition-colors outline-none hover:border-fg/20 hover:bg-fg/[0.02] focus-visible:ring-2 focus-visible:ring-ring active:bg-fg/[0.04]"
                     >
                       <CategoryIcon category={category} className="size-9 rounded-lg" />
                       <span className="flex-1 font-medium">{t(`cat_${category}`)}</span>
