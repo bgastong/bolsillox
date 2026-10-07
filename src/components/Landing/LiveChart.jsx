@@ -131,7 +131,7 @@ function LiveChart() {
         </mask>
       </defs>
       {["25%", "50%", "75%"].map((y) => (
-        <line key={y} x1="0" x2="100%" y1={y} y2={y} stroke="rgba(255,255,255,.05)" strokeDasharray="2 5" />
+        <line key={y} x1="0" x2="100%" y1={y} y2={y} strokeDasharray="2 5" style={{ stroke: "rgb(var(--fg-rgb) / 0.06)" }} />
       ))}
       <g mask="url(#live-mask)">
         <path ref={areaRef} fill="url(#live-income)" />
@@ -140,11 +140,11 @@ function LiveChart() {
       </g>
       <g ref={incomeDotRef}>
         <circle r="7" fill="#3ecf8e" className="live-ping" />
-        <circle r="3.5" fill="#08090a" stroke="#3ecf8e" strokeWidth="2" />
+        <circle r="3.5" stroke="#3ecf8e" strokeWidth="2" style={{ fill: "var(--surface-base)" }} />
       </g>
       <g ref={expenseDotRef}>
         <circle r="7" fill="#f2555a" className="live-ping" style={{ animationDelay: "0.6s" }} />
-        <circle r="3.5" fill="#08090a" stroke="#f2555a" strokeWidth="2" />
+        <circle r="3.5" stroke="#f2555a" strokeWidth="2" style={{ fill: "var(--surface-base)" }} />
       </g>
     </svg>
   );

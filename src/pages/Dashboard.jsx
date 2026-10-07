@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRightIcon, PlusIcon, SparklesIcon, TriangleAlertIcon } from "lucide-react";
+import { ArrowRightIcon, CalendarX2Icon, PlusIcon, SparklesIcon, TriangleAlertIcon } from "lucide-react";
 import {
   BalanceCard,
   FlowCard,
@@ -18,7 +18,7 @@ import { EmptyState, ErrorState } from "@/components/States/States";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
-import { currentMonthKey } from "@/lib/format";
+import { currentMonthKey, formatCurrency, formatMonth } from "@/lib/format";
 import { useApiData } from "@/hooks/useApiData";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -30,8 +30,46 @@ import "@/components/Dashboard/Charts/chartSetup";
 // Presupuestos que se muestran en el dashboard (los mas comprometidos).
 const DASHBOARD_BUDGETS = 3;
 
-function hasAnyMonthly(summary) {
-  return summary.monthly.some((item) => item.income || item.expense);
+// Mes sin movimientos en una cuenta que ya tiene datos: no es una cuenta nueva,
+// asi que en vez de la bienvenida se explica que este mes esta vacio.
+function EmptyMonthCard({ summary, month, onCreate, onGoTo }) {
+  const { t, locale } = useLanguage();
+  const latest = summary.latestMonth && summary.latestMonth !== month ? summary.latestMonth : null;
+
+  return (
+    <section
+      aria-labelledby="empty-month-title"
+      className="surface flex flex-col gap-5 rounded-[14px] p-5 sm:flex-row sm:items-center sm:p-6 lg:col-span-12"
+    >
+      <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-fg/10 bg-fg/[0.04] text-[color:var(--text-2)]">
+        <CalendarX2Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
+      </span>
+      <div className="grid min-w-0 flex-1 gap-1">
+        <h2 id="empty-month-title" className="m-0 text-lg font-medium tracking-[-0.02em]">
+          {t("emptyMonthTitle", { month: formatMonth(month, locale) })}
+        </h2>
+        <p className="m-0 max-w-[60ch] text-sm text-muted-foreground">{t("emptyMonthText")}</p>
+        {summary.balance !== 0 && (
+          <p className="m-0 text-sm text-[color:var(--text-2)]">
+            {t("emptyMonthBalance", {
+              amount: formatCurrency(summary.balance, locale, { currency: summary.currency }),
+            })}
+          </p>
+        )}
+      </div>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button onClick={onCreate}>
+          <PlusIcon data-icon="inline-start" />
+          {t("newMovement")}
+        </Button>
+        {latest && (
+          <Button variant="outline" onClick={() => onGoTo(latest)}>
+            {t("emptyMonthGoTo", { month: formatMonth(latest, locale) })}
+          </Button>
+        )}
+      </div>
+    </section>
+  );
 }
 
 // Bienvenida para cuentas nuevas: cargar el primer movimiento o datos de ejemplo.
@@ -59,7 +97,7 @@ function WelcomeCard({ onCreate, onDemoLoaded }) {
       className="surface grid gap-4 rounded-[14px] p-5 sm:p-6"
     >
       <div className="flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-foreground">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-fg/10 bg-fg/[0.04] text-foreground">
           <SparklesIcon className="size-5" aria-hidden="true" />
         </span>
         <div className="grid gap-1">
@@ -120,9 +158,10 @@ function Dashboard() {
   );
   const { data: budgets } = useApiData(loadBudgets);
 
-  // Cuenta nueva: sin ningun movimiento cargado todavia.
-  const isEmptyAccount =
-    summary && summary.recent.length === 0 && summary.balance === 0 && !hasAnyMonthly(summary);
+  // Cuenta nueva: sin ningun movimiento cargado todavia (en ningun mes).
+  const isEmptyAccount = summary && !summary.hasMovements;
+  // La cuenta tiene datos, pero el mes elegido esta vacio.
+  const isEmptyMonth = summary && summary.hasMovements && summary.count === 0;
   const hasMonthlyData = summary?.monthly.some((item) => item.income || item.expense);
   const showSkeleton = loading && !summary;
 
@@ -144,11 +183,11 @@ function Dashboard() {
       {summary?.unconverted > 0 && (
         <p
           role="alert"
-          className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-amber-400/25 bg-amber-400/[0.07] px-4 py-3 text-sm text-amber-200"
+          className="m-0 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-[color:var(--warn-border)] bg-[color:var(--warn-bg)] px-4 py-3 text-sm text-warn-strong"
         >
           <TriangleAlertIcon className="size-4 shrink-0" aria-hidden="true" />
           <span className="flex-1">{t("rateMissingSummary", { count: summary.unconverted })}</span>
-          <Link to="/settings" className="font-medium text-amber-100 underline underline-offset-4">
+          <Link to="/settings" className="font-medium text-warn-strong underline underline-offset-4">
             {t("rateConfigure")}
           </Link>
         </p>
@@ -167,6 +206,8 @@ function Dashboard() {
         >
           {showSkeleton ? (
             <SummaryHeroSkeleton />
+          ) : isEmptyMonth ? (
+            <EmptyMonthCard summary={summary} month={month} onCreate={openCreate} onGoTo={setMonth} />
           ) : (
             <>
               <BalanceCard summary={summary} className="lg:col-span-8" />

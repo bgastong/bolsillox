@@ -16,6 +16,8 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useTheme } from "@/hooks/useTheme";
+import { THEME_OPTIONS } from "@/components/Theme/themeOptions";
 import { useSettings } from "@/hooks/useSettings";
 import { useToast } from "@/hooks/useToast";
 
@@ -53,14 +55,14 @@ function OptionCard({ checked, onSelect, title, detail, trailing, disabled }) {
         "flex min-h-14 w-full touch-manipulation items-center gap-3 rounded-xl border px-4 py-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
         checked
           ? "border-primary/60 bg-primary/[0.07]"
-          : "border-input hover:border-white/20 hover:bg-white/[0.02]",
+          : "border-input hover:border-fg/20 hover:bg-fg/[0.02]",
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
           "flex size-5 shrink-0 items-center justify-center rounded-full border",
-          checked ? "border-primary bg-primary text-primary-foreground" : "border-white/25",
+          checked ? "border-primary bg-primary text-primary-foreground" : "border-fg/25",
         )}
       >
         {checked && <CheckIcon className="size-3" strokeWidth={3} />}
@@ -115,7 +117,7 @@ function RateSettings() {
       {(ratesError || (rates && !hasApiRates)) && (
         <p
           role="alert"
-          className="m-0 flex items-start gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2.5 text-sm text-amber-200"
+          className="m-0 flex items-start gap-2 rounded-xl border border-[color:var(--warn-border)] bg-[color:var(--warn-bg)] px-3 py-2.5 text-sm text-warn-strong"
         >
           <TriangleAlertIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           {t("rateUnavailable")}
@@ -229,6 +231,7 @@ function RateSettings() {
 function Settings() {
   const { t, language, setLanguage } = useLanguage();
   const { currency, setCurrency, rate } = useSettings();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="grid gap-5">
@@ -253,10 +256,25 @@ function Settings() {
             />
           ))}
         </div>
-        {!rate && <p className="m-0 text-xs text-amber-400">{t("rateMissingShort")}</p>}
+        {!rate && <p className="m-0 text-xs text-warn">{t("rateMissingShort")}</p>}
       </Section>
 
       <RateSettings />
+
+      <Section id="settings-theme" title={t("themeTitle")} description={t("themeDescription")}>
+        <div role="radiogroup" aria-label={t("themeTitle")} className="grid gap-2 sm:grid-cols-3">
+          {THEME_OPTIONS.map(({ value, icon: Icon, detailKey }) => (
+            <OptionCard
+              key={value}
+              checked={theme === value}
+              onSelect={() => setTheme(value)}
+              title={t(`theme_${value}`)}
+              detail={t(detailKey)}
+              trailing={<Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />}
+            />
+          ))}
+        </div>
+      </Section>
 
       <Section id="settings-language" title={t("language")}>
         <div role="radiogroup" aria-label={t("language")} className="grid gap-2 sm:grid-cols-2">
@@ -277,9 +295,9 @@ function Settings() {
           href="https://github.com/bgastong/bolsillox"
           target="_blank"
           rel="noreferrer"
-          className="flex min-h-14 touch-manipulation items-center gap-3 rounded-xl border border-input px-4 py-3 transition-colors outline-none hover:border-white/20 hover:bg-white/[0.02] focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex min-h-14 touch-manipulation items-center gap-3 rounded-xl border border-input px-4 py-3 transition-colors outline-none hover:border-fg/20 hover:bg-fg/[0.02] focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/[0.06]">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-fg/[0.06]">
             <GitHubIcon />
           </span>
           <span className="grid flex-1 gap-0.5">

@@ -18,7 +18,7 @@ function MonthPicker({ month, onChange }) {
   const isCurrent = month >= currentMonthKey();
 
   return (
-    <div className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-white/[0.03] sm:h-10 sm:w-auto sm:rounded-lg">
+    <div className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-fg/[0.03] sm:h-10 sm:w-auto sm:rounded-lg">
       <Button
         variant="ghost"
         size="icon"
@@ -32,7 +32,7 @@ function MonthPicker({ month, onChange }) {
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="inline-flex h-full min-w-36 touch-manipulation items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium outline-none hover:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-full min-w-36 touch-manipulation items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium outline-none hover:bg-fg/[0.04] focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={`${t("chooseMonth")}: ${formatMonth(month, locale)}`}
           >
             <span aria-live="polite" aria-atomic="true">

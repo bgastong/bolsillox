@@ -157,7 +157,7 @@ export function FlowCard({ summary, className }) {
     <section
       aria-label={t("cashflowTitle")}
       className={cn(
-        "surface grid min-w-0 grid-cols-2 rounded-[14px] lg:grid-cols-1 lg:grid-rows-2 [&>*+*]:border-l [&>*+*]:border-white/[0.065] lg:[&>*+*]:border-t lg:[&>*+*]:border-l-0",
+        "surface grid min-w-0 grid-cols-2 rounded-[14px] lg:grid-cols-1 lg:grid-rows-2 [&>*+*]:border-l [&>*+*]:border-fg/[0.065] lg:[&>*+*]:border-t lg:[&>*+*]:border-l-0",
         className,
       )}
     >
