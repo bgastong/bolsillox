@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LogOutIcon, Trash2Icon } from "lucide-react";
+import { KeyRoundIcon, LogOutIcon, MailIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { GoogleIcon } from "@/components/Brand/BrandIcons";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useToast } from "@/hooks/useToast";
 import UserAvatar from "./UserAvatar";
+import { AccountDialog } from "./AccountDialogs";
 
 // Confirmacion para borrar la cuenta: hay que escribir el email.
 function DeleteAccountDialog({ open, onOpenChange }) {
@@ -92,8 +93,10 @@ function DeleteAccountDialog({ open, onOpenChange }) {
 // Section: el contenedor de seccion de la pantalla de Ajustes.
 function AccountSection({ Section }) {
   const { t } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, logout, config } = useAuth();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // Dialogo abierto para cambiar un dato: "name" | "email" | "password" | "createPassword".
+  const [editing, setEditing] = useState(null);
 
   return (
     <Section id="settings-account" title={t("accountTitle")}>
@@ -110,7 +113,28 @@ function AccountSection({ Section }) {
           {t("linkedWithGoogle")}
         </p>
       )}
-      <div className="flex flex-col gap-2 sm:flex-row">
+      {/* Cambiar los datos de la cuenta */}
+      <div className="grid gap-2 sm:grid-cols-3">
+        <Button variant="outline" onClick={() => setEditing("name")} className="h-11 justify-start sm:h-9">
+          <PencilIcon data-icon="inline-start" />
+          {t("editName")}
+        </Button>
+        {config.email && (
+          <Button variant="outline" onClick={() => setEditing("email")} className="h-11 justify-start sm:h-9">
+            <MailIcon data-icon="inline-start" />
+            {t("changeEmailTitle")}
+          </Button>
+        )}
+        <Button
+          variant="outline"
+          onClick={() => setEditing(user.hasPassword ? "password" : "createPassword")}
+          className="h-11 justify-start sm:h-9"
+        >
+          <KeyRoundIcon data-icon="inline-start" />
+          {t(user.hasPassword ? "changePasswordTitle" : "setPasswordTitle")}
+        </Button>
+      </div>
+      <div className="flex flex-col gap-2 border-t border-fg/[0.06] pt-4 sm:flex-row">
         <Button variant="outline" onClick={logout} className="h-11 sm:h-9">
           <LogOutIcon data-icon="inline-start" />
           {t("logout")}
@@ -125,6 +149,7 @@ function AccountSection({ Section }) {
         </Button>
       </div>
       <DeleteAccountDialog open={confirmOpen} onOpenChange={setConfirmOpen} />
+      <AccountDialog kind={editing} onClose={() => setEditing(null)} />
     </Section>
   );
 }

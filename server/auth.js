@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { promisify } from "node:util";
+import { TERMS_VERSION } from "../shared/legal.js";
 import { HttpError } from "./errors.js";
 import { sql } from "./sql.js";
 
@@ -39,6 +40,16 @@ export async function verifyPassword(password, stored) {
 // tarda lo mismo y no revela que cuentas estan registradas.
 const DUMMY_HASH = await hashPassword(crypto.randomBytes(16).toString("hex"));
 
+// Codigos por email: 6 digitos, vencen a los 15 minutos, 5 intentos como
+// maximo y no se puede pedir otro hasta pasado un minuto.
+export const CODE_MINUTES = 15;
+const CODE_MAX_ATTEMPTS = 5;
+const CODE_COOLDOWN_MS = 60 * 1000;
+
+function codeHash(userId, purpose, code) {
+  return crypto.createHash("sha256").update(`${purpose}:${userId}:${code}`).digest("hex");
+}
+
 // En la base se guarda el hash del token, no el token de la cookie.
 function tokenId(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -54,12 +65,30 @@ export function createAuthService(db, { now = () => new Date() } = {}) {
     return db.one(sql`SELECT ${USER_COLUMNS} FROM users WHERE id = ${id}`);
   }
 
-  async function register({ name, email, password }) {
+  function findByEmail(email) {
+    return db.one(sql`
+      SELECT id, email, name, password_hash AS "passwordHash",
+             pending_verification AS "pending"
+      FROM users WHERE email = ${email}
+    `);
+  }
+
+  /*
+  Crea la cuenta. Con verify = true queda pendiente hasta confirmar el email
+  con el codigo. Si el email ya estaba registrado pero nunca se confirmo,
+  se reemplazan nombre y contraseña (quien lo registro no probo que era suyo).
+  */
+  async function register({ name, email, password }, { verify = false } = {}) {
     const passwordHash = await hashPassword(password);
     const user = await db.one(sql`
-      INSERT INTO users (email, name, password_hash)
-      VALUES (${email}, ${name}, ${passwordHash})
-      ON CONFLICT (email) DO NOTHING
+      INSERT INTO users (email, name, password_hash, pending_verification,
+                         terms_version, terms_accepted_at)
+      VALUES (${email}, ${name}, ${passwordHash}, ${verify}, ${TERMS_VERSION}, ${now()})
+      ON CONFLICT (email) DO UPDATE
+        SET name = EXCLUDED.name, password_hash = EXCLUDED.password_hash,
+            pending_verification = EXCLUDED.pending_verification,
+            terms_version = EXCLUDED.terms_version, terms_accepted_at = EXCLUDED.terms_accepted_at
+        WHERE users.pending_verification
       RETURNING ${USER_COLUMNS}
     `);
     if (!user) throw new HttpError(409, "email_taken");
@@ -67,12 +96,154 @@ export function createAuthService(db, { now = () => new Date() } = {}) {
   }
 
   async function login({ email, password }) {
-    const row = await db.one(
-      sql`SELECT id, password_hash AS "passwordHash" FROM users WHERE email = ${email}`,
-    );
+    const row = await findByEmail(email);
     const valid = await verifyPassword(password, row?.passwordHash ?? DUMMY_HASH);
     if (!row?.passwordHash || !valid) throw new HttpError(401, "invalid_credentials");
+    // La contraseña es correcta pero falta confirmar el email.
+    if (row.pending) throw new HttpError(403, "email_not_verified");
     return getUser(row.id);
+  }
+
+  // --- Codigos por email ---
+
+  // Genera un codigo nuevo (reemplaza al anterior) y lo devuelve para enviarlo.
+  async function issueCode(userId, purpose, { newEmail = null } = {}) {
+    const previous = await db.one(sql`
+      SELECT created_at AS "createdAt" FROM email_codes
+      WHERE user_id = ${userId} AND purpose = ${purpose}
+    `);
+    if (previous && now().getTime() - new Date(previous.createdAt).getTime() < CODE_COOLDOWN_MS) {
+      throw new HttpError(429, "code_cooldown");
+    }
+    const code = String(crypto.randomInt(0, 1_000_000)).padStart(6, "0");
+    const expiresAt = new Date(now().getTime() + CODE_MINUTES * 60 * 1000);
+    await db.run(sql`
+      INSERT INTO email_codes (user_id, purpose, code_hash, new_email, attempts, expires_at, created_at)
+      VALUES (${userId}, ${purpose}, ${codeHash(userId, purpose, code)}, ${newEmail}, 0,
+              ${expiresAt}, ${now()})
+      ON CONFLICT (user_id, purpose) DO UPDATE
+        SET code_hash = EXCLUDED.code_hash, new_email = EXCLUDED.new_email, attempts = 0,
+            expires_at = EXCLUDED.expires_at, created_at = EXCLUDED.created_at
+    `);
+    return code;
+  }
+
+  // Valida el codigo; si es correcto lo borra (un solo uso) y devuelve su fila.
+  async function consumeCode(userId, purpose, code) {
+    const row = await db.one(sql`
+      SELECT code_hash AS "codeHash", new_email AS "newEmail", attempts, expires_at AS "expiresAt"
+      FROM email_codes WHERE user_id = ${userId} AND purpose = ${purpose}
+    `);
+    if (!row) throw new HttpError(400, "code_invalid");
+    if (new Date(row.expiresAt) <= now()) {
+      await db.run(sql`DELETE FROM email_codes WHERE user_id = ${userId} AND purpose = ${purpose}`);
+      throw new HttpError(400, "code_expired");
+    }
+    const expected = Buffer.from(row.codeHash, "hex");
+    const actual = Buffer.from(codeHash(userId, purpose, code), "hex");
+    if (!crypto.timingSafeEqual(expected, actual)) {
+      if (row.attempts + 1 >= CODE_MAX_ATTEMPTS) {
+        // Demasiados intentos: el codigo deja de servir y hay que pedir otro.
+        await db.run(sql`DELETE FROM email_codes WHERE user_id = ${userId} AND purpose = ${purpose}`);
+        throw new HttpError(429, "too_many_attempts");
+      }
+      await db.run(sql`
+        UPDATE email_codes SET attempts = attempts + 1
+        WHERE user_id = ${userId} AND purpose = ${purpose}
+      `);
+      throw new HttpError(400, "code_invalid");
+    }
+    await db.run(sql`DELETE FROM email_codes WHERE user_id = ${userId} AND purpose = ${purpose}`);
+    return row;
+  }
+
+  // Confirma el email de una cuenta nueva.
+  async function verifyEmail({ email, code }) {
+    const row = await findByEmail(email);
+    if (!row?.pending) throw new HttpError(400, "code_invalid");
+    await consumeCode(row.id, "verify_email", code);
+    await db.run(sql`
+      UPDATE users SET pending_verification = FALSE, email_verified = TRUE WHERE id = ${row.id}
+    `);
+    return getUser(row.id);
+  }
+
+  // Codigo para confirmar el email (null si no hay una cuenta pendiente con ese email).
+  async function verificationCodeFor(email) {
+    const row = await findByEmail(email);
+    if (!row?.pending) return null;
+    return { user: row, code: await issueCode(row.id, "verify_email") };
+  }
+
+  // Codigo para recuperar la contraseña (null si el email no tiene cuenta).
+  async function resetCodeFor(email) {
+    const row = await findByEmail(email);
+    if (!row) return null;
+    return { user: row, code: await issueCode(row.id, "reset_password") };
+  }
+
+  // Elige una contraseña nueva con el codigo. Cierra todas las sesiones abiertas.
+  async function resetPassword({ email, code, password }) {
+    const row = await findByEmail(email);
+    if (!row) throw new HttpError(400, "code_invalid");
+    await consumeCode(row.id, "reset_password", code);
+    const passwordHash = await hashPassword(password);
+    // Recibir el codigo tambien prueba que el email es de esta persona.
+    await db.run(sql`
+      UPDATE users SET password_hash = ${passwordHash}, pending_verification = FALSE,
+                       email_verified = TRUE
+      WHERE id = ${row.id}
+    `);
+    await db.run(sql`DELETE FROM sessions WHERE user_id = ${row.id}`);
+    return getUser(row.id);
+  }
+
+  // --- Datos de la cuenta ---
+
+  async function updateProfile(userId, { name }) {
+    await db.run(sql`UPDATE users SET name = ${name} WHERE id = ${userId}`);
+    return getUser(userId);
+  }
+
+  async function checkPassword(userId, password) {
+    const row = await db.one(sql`SELECT password_hash AS "passwordHash" FROM users WHERE id = ${userId}`);
+    // Las cuentas solo con Google no tienen contraseña: no se pide.
+    if (!row?.passwordHash) return;
+    if (!password || !(await verifyPassword(password, row.passwordHash))) {
+      throw new HttpError(400, "wrong_password");
+    }
+  }
+
+  // Cambia la contraseña y cierra las demas sesiones (la actual sigue abierta).
+  async function changePassword(userId, { currentPassword, newPassword }, keepToken) {
+    await checkPassword(userId, currentPassword);
+    await db.run(sql`
+      UPDATE users SET password_hash = ${await hashPassword(newPassword)} WHERE id = ${userId}
+    `);
+    await db.run(sql`
+      DELETE FROM sessions WHERE user_id = ${userId} AND id <> ${keepToken ? tokenId(keepToken) : ""}
+    `);
+    return getUser(userId);
+  }
+
+  // Primer paso para cambiar el email: codigo al email nuevo.
+  async function requestEmailChange(userId, { email, password }) {
+    await checkPassword(userId, password);
+    const current = await getUser(userId);
+    if (current.email === email) throw new HttpError(400, "email_same");
+    const taken = await db.one(sql`SELECT id FROM users WHERE email = ${email}`);
+    if (taken) throw new HttpError(409, "email_taken");
+    return issueCode(userId, "change_email", { newEmail: email });
+  }
+
+  async function confirmEmailChange(userId, { code }) {
+    const { newEmail } = await consumeCode(userId, "change_email", code);
+    const updated = await db.run(sql`
+      UPDATE users SET email = ${newEmail}, email_verified = TRUE
+      WHERE id = ${userId} AND NOT EXISTS (SELECT 1 FROM users WHERE email = ${newEmail})
+    `);
+    if (!updated) throw new HttpError(409, "email_taken");
+    return getUser(userId);
   }
 
   /*
@@ -97,15 +268,16 @@ export function createAuthService(db, { now = () => new Date() } = {}) {
           await tx.run(sql`DELETE FROM sessions WHERE user_id = ${existing.id}`);
         }
         await tx.run(sql`
-          UPDATE users SET google_id = ${googleId}, email_verified = TRUE
+          UPDATE users SET google_id = ${googleId}, email_verified = TRUE,
+                           pending_verification = FALSE
           WHERE id = ${existing.id}
         `);
         return existing.id;
       }
 
       const created = await tx.one(sql`
-        INSERT INTO users (email, name, google_id, email_verified)
-        VALUES (${email}, ${name}, ${googleId}, TRUE)
+        INSERT INTO users (email, name, google_id, email_verified, terms_version, terms_accepted_at)
+        VALUES (${email}, ${name}, ${googleId}, TRUE, ${TERMS_VERSION}, ${now()})
         RETURNING id
       `);
       return created.id;
@@ -157,6 +329,14 @@ export function createAuthService(db, { now = () => new Date() } = {}) {
     getUser,
     register,
     login,
+    verifyEmail,
+    verificationCodeFor,
+    resetCodeFor,
+    resetPassword,
+    updateProfile,
+    changePassword,
+    requestEmailChange,
+    confirmEmailChange,
     loginWithGoogle,
     createSession,
     getSession,

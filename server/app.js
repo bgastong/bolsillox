@@ -17,6 +17,7 @@ import { budgetsRouter } from "./routes/budgets.js";
 import { buildSummary } from "./summary.js";
 import { parseCurrency, parseMonth } from "./params.js";
 import { errorHandler, HttpError } from "./errors.js";
+import { disabledMailer } from "./mailer.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = path.join(__dirname, "..", "dist");
@@ -38,7 +39,8 @@ options:
 - publicUrl: URL publica de la app (para la vuelta de Google).
 - now: reloj (los tests lo fijan para que las fechas sean predecibles).
 - fetchImpl: fetch para cotizaciones y Google (los tests lo simulan).
-- authLimits: { login, register } limites de intentos (los tests los suben).
+- authLimits: { login, register, code, send } limites de intentos (los tests los suben).
+- mailer: envio de emails con codigos (ver mailer.js). Sin el, no se piden codigos.
 */
 export function createApp(
   db,
@@ -51,6 +53,7 @@ export function createApp(
     now = () => new Date(),
     fetchImpl = globalThis.fetch,
     authLimits,
+    mailer = disabledMailer,
   } = {},
 ) {
   const app = express();
@@ -98,7 +101,10 @@ export function createApp(
     next();
   });
 
-  app.use("/api/auth", authRouter(auth, { secureCookies, google, publicUrl, fetchImpl, now, limits: authLimits }));
+  app.use(
+    "/api/auth",
+    authRouter(auth, { secureCookies, google, publicUrl, fetchImpl, now, limits: authLimits, mailer }),
+  );
 
   // De aca en adelante todo requiere haber iniciado sesion.
   app.use("/api", (req, res, next) => {

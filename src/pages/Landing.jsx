@@ -16,6 +16,7 @@ import {
 import Wordmark from "@/components/Brand/Wordmark";
 import CursorDots from "@/components/Brand/CursorDots";
 import LiveChart from "@/components/Landing/LiveChart";
+import LiveBalance from "@/components/Landing/LiveBalance";
 import { LanguageToggle } from "@/components/Auth/AuthLayout";
 import { ThemeToggle } from "@/components/Theme/ThemeControls";
 import { buttonVariants } from "@/components/ui/button";
@@ -83,8 +84,7 @@ function ProductPreview() {
         <div className="surface rounded-xl p-4 sm:col-span-7">
           <p className="m-0 text-[11px] text-[color:var(--text-3)]">{t("balanceAvailable")}</p>
           <p className="m-0 mt-1.5 font-mono text-[32px] leading-none tracking-[-0.05em] sm:text-[38px]">
-            <span className="text-[color:var(--text-4)]">$</span>
-            <Counter value={1284350} />
+            <LiveBalance />
           </p>
           <div className="mt-5 flex h-1.5 gap-[3px] overflow-hidden rounded-full">
             <span className="grow-x h-full w-[58%] rounded-[2px] bg-expense" />
@@ -230,7 +230,13 @@ function Landing() {
       <footer className="border-t border-fg/[0.06]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-6 pb-[max(24px,env(safe-area-inset-bottom))] text-sm text-[color:var(--text-4)] sm:px-6">
           <p className="m-0">{t("footerRights", { year: new Date().getFullYear() })}</p>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <Link to="/terminos" className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline">
+              {t("footerTerms")}
+            </Link>
+            <Link to="/privacidad" className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline">
+              {t("footerPrivacy")}
+            </Link>
             <span className="sm:hidden">
               <LanguageToggle />
             </span>
