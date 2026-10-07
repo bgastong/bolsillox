@@ -50,18 +50,7 @@ function MonthlyChart({ data, currency = "ARS" }) {
     responsive: true,
     maintainAspectRatio: false,
     interaction: { mode: "index", intersect: false },
-    animation: { duration: 1100, easing: "easeOutQuart" },
-    // Al abrirse, las lineas y el area suben desde cero.
-    animations: {
-      y: {
-        duration: 1100,
-        easing: "easeOutQuart",
-        from: (context) =>
-          context.type === "data" && context.mode === "default" && !context.dropped
-            ? context.chart.scales.y.getPixelForValue(0)
-            : undefined,
-      },
-    },
+    animation: { duration: 900, easing: "easeOutQuart" },
     plugins: {
       legend: { display: false },
       tooltip: {

@@ -406,3 +406,21 @@ Todos respetan prefers-reduced-motion (ver index.css).
     opacity: 1;
   }
 }
+
+/* Onda que late alrededor del punto final del grafico en vivo */
+.live-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: live-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes live-ping {
+  from {
+    transform: scale(0.5);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}

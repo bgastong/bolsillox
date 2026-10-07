@@ -5,7 +5,6 @@ import { MovementsProvider } from "@/context/MovementsContext";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useSurfaceGlow } from "@/hooks/useSurfaceGlow";
 import CommandPalette from "@/components/CommandPalette/CommandPalette";
-import CursorDots from "@/components/Brand/CursorDots";
 import AppSidebar from "../../components/Sidebar/Sidebar";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
@@ -21,7 +20,6 @@ function DashboardLayout({ children }) {
       <CommandPalette>
         {/* Luz tenue de fondo */}
         <div className="bg-glow" aria-hidden="true" />
-        <CursorDots />
         <SidebarProvider className="dashboard-shell-wrapper">
           {/* Accesibilidad: saltar directo al contenido con el teclado */}
           <a href="#main-content" className="skip-link">

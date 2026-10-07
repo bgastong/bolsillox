@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Wordmark from "@/components/Brand/Wordmark";
 import CursorDots from "@/components/Brand/CursorDots";
+import LiveChart from "@/components/Landing/LiveChart";
 import { LanguageToggle } from "@/components/Auth/AuthLayout";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -50,15 +51,6 @@ function AuthButtons({ size = "default", primaryLabel, secondaryLabel, className
       </Link>
     </div>
   );
-}
-
-// Curva de ejemplo para la vista previa (ingresos y gastos de 6 meses).
-const INCOME = [780, 800, 820, 840, 854, 890];
-const EXPENSE = [520, 610, 700, 550, 580, 513];
-
-function previewPath(values, width = 520, height = 150) {
-  const y = (value) => height - ((value - 400) / 600) * height;
-  return values.map((value, index) => `${index ? "L" : "M"}${(index * width) / 5},${y(value).toFixed(1)}`).join(" ");
 }
 
 // Vista previa decorativa del resumen (datos de ejemplo, no del usuario).
@@ -113,20 +105,7 @@ function ProductPreview() {
         </div>
 
         <div className="surface rounded-xl p-4 sm:col-span-7">
-          <svg viewBox="0 0 520 150" preserveAspectRatio="none" className="block h-28 w-full overflow-visible sm:h-32">
-            <defs>
-              <linearGradient id="landing-income" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#3ecf8e" stopOpacity=".25" />
-                <stop offset="1" stopColor="#3ecf8e" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            {[37.5, 75, 112.5].map((y) => (
-              <line key={y} x1="0" x2="520" y1={y} y2={y} stroke="rgba(255,255,255,.05)" strokeDasharray="2 5" />
-            ))}
-            <path d={`${previewPath(INCOME)} L520,150 L0,150Z`} fill="url(#landing-income)" className="rise-y" />
-            <path d={previewPath(INCOME)} fill="none" stroke="#3ecf8e" strokeWidth="2" pathLength="1" className="draw-line" vectorEffect="non-scaling-stroke" />
-            <path d={previewPath(EXPENSE)} fill="none" stroke="#f2555a" strokeWidth="2" pathLength="1" className="draw-line" vectorEffect="non-scaling-stroke" style={{ animationDelay: "0.4s" }} />
-          </svg>
+          <LiveChart />
         </div>
 
         <div className="surface rounded-xl p-2 sm:col-span-5">
