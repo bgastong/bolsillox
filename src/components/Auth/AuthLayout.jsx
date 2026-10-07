@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Wordmark from "@/components/Brand/Wordmark";
 import { GoogleIcon } from "@/components/Brand/BrandIcons";
+import { ThemeToggle } from "@/components/Theme/ThemeControls";
 import { LegalLinks } from "./LegalLinks";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +28,7 @@ export function LanguageToggle() {
           onClick={() => setLanguage(code)}
           className={cn(
             "min-h-10 min-w-11 touch-manipulation rounded-md px-2 text-xs font-semibold uppercase outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            language === code ? "bg-white/10 text-foreground" : "text-muted-foreground",
+            language === code ? "bg-fg/10 text-foreground" : "text-muted-foreground",
           )}
         >
           {code}
@@ -47,7 +48,10 @@ export function AuthLayout({ title, subtitle, children, footer }) {
         <Link to="/" aria-label="bolsillox" className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <Wordmark />
         </Link>
-        <LanguageToggle />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <LanguageToggle />
+        </div>
       </header>
 
       <main id="main-content" className="flex flex-1 items-center justify-center py-8">

@@ -7,7 +7,7 @@ import { CategoryIcon } from "../Movements/MovementBits";
 // Estados del presupuesto: siempre icono + texto, nunca solo color.
 const STATUS = {
   ok: { icon: CircleCheckIcon, className: "text-muted-foreground", labelKey: "budgetOk" },
-  warning: { icon: TriangleAlertIcon, className: "text-amber-400", labelKey: "budgetWarning" },
+  warning: { icon: TriangleAlertIcon, className: "text-warn", labelKey: "budgetWarning" },
   over: { icon: CircleAlertIcon, className: "text-destructive", labelKey: "budgetOver" },
 };
 
@@ -40,7 +40,7 @@ export function BudgetBar({ item, label }) {
       aria-valuemax={100}
       aria-valuenow={Math.min(Math.round(item.percent), 100)}
       aria-valuetext={`${Math.round(item.percent)}%`}
-      className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]"
+      className="h-1.5 overflow-hidden rounded-full bg-fg/[0.06]"
     >
       <div
         className={cn("grow-x h-full rounded-full transition-[width] duration-500", over && "bar-over")}
@@ -87,7 +87,7 @@ function BudgetRow({ item, onClick, compact = false }) {
       type="button"
       onClick={() => onClick(item)}
       aria-label={`${name}: ${formatCurrency(item.spent, locale)} / ${formatCurrency(item.amount, locale)}, ${Math.round(item.percent)}%. ${t("tapToEdit")}`}
-      className="group flex w-full touch-manipulation items-center gap-3 rounded-2xl border bg-card p-4 text-left transition-colors outline-none hover:bg-white/[0.02] focus-visible:ring-2 focus-visible:ring-ring active:bg-white/[0.04]"
+      className="group flex w-full touch-manipulation items-center gap-3 rounded-2xl border bg-card p-4 text-left transition-colors outline-none hover:bg-fg/[0.02] focus-visible:ring-2 focus-visible:ring-ring active:bg-fg/[0.04]"
     >
       {content}
       <ChevronRightIcon

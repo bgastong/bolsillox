@@ -56,11 +56,78 @@
   --sidebar-accent-foreground: #f7f8f8;
   --sidebar-border: rgba(255, 255, 255, 0.065);
   --sidebar-ring: rgba(255, 255, 255, 0.55);
+  /* Canal RGB del texto: para superposiciones que se invierten con el tema,
+     rgb(var(--fg-rgb) / 0.06) = blanco tenue en oscuro, negro tenue en claro */
+  --fg-rgb: 247 248 248;
+  /* Avisos (falta cotizacion, cerca del limite) */
+  --warn: #fbbf24;
+  --warn-strong: #fde68a;
+  --warn-bg: rgba(251, 191, 36, 0.07);
+  --warn-border: rgba(251, 191, 36, 0.25);
+  --surface-base: #08090a;
+  --elevated: rgba(18, 19, 21, 0.96);
+}
+
+/* Tema claro: papel casi blanco, tinta casi negra y el mismo lenguaje de
+   bordes finos. Verde y rojo un poco mas oscuros para mantener el contraste. */
+[data-theme="light"] {
+  --background: #fbfbfa;
+  --foreground: #0b0c0e;
+  --card: #ffffff;
+  --card-foreground: #0b0c0e;
+  --popover: #ffffff;
+  --popover-foreground: #0b0c0e;
+  --primary: #0b0c0e;
+  --primary-foreground: #ffffff;
+  --primary-deep: #3c3f44;
+  --secondary: #f1f1f2;
+  --secondary-foreground: #0b0c0e;
+  --muted: #f1f1f2;
+  --muted-foreground: #5f636b;
+  --accent: #efeff0;
+  --accent-foreground: #0b0c0e;
+  --destructive: #d93036;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.15);
+  --input: rgba(0, 0, 0, 0.14);
+  --ring: rgba(0, 0, 0, 0.5);
+  --cream: #0b0c0e;
+  --ink: #ffffff;
+  --violet: #5f636b;
+  --text-2: #3c3f44;
+  --text-3: #5f636b;
+  --text-4: #8b8f97;
+  --chart-income: #0e9f6e;
+  --chart-expense: #d93036;
+  --income: #0b8a5f;
+  --expense: #d0303a;
+  --income-soft: rgba(14, 159, 110, 0.1);
+  --expense-soft: rgba(217, 48, 54, 0.09);
+  --sidebar: #f6f6f5;
+  --sidebar-background: #f6f6f5;
+  --sidebar-foreground: #0b0c0e;
+  --sidebar-primary: #0b0c0e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(0, 0, 0, 0.05);
+  --sidebar-accent-foreground: #0b0c0e;
+  --sidebar-border: rgba(0, 0, 0, 0.07);
+  --sidebar-ring: rgba(0, 0, 0, 0.5);
+  --fg-rgb: 11 12 14;
+  --warn: #b45309;
+  --warn-strong: #92400e;
+  --warn-bg: rgba(245, 158, 11, 0.1);
+  --warn-border: rgba(217, 119, 6, 0.3);
+  --surface-base: #ffffff;
+  --elevated: rgba(255, 255, 255, 0.97);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  /* "fg": el color del texto, para superposiciones (bg-fg/[0.04], border-fg/10) */
+  --color-fg: var(--foreground);
+  --color-warn: var(--warn);
+  --color-warn-strong: var(--warn-strong);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -120,7 +187,7 @@
   }
 
   ::selection {
-    background: rgba(255, 255, 255, 0.18);
+    background: rgb(var(--fg-rgb) / 0.18);
   }
 
   h1,
@@ -136,7 +203,7 @@
   }
 
   /* Inputs nativos de fecha con el icono visible en modo oscuro */
-  input[type="date"]::-webkit-calendar-picker-indicator {
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
     opacity: 0.7;
   }

@@ -34,7 +34,7 @@ function RecurringRow({ rule, onEdit }) {
       onClick={() => onEdit(rule)}
       aria-label={`${rule.title}, ${amount}, ${t("recurringEveryMonth", { day: rule.dayOfMonth })}. ${schedule}. ${t("tapToEdit")}`}
       className={cn(
-        "group flex w-full touch-manipulation items-center gap-3 rounded-2xl border bg-card p-3.5 text-left transition-colors outline-none hover:bg-white/[0.02] focus-visible:ring-2 focus-visible:ring-ring active:bg-white/[0.04]",
+        "group flex w-full touch-manipulation items-center gap-3 rounded-2xl border bg-card p-3.5 text-left transition-colors outline-none hover:bg-fg/[0.02] focus-visible:ring-2 focus-visible:ring-ring active:bg-fg/[0.04]",
         !rule.active && "opacity-70",
       )}
     >
@@ -57,7 +57,7 @@ function RecurringRow({ rule, onEdit }) {
           <span
             className={cn(
               "inline-flex shrink-0 items-center gap-1 whitespace-nowrap",
-              !rule.active && "text-amber-400",
+              !rule.active && "text-warn",
             )}
           >
             {!rule.active && <PauseIcon className="size-3" aria-hidden="true" />}
@@ -134,7 +134,7 @@ function Recurring() {
               </p>
             </div>
             {!monthly.convertible && (
-              <p className="col-span-2 m-0 text-xs text-amber-400">{t("rateMissingShort")}</p>
+              <p className="col-span-2 m-0 text-xs text-warn">{t("rateMissingShort")}</p>
             )}
           </section>
 

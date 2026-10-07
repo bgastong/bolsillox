@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeftIcon } from "lucide-react";
 import Wordmark from "@/components/Brand/Wordmark";
+import { ThemeToggle } from "@/components/Theme/ThemeControls";
 import { LanguageToggle } from "@/components/Auth/AuthLayout";
 import { formatDate } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -32,12 +33,15 @@ function LegalPage({ title, sections, updated, otherLink }) {
   return (
     <div className="relative min-h-svh">
       <div className="bg-glow" aria-hidden="true" />
-      <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[rgba(8,9,10,0.75)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+      <header className="sticky top-0 z-20 border-b border-fg/[0.06] bg-[color-mix(in_srgb,var(--background)_75%,transparent)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link to="/" aria-label="bolsillox" className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Wordmark />
           </Link>
-          <LanguageToggle />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <LanguageToggle />
+          </div>
         </div>
       </header>
 
@@ -49,7 +53,7 @@ function LegalPage({ title, sections, updated, otherLink }) {
               <a
                 key={section.id}
                 href={`#${section.id}`}
-                className="rounded-md px-2 py-1 text-[color:var(--text-3)] transition-colors hover:bg-white/[0.04] hover:text-foreground"
+                className="rounded-md px-2 py-1 text-[color:var(--text-3)] transition-colors hover:bg-fg/[0.04] hover:text-foreground"
               >
                 {section.title.replace(/^\d+\.\s*/, "")}
               </a>
@@ -72,7 +76,7 @@ function LegalPage({ title, sections, updated, otherLink }) {
               {t("legalUpdated", { date: formatDate(updated, locale, { day: "numeric", month: "long", year: "numeric" }) })}
             </p>
             {language !== "es" && (
-              <p className="m-0 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-[color:var(--text-3)]" lang="en">
+              <p className="m-0 rounded-lg border border-fg/10 bg-fg/[0.03] px-3 py-2 text-sm text-[color:var(--text-3)]" lang="en">
                 {t("legalSpanishOnly")}
               </p>
             )}
@@ -91,7 +95,7 @@ function LegalPage({ title, sections, updated, otherLink }) {
             ))}
           </div>
 
-          <p className="m-0 border-t border-white/[0.06] pt-6 text-sm text-[color:var(--text-3)]">{otherLink}</p>
+          <p className="m-0 border-t border-fg/[0.06] pt-6 text-sm text-[color:var(--text-3)]">{otherLink}</p>
         </article>
       </main>
     </div>

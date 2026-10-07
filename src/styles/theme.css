@@ -20,6 +20,24 @@
   --color-danger: #f2555a;
 }
 
+[data-theme="light"] {
+  color-scheme: light;
+
+  --color-bg: #fbfbfa;
+  --color-surface: #ffffff;
+  --color-input: #ffffff;
+  --color-elevated: #f1f1f2;
+  --color-text: #0b0c0e;
+  --color-muted: #5f636b;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-primary: #0b0c0e;
+  --color-primary-hover: #26282c;
+  --color-primary-text: #ffffff;
+  --color-success: #0b8a5f;
+  --color-warning: #b45309;
+  --color-danger: #d0303a;
+}
+
 /* En @layer base para que las utilidades de Tailwind puedan pisarlas. */
 @layer base {
   * {

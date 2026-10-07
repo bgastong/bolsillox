@@ -30,7 +30,7 @@ export function CategoryIcon({ category, className }) {
     <span
       title={t(`cat_${category}`)}
       className={cn(
-        "inline-flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-white/[0.07] bg-white/[0.04] text-[color:var(--text-2)]",
+        "inline-flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-fg/[0.07] bg-fg/[0.04] text-[color:var(--text-2)]",
         className,
       )}
     >

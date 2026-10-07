@@ -90,7 +90,7 @@ function TableHistory({ movements, onEdit, onDelete }) {
           </TableHeader>
           <TableBody>
             {movements.map((movement) => (
-              <TableRow key={movement.id} className="group hover:bg-white/[0.02]">
+              <TableRow key={movement.id} className="group hover:bg-fg/[0.02]">
                 <TableCell className="max-w-72 py-3 pl-5">
                   <div className="flex items-center gap-3">
                     <CategoryIcon category={movement.category} className="size-9 rounded-lg" />
@@ -125,7 +125,7 @@ function TableHistory({ movements, onEdit, onDelete }) {
               </TableRow>
             ))}
           </TableBody>
-          <TableFooter className="bg-white/[0.02]">
+          <TableFooter className="bg-fg/[0.02]">
             <TableRow className="hover:bg-transparent">
               <TableCell colSpan={6} className="px-5 py-3 text-right text-sm text-muted-foreground">
                 {summaryText}
@@ -145,7 +145,7 @@ function TableHistory({ movements, onEdit, onDelete }) {
                 type="button"
                 onClick={() => onEdit(movement)}
                 aria-label={movementLabel(movement, t, locale)}
-                className="flex w-full touch-manipulation items-center gap-3 rounded-2xl border bg-card p-3.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-white/[0.04]"
+                className="flex w-full touch-manipulation items-center gap-3 rounded-2xl border bg-card p-3.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-fg/[0.04]"
               >
                 <CategoryIcon category={movement.category} className="size-11" />
                 <div className="min-w-0 flex-1">

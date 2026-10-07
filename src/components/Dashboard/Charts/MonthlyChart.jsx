@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { Line } from "react-chartjs-2";
 import { formatCompactCurrency, formatCurrency, formatMonth } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
-import { GRID_COLOR, SERIES_COLORS, tooltipStyle } from "./chartSetup";
+import { useTheme } from "@/hooks/useTheme";
+import { chartColors, tooltipStyle } from "./chartSetup";
 
 // Degradado vertical bajo cada linea (se calcula con el tamaño real del grafico).
 function areaFill(color, alpha) {
@@ -19,6 +21,10 @@ function areaFill(color, alpha) {
 // punto (el mes elegido) queda marcado.
 function MonthlyChart({ data, currency = "ARS" }) {
   const { t, locale } = useLanguage();
+  const { resolvedTheme } = useTheme();
+  // Se recalculan al cambiar de tema.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const colors = useMemo(() => chartColors(), [resolvedTheme]);
   const last = data.length - 1;
   const pointRadius = (context) => (context.dataIndex === last ? 4.5 : 0);
 
@@ -33,7 +39,7 @@ function MonthlyChart({ data, currency = "ARS" }) {
     cubicInterpolationMode: "monotone",
     pointRadius,
     pointHoverRadius: 5,
-    pointBackgroundColor: "#08090a",
+    pointBackgroundColor: colors.base,
     pointBorderColor: color,
     pointBorderWidth: 2,
   });
@@ -41,8 +47,8 @@ function MonthlyChart({ data, currency = "ARS" }) {
   const chartData = {
     labels: data.map((item) => formatMonth(item.month, locale, true)),
     datasets: [
-      series("income", t("incomes"), SERIES_COLORS.income, "38"),
-      series("expense", t("expenses"), SERIES_COLORS.expense, "1f"),
+      series("income", t("incomes"), colors.income, "38"),
+      series("expense", t("expenses"), colors.expense, "1f"),
     ],
   };
 
@@ -54,7 +60,7 @@ function MonthlyChart({ data, currency = "ARS" }) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        ...tooltipStyle,
+        ...tooltipStyle(colors),
         callbacks: {
           title: (items) => formatMonth(data[items[0].dataIndex].month, locale),
           label: (ctx) => ` ${ctx.dataset.label}  ${formatCurrency(ctx.parsed.y, locale, { currency })}`,
@@ -63,9 +69,6 @@ function MonthlyChart({ data, currency = "ARS" }) {
             return `${t("netLabel")}  ${formatCurrency(item.income - item.expense, locale, { currency, signed: true })}`;
           },
         },
-        footerColor: "#b4b9c2",
-        footerFont: { family: '"Geist Mono Variable", ui-monospace, monospace', size: 12, weight: 400 },
-        footerMarginTop: 8,
       },
     },
     scales: {
@@ -75,15 +78,16 @@ function MonthlyChart({ data, currency = "ARS" }) {
         ticks: {
           maxRotation: 0,
           autoSkipPadding: 12,
-          color: (context) => (context.index === last ? "#f7f8f8" : "#5d6168"),
+          color: (context) => (context.index === last ? colors.text : colors.muted),
         },
       },
       y: {
         beginAtZero: true,
         grace: "8%",
-        grid: { color: GRID_COLOR, drawTicks: false },
+        grid: { color: colors.grid, drawTicks: false },
         border: { display: false, dash: [2, 5] },
         ticks: {
+          color: colors.muted,
           padding: 10,
           maxTicksLimit: 5,
           callback: (value) => formatCompactCurrency(value, locale, currency),
@@ -95,7 +99,7 @@ function MonthlyChart({ data, currency = "ARS" }) {
   return (
     <>
       <div className="relative h-60 sm:h-64 lg:h-auto lg:min-h-64 lg:flex-1" aria-hidden="true">
-        <Line data={chartData} options={options} />
+        <Line key={resolvedTheme} data={chartData} options={options} />
       </div>
       {/* Version accesible del grafico para lectores de pantalla */}
       <table className="sr-only">
