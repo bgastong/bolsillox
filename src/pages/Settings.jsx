@@ -1,14 +1,12 @@
 import { useState } from "react";
 import {
   CheckIcon,
-  ExternalLinkIcon,
   RefreshCwIcon,
   TriangleAlertIcon,
 } from "lucide-react";
 import { CURRENCIES } from "@shared/catalog.js";
 import { issuesToFieldErrors, rateSettingsSchema } from "@shared/movementSchema.js";
 import AccountSection from "@/components/Account/AccountSection";
-import { GitHubIcon } from "@/components/Brand/BrandIcons";
 import { PageHeader } from "@/components/Movements/MovementBits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -288,25 +286,6 @@ function Settings() {
             />
           ))}
         </div>
-      </Section>
-
-      <Section id="settings-about" title={t("aboutTitle")} description={t("aboutDescription")}>
-        <a
-          href="https://github.com/bgastong/bolsillox"
-          target="_blank"
-          rel="noreferrer"
-          className="flex min-h-14 touch-manipulation items-center gap-3 rounded-xl border border-input px-4 py-3 transition-colors outline-none hover:border-fg/20 hover:bg-fg/[0.02] focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-fg/[0.06]">
-            <GitHubIcon />
-          </span>
-          <span className="grid flex-1 gap-0.5">
-            <span className="text-[15px] font-medium sm:text-sm">{t("aboutGithub")}</span>
-            <span className="text-xs text-muted-foreground">github.com/bgastong/bolsillox</span>
-          </span>
-          <ExternalLinkIcon className="size-4 text-muted-foreground" aria-hidden="true" />
-          <span className="sr-only">{t("opensNewTab")}</span>
-        </a>
       </Section>
     </div>
   );
