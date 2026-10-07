@@ -176,7 +176,16 @@ async function openPostgres(url) {
   const { default: pg } = await import("pg");
   pg.types.setTypeParser(INT8_OID, Number);
   pg.types.setTypeParser(NUMERIC_OID, Number);
-  const pool = new pg.Pool({ connectionString: url, max: 5 });
+  // En Vercel cada instancia de la funcion tiene su propio pool: conviene uno
+  // chico (PG_POOL_MAX) y la URL "pooled" de Neon.
+  const pool = new pg.Pool({
+    connectionString: url,
+    max: Number(process.env.PG_POOL_MAX) || 5,
+    idleTimeoutMillis: 30_000,
+  });
+  // Neon corta las conexiones inactivas cuando suspende la base: sin este
+  // manejador, ese error tiraria abajo el proceso.
+  pool.on("error", (error) => console.warn("[db] conexion cerrada:", error.message));
   const affected = (result) => result.rowCount ?? 0;
 
   return {

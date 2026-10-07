@@ -1,6 +1,7 @@
 # Dependencias y build
 node_modules
 dist
+.vercel
 
 # Base de datos local (PGlite y la SQLite de la version anterior)
 server/data/
