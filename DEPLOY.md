@@ -1,42 +1,61 @@
-# Subir bolsillox a internet (gratis)
+# Subir bolsillox a internet
 
-La app queda en una dirección como `https://bolsillox.onrender.com`, cada persona crea su cuenta y sus datos se guardan en una base Postgres en la nube.
+La app queda en tu dominio (por ejemplo `https://bolsillox.com.ar`), cada persona crea su cuenta y sus datos se guardan en una base Postgres en la nube.
 
-- **Render** ejecuta el servidor (la API y la web juntas). El plan gratis no pide tarjeta.
-- **Neon** guarda la base de datos Postgres. El plan gratis tampoco pide tarjeta.
+- **Vercel** publica la web y ejecuta la API. Siempre está activa: no se "duerme" como el plan gratis de Render.
+- **Neon** guarda la base de datos Postgres.
+- **Resend** manda los emails con códigos (opcional).
 
-> **Plan gratis de Render:** si nadie usa la app durante 15 minutos, el servidor se duerme. La siguiente visita tarda entre 30 y 60 segundos en cargar; después anda normal. Si más adelante querés que responda siempre al instante, pasás al plan pago desde el panel de Render. No hay que cambiar código.
+> **Plan gratis de Vercel (Hobby):** es para proyectos personales, sin fines comerciales. Si cobrás o ponés publicidad, corresponde el plan Pro.
 
-Antes de empezar, mergeá el PR a `master`: Render publica lo que hay en esa rama.
+Vercel publica lo que hay en la rama `master`: mergeá los PRs antes de empezar.
 
 ## 1. Base de datos en Neon
+
+Si ya tenés la base de Neon que usaba Render, **usá esa misma**: tus cuentas y movimientos siguen ahí. Solo necesitás la URL "pooled" (punto 3).
 
 1. Entrá a [neon.tech](https://neon.tech) y creá una cuenta. Podés usar tu cuenta de GitHub.
 2. Creá un proyecto:
    - **Name:** `bolsillox`
-   - **Region:** AWS **US East (N. Virginia)**. Tiene que ser la misma zona que el servidor de Render.
-3. En el panel del proyecto, tocá **Connect** y copiá la **connection string**. Empieza con `postgresql://` y termina con `?sslmode=require`.
+   - **Region:** AWS **US East (N. Virginia)**. Es la misma zona donde corre la API en Vercel (`iad1`).
+3. En el panel del proyecto, tocá **Connect**, activá **Connection pooling** y copiá la **connection string**. Empieza con `postgresql://`, el host tiene `-pooler` y termina con `?sslmode=require`.
 
-Guardala, la vas a usar en el paso 2. Es la contraseña de tu base: no la subas al repo ni la compartas.
+Es la contraseña de tu base: no la subas al repo ni la compartas. No hace falta crear tablas: la app las crea sola.
 
-No hace falta crear tablas: la app las crea sola la primera vez que arranca.
+## 2. Proyecto en Vercel
 
-## 2. Servidor en Render
+1. Entrá a [vercel.com](https://vercel.com) y creá una cuenta con GitHub (plan **Hobby**).
+2. Tocá **Add New… → Project** e importá el repositorio `bgastong/bolsillox`. Si no aparece, tocá **Adjust GitHub App Permissions** y dale acceso.
+3. Vercel lee `vercel.json` y completa solo la configuración (Vite, `npm run build`, carpeta `dist`). No cambies nada.
+4. Abrí **Environment Variables** y cargá:
 
-1. Entrá a [render.com](https://render.com) y creá una cuenta con GitHub.
-2. Tocá **New → Blueprint** y elegí el repositorio `bgastong/bolsillox`. Render lee el archivo `render.yaml` y arma el servicio solo.
-3. Te va a pedir las variables de entorno:
-   - **DATABASE_URL:** la connection string de Neon.
-   - **PUBLIC_URL:** dejala vacía por ahora.
-   - **GOOGLE_CLIENT_ID** y **GOOGLE_CLIENT_SECRET:** vacías por ahora (el paso 4 es opcional).
-4. Tocá **Apply**. El primer deploy tarda unos minutos. Al terminar, arriba aparece la dirección de tu app, por ejemplo `https://bolsillox.onrender.com`.
-5. Volvé a **Environment**, completá **PUBLIC_URL** con esa dirección (sin `/` al final) y guardá. Render vuelve a publicar solo.
+   | Variable | Valor |
+   | --- | --- |
+   | `DATABASE_URL` | la connection string pooled de Neon |
+   | `PG_POOL_MAX` | `2` |
+   | `PUBLIC_URL` | `https://bolsillox.com.ar` (tu dominio, sin `/` al final) |
+   | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | si usás el login con Google (paso 5) |
+   | `RESEND_API_KEY`, `EMAIL_FROM` | si usás los códigos por email (paso 6) |
 
-Cada vez que se mergea algo a `master`, Render publica la versión nueva automáticamente.
+5. Tocá **Deploy**. Tarda uno o dos minutos. Al terminar te da una dirección de prueba, por ejemplo `https://bolsillox.vercel.app`.
 
-## 3. Crear tu cuenta
+Mientras no conectes el dominio, el login con Google solo anda si `PUBLIC_URL` es la dirección en la que estás. El login con email anda en cualquiera.
 
-Abrí la dirección de la app, tocá **Crear cuenta** y listo.
+Cada vez que se mergea algo a `master`, Vercel publica la versión nueva. Cada PR también recibe su propia dirección de prueba.
+
+Si cambiás una variable, tenés que volver a publicar: **Deployments → ⋯ → Redeploy**.
+
+## 3. Conectar tu dominio
+
+1. En Vercel, entrá al proyecto → **Settings → Domains** y agregá `bolsillox.com.ar`. Vercel te ofrece sumar también `www.bolsillox.com.ar` y redirigirlo; aceptá.
+2. Vercel te muestra qué cargar. Tenés dos opciones:
+   - **Registros DNS** (lo más simple si el dominio está en NIC.ar con otro DNS): un registro **A** para `@` y un **CNAME** para `www`, con los valores que muestra Vercel.
+   - **Nameservers de Vercel**: en NIC.ar, en **Delegaciones**, poné los nameservers que te indica Vercel (`ns1.vercel-dns.com` y `ns2.vercel-dns.com`). Así todo el DNS se maneja desde Vercel, incluidos los registros de Resend.
+3. Esperá a que el dominio aparezca como **Valid Configuration**. Puede tardar desde minutos hasta algunas horas (NIC.ar a veces tarda más). El certificado HTTPS se genera solo.
+
+## 4. Crear tu cuenta
+
+Abrí tu dominio, tocá **Crear cuenta** y listo.
 
 ### Traer los datos que tenías en tu compu (opcional)
 
@@ -50,9 +69,9 @@ Si cargaste movimientos en la versión anterior (antes de que hubiera cuentas), 
    ```bash
    npm run import:sqlite -- --email tu@email.com
    ```
-   El email tiene que ser el de la cuenta que creaste en el paso 3.
+   El email tiene que ser el de la cuenta que creaste.
 
-## 4. Login con Google (opcional)
+## 5. Login con Google (opcional)
 
 1. Entrá a [console.cloud.google.com](https://console.cloud.google.com) y creá un proyecto (por ejemplo, `bolsillox`).
 2. Buscá **Google Auth Platform** (o **APIs y servicios → Pantalla de consentimiento de OAuth**) y configurala:
@@ -60,36 +79,36 @@ Si cargaste movimientos en la versión anterior (antes de que hubiera cuentas), 
    - **Correo de asistencia:** tu email
    - **Público:** Externo
 3. En **Público** (Audience), tocá **Publicar app**. Si la dejás en modo "Prueba", solo pueden entrar los emails que agregues como usuarios de prueba. bolsillox solo pide nombre y email, que son permisos básicos.
-4. En **Clientes** (Clients), tocá **Crear cliente**:
+4. En **Clientes** (Clients), tocá **Crear cliente** (o abrí el que ya tenías):
    - **Tipo:** Aplicación web
-   - **URIs de redireccionamiento autorizados:** agregá estos dos:
-     - `https://TU-APP.onrender.com/api/auth/google/callback`
+   - **Orígenes de JavaScript autorizados:** `https://bolsillox.com.ar`
+   - **URIs de redireccionamiento autorizados:**
+     - `https://bolsillox.com.ar/api/auth/google/callback`
      - `http://localhost:5173/api/auth/google/callback` (para probar en tu compu)
-5. Copiá el **ID de cliente** y el **Secreto del cliente**.
-6. En Render, en **Environment**, completá **GOOGLE_CLIENT_ID** y **GOOGLE_CLIENT_SECRET** y guardá.
-
-Después del nuevo deploy aparece el botón **Continuar con Google** en el login y en el registro.
+5. Copiá el **ID de cliente** y el **Secreto del cliente** y cargalos en Vercel como `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`. Después, **Redeploy**.
 
 Para probarlo en tu compu, poné las mismas dos variables en tu `.env` y corré `npm run dev`.
 
-## 5. Emails con código (verificación y recuperar contraseña)
+## 6. Emails con código (verificación y recuperar contraseña)
 
-Al crear una cuenta, bolsillox manda un código de 6 dígitos para confirmar el email. Lo mismo pasa con "¿Olvidaste tu contraseña?" y al cambiar el email. Los emails salen por **Resend**: el plan gratis alcanza (3.000 emails por mes) y funciona en el plan gratis de Render, que no permite enviar por SMTP.
+Al crear una cuenta, bolsillox manda un código de 6 dígitos para confirmar el email. Lo mismo pasa con "¿Olvidaste tu contraseña?" y al cambiar el email. Los emails salen por **Resend** (el plan gratis alcanza: 3.000 emails por mes).
+
+> Cargá `RESEND_API_KEY` recién cuando el dominio esté verificado en Resend. Con la clave cargada la app pide el código a todos, y sin dominio verificado Resend solo le manda emails a tu propia dirección: nadie más podría crear una cuenta.
 
 1. Creá una cuenta en [resend.com](https://resend.com).
-2. En **API Keys**, creá una clave con permiso **Sending access** y copiala. Empieza con `re_`.
-3. En Render, en **Environment**, agregá **RESEND_API_KEY** con esa clave.
-4. Para mandar desde tu propio dominio, por ejemplo `hola@tudominio.com`:
-   - En Resend, entrá a **Domains**, agregá tu dominio y cargá en tu proveedor de dominio los registros DNS que te indica.
-   - Cuando aparezca como verificado, agregá en Render **EMAIL_FROM** con el remitente. Por ejemplo: `bolsillox <hola@tudominio.com>`.
-
-   Sin dominio propio, Resend solo deja mandar emails de prueba a tu propia dirección. Sirve para probar, pero no para usuarios reales.
+2. En **Domains**, tocá **Add Domain** y agregá `bolsillox.com.ar` (o un subdominio, como `mail.bolsillox.com.ar`).
+3. Cargá los registros DNS que te muestra Resend (MX y TXT) donde manejes el DNS: en Vercel (**Settings → Domains**, o la sección **Domains** de tu cuenta) si pusiste sus nameservers, o en tu proveedor si no.
+4. Cuando todos aparezcan como **Verified**, entrá a **API Keys** y creá una clave con permiso **Sending access**. Empieza con `re_`; copiala, se muestra una sola vez.
+5. En Vercel cargá:
+   - `RESEND_API_KEY`: la clave.
+   - `EMAIL_FROM`: el remitente, por ejemplo `bolsillox <no-reply@bolsillox.com.ar>`.
+6. **Redeploy** y probá crear una cuenta en una ventana de incógnito.
 
 Sin `RESEND_API_KEY` la app sigue funcionando: las cuentas nuevas entran sin código y "¿Olvidaste tu contraseña?" no aparece. En tu compu, sin la clave, el código se muestra en la terminal de `npm run dev`.
 
 Las cuentas creadas antes de activar esto no tienen que confirmar nada.
 
-## 6. Términos y privacidad
+## 7. Términos y privacidad
 
 Los textos están en `src/lib/legalContent.js`. Antes de publicar:
 
@@ -97,14 +116,24 @@ Los textos están en `src/lib/legalContent.js`. Antes de publicar:
 2. Hacelos revisar por un abogado.
 3. Si después cambiás los textos, actualizá la fecha en `shared/legal.js`. Cada persona queda registrada con la versión que aceptó.
 
+## 8. Apagar Render (si venías de ahí)
+
+Cuando tu dominio ya ande en Vercel y hayas probado entrar con tu cuenta:
+
+1. En Render, abrí el servicio **bolsillox** → **Settings** → **Suspend Web Service** (o **Delete Web Service**).
+2. La base de Neon no se toca: es la misma que usa Vercel.
+
+`render.yaml` sigue en el repo por si alguna vez querés volver a Render: ahí el servidor sirve la web y la API juntas (`npm start`).
+
 ## Problemas comunes
 
 | Qué pasa | Qué revisar |
 | --- | --- |
-| El build falla con `Cannot find package '@vitejs/plugin-react'` | Que el Build Command sea `npm ci --include=dev && npm run build`. |
-| La primera carga tarda mucho | Es el servidor gratis despertándose; esperá hasta un minuto. |
-| El deploy falla al arrancar con un error de base de datos | Que `DATABASE_URL` sea la connection string completa de Neon, con `?sslmode=require`. |
+| La API responde error 500 y en los logs dice `Falta la variable DATABASE_URL` | Cargala en **Settings → Environment Variables** y hacé **Redeploy**. |
+| Error de base de datos o `too many connections` | Que `DATABASE_URL` sea la URL **pooled** de Neon (host con `-pooler`) y que `PG_POOL_MAX` sea `2`. |
+| Cambié una variable y no se nota | Las variables se aplican en el próximo deploy: **Deployments → ⋯ → Redeploy**. |
+| El dominio dice "Invalid Configuration" | Revisá los registros A/CNAME o los nameservers en NIC.ar. A veces tarda unas horas. |
 | Google dice `redirect_uri_mismatch` | Que la URI cargada en Google sea exactamente `PUBLIC_URL` + `/api/auth/google/callback`. |
-| Google vuelve al login con un error | Que `PUBLIC_URL` esté completa y que la app de Google esté publicada (o tu email agregado como usuario de prueba). |
+| Google vuelve al login con un error | Que `PUBLIC_URL` sea tu dominio y que la app de Google esté publicada (o tu email agregado como usuario de prueba). |
 | No aparece el botón de Google | Que estén cargadas las dos variables `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`. |
-| No llegan los códigos por email | Que `RESEND_API_KEY` esté cargada y que el dominio de `EMAIL_FROM` esté verificado en Resend. Revisá los logs de Render: ahí aparece el error de Resend. También fijate en spam. |
+| No llegan los códigos por email | Que `RESEND_API_KEY` esté cargada y que el dominio de `EMAIL_FROM` esté verificado en Resend. En Vercel, **Logs** muestra el error de Resend; en Resend, **Emails** muestra cada envío. También fijate en spam. |
