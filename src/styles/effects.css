@@ -331,3 +331,40 @@ Todos respetan prefers-reduced-motion (ver index.css).
     stroke-dashoffset: 0;
   }
 }
+
+/* Pagina de inicio: haz de luz detras de la portada */
+.landing-beam {
+  position: absolute;
+  top: -240px;
+  left: 50%;
+  width: min(1100px, 140vw);
+  height: 720px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 40% 50% at 70% 45%, rgba(62, 207, 142, 0.07), transparent 70%),
+    radial-gradient(ellipse 50% 60% at 50% 30%, rgba(255, 255, 255, 0.06), transparent 70%);
+}
+
+/* Vista previa del producto, apenas inclinada; se endereza al pasar el mouse */
+.landing-tilt {
+  perspective: 1600px;
+}
+
+.landing-preview {
+  transform: rotateY(-8deg) rotateX(4deg);
+  transform-origin: left center;
+  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  animation: page-in 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+}
+
+.landing-preview:hover {
+  transform: none;
+}
+
+@media (max-width: 1023px) {
+  .landing-preview {
+    transform: none;
+  }
+}

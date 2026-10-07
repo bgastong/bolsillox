@@ -1,4 +1,5 @@
 import { useId, useState } from "react";
+import { Link } from "react-router-dom";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Wordmark from "@/components/Brand/Wordmark";
 import { GoogleIcon } from "@/components/Brand/BrandIcons";
@@ -11,32 +12,40 @@ import { useLanguage } from "@/hooks/useLanguage";
 
 const LANGUAGES = ["es", "en"];
 
+// Selector de idioma ES / EN (cuenta y pagina de inicio).
+export function LanguageToggle() {
+  const { t, language, setLanguage } = useLanguage();
+  return (
+    <div role="group" aria-label={t("language")} className="flex rounded-lg border p-0.5">
+      {LANGUAGES.map((code) => (
+        <button
+          key={code}
+          type="button"
+          lang={code}
+          aria-pressed={language === code}
+          onClick={() => setLanguage(code)}
+          className={cn(
+            "min-h-10 min-w-11 touch-manipulation rounded-md px-2 text-xs font-semibold uppercase outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            language === code ? "bg-white/10 text-foreground" : "text-muted-foreground",
+          )}
+        >
+          {code}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // Pantalla de cuenta (login / registro): logo, tarjeta centrada y selector de idioma.
 export function AuthLayout({ title, subtitle, children, footer }) {
-  const { t, language, setLanguage } = useLanguage();
-
   return (
     <div className="relative flex min-h-svh flex-col px-4 pt-[max(16px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
       <div className="bg-glow" aria-hidden="true" />
       <header className="flex items-center justify-between">
-        <Wordmark />
-        <div role="group" aria-label={t("language")} className="flex rounded-lg border p-0.5">
-          {LANGUAGES.map((code) => (
-            <button
-              key={code}
-              type="button"
-              lang={code}
-              aria-pressed={language === code}
-              onClick={() => setLanguage(code)}
-              className={cn(
-                "min-h-10 min-w-11 touch-manipulation rounded-md px-2 text-xs font-semibold uppercase outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                language === code ? "bg-white/10 text-foreground" : "text-muted-foreground",
-              )}
-            >
-              {code}
-            </button>
-          ))}
-        </div>
+        <Link to="/" aria-label="bolsillox" className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <Wordmark />
+        </Link>
+        <LanguageToggle />
       </header>
 
       <main id="main-content" className="flex flex-1 items-center justify-center py-8">
