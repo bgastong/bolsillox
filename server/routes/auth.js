@@ -53,7 +53,10 @@ export function authRouter(
   }
 
   async function sendCode(to, purpose, code, language) {
-    await mailer.send({ to, ...codeEmail({ purpose, code, language, minutes: CODE_MINUTES }) });
+    await mailer.send({
+      to,
+      ...codeEmail({ purpose, code, language, minutes: CODE_MINUTES, appUrl: publicUrl }),
+    });
   }
 
   function startSession(res, { token, expiresAt }) {
