@@ -33,3 +33,6 @@ services:
         sync: false
       - key: EMAIL_FROM
         sync: false
+      # Email para avisar errores inesperados (ver DEPLOY.md, paso 7).
+      - key: ALERT_EMAIL
+        sync: false

@@ -15,6 +15,7 @@ Arma la app a partir de las variables de entorno (ver DEPLOY.md):
 - PUBLIC_URL: URL publica (por ejemplo https://bolsillox.com.ar).
 - RESEND_API_KEY / EMAIL_FROM: envio de codigos por email (verificacion y
   recuperar contraseña). En desarrollo, sin clave, el codigo sale por consola.
+- ALERT_EMAIL: email donde avisar los errores inesperados (usa el mismo Resend).
 - COOKIE_SECURE=false: cookies sin HTTPS (solo para probar el build en local).
 
 La usan server/index.js (Render y desarrollo) y api/index.js (Vercel).
@@ -50,6 +51,7 @@ export async function createAppFromEnv({ isProduction, serveStatic = isProductio
     google: googleConfigFromEnv(),
     publicUrl: process.env.PUBLIC_URL?.replace(/\/$/, "") || null,
     mailer: mailerFromEnv({ isProduction }),
+    alertEmail: process.env.ALERT_EMAIL?.trim() || null,
   });
 
   return { app, db };
