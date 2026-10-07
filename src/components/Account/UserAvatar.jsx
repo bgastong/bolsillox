@@ -6,7 +6,7 @@ function UserAvatar({ name, className }) {
     <span
       aria-hidden="true"
       className={cn(
-        "flex size-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[linear-gradient(135deg,#2b2e33,#16181b)] text-base font-medium text-[color:var(--text-2)] uppercase",
+        "flex size-11 shrink-0 items-center justify-center rounded-full border border-fg/10 bg-fg/[0.06] text-base font-medium text-[color:var(--text-2)] uppercase",
         className,
       )}
     >

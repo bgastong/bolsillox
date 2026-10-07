@@ -78,7 +78,7 @@ function MonthWheel({ value, onSelect }) {
         {/* Banda central resaltada */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-1/2 h-11 -translate-y-1/2 rounded-xl border border-white/10 bg-white/[0.06]"
+          className="pointer-events-none absolute inset-x-0 top-1/2 h-11 -translate-y-1/2 rounded-xl border border-fg/10 bg-fg/[0.06]"
         />
         <div
           ref={listRef}

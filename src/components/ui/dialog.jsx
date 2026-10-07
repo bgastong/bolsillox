@@ -48,7 +48,7 @@ function DialogContent({ className, children, showCloseButton = true, closeLabel
         )}
         {...props}>
         {/* Indicador visual de hoja inferior (solo mobile) */}
-        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-white/15 sm:hidden" />
+        <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-fg/15 sm:hidden" />
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
