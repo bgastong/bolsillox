@@ -4,7 +4,6 @@ import {
   CATEGORIES_BY_TYPE,
   CURRENCIES,
   NOTE_MAX_LENGTH,
-  PAYMENT_METHODS,
   TITLE_MAX_LENGTH,
 } from "@shared/catalog.js";
 import {
@@ -15,12 +14,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { todayISO } from "@/lib/format";
 import { getCategoryMeta } from "@/lib/categories";
+import { paymentMethodOptions } from "@/lib/paymentMethods";
 import { useLanguage } from "@/hooks/useLanguage";
 
 /*
@@ -172,6 +173,18 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
     };
   }
 
+  // Para los controles propios (fecha y medio de pago), que devuelven el valor directo.
+  function pickerProps(field) {
+    const error = errors[field];
+    return {
+      id: `movement-${field}`,
+      value: values[field],
+      "aria-invalid": error ? true : undefined,
+      "aria-describedby": error ? `movement-${field}-error` : undefined,
+      disabled: saving,
+    };
+  }
+
   const errorText = (field) => (errors[field] ? t(errors[field]) : null);
 
   return (
@@ -267,7 +280,10 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
             hint={t("startDateHint")}
             error={errorText("startDate")}
           >
-            <Input {...fieldProps("startDate")} type="date" />
+            <DatePicker
+              {...pickerProps("startDate")}
+              onChange={(value) => update("startDate", value)}
+            />
           </Field>
           <Field
             id="movement-endDate"
@@ -275,12 +291,22 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
             hint={t("endDateHint")}
             error={errorText("endDate")}
           >
-            <Input {...fieldProps("endDate")} type="date" min={values.startDate || undefined} />
+            <DatePicker
+              {...pickerProps("endDate")}
+              onChange={(value) => update("endDate", value)}
+              min={values.startDate || undefined}
+              placeholder={t("noEndDate")}
+              clearable
+            />
           </Field>
         </div>
       ) : (
         <Field id="movement-date" label={t("date")} error={errorText("date")}>
-          <Input {...fieldProps("date")} type="date" />
+          <DatePicker
+            {...pickerProps("date")}
+            onChange={(value) => update("date", value)}
+            shortcuts
+          />
         </Field>
       )}
 
@@ -333,16 +359,12 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
       </fieldset>
 
       <Field id="movement-paymentMethod" label={t("method")} error={errorText("paymentMethod")}>
-        <NativeSelect {...fieldProps("paymentMethod")}>
-          <option value="" disabled>
-            {t("selectPlaceholder")}
-          </option>
-          {PAYMENT_METHODS.map((method) => (
-            <option key={method} value={method}>
-              {t(`pm_${method}`)}
-            </option>
-          ))}
-        </NativeSelect>
+        <Select
+          {...pickerProps("paymentMethod")}
+          onValueChange={(value) => update("paymentMethod", value)}
+          options={paymentMethodOptions(t)}
+          placeholder={t("selectPlaceholder")}
+        />
       </Field>
 
       <Field id="movement-note" label={t("note")} error={errorText("note")}>
