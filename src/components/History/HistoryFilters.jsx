@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
-import {
-  EXPENSE_CATEGORIES,
-  INCOME_CATEGORIES,
-  PAYMENT_METHODS,
-} from "@shared/catalog.js";
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@shared/catalog.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import { DatePicker } from "@/components/ui/date-picker";
+import { Select } from "@/components/ui/select";
+import { getCategoryMeta } from "@/lib/categories";
+import { paymentMethodOptions } from "@/lib/paymentMethods";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -149,94 +148,74 @@ function HistoryFilters({
       </div>
 
       <FilterField className="max-sm:hidden" id="filter-type" label={t("type")}>
-        <NativeSelect
+        <Select
           id="filter-type"
           value={filters.type}
-          onChange={(event) => onFilterChange("type", event.target.value)}
-        >
-          <option value="">{t("all")}</option>
-          <option value="income">{t("incomes")}</option>
-          <option value="expense">{t("expenses")}</option>
-        </NativeSelect>
+          onValueChange={(value) => onFilterChange("type", value)}
+          options={[
+            { value: "", label: t("all") },
+            { value: "income", label: t("incomes") },
+            { value: "expense", label: t("expenses") },
+          ]}
+        />
       </FilterField>
 
-      <FilterField
-        className={advanced}
-        id="filter-category"
-        label={t("category")}
-      >
-        <NativeSelect
+      <FilterField className={advanced} id="filter-category" label={t("category")}>
+        <Select
           id="filter-category"
           value={filters.category}
-          onChange={(event) => onFilterChange("category", event.target.value)}
-        >
-          <option value="">{t("allFem")}</option>
-          {categoryGroups.map((group) => (
-            <optgroup
-              key={group.type}
-              label={t(group.type === "income" ? "incomes" : "expenses")}
-            >
-              {group.items.map((category) => (
-                <option key={category} value={category}>
-                  {t(`cat_${category}`)}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </NativeSelect>
+          onValueChange={(value) => onFilterChange("category", value)}
+          options={[{ value: "", label: t("allFem") }]}
+          groups={categoryGroups.map((group) => ({
+            label: t(group.type === "income" ? "incomes" : "expenses"),
+            options: group.items.map((category) => {
+              const { color, icon } = getCategoryMeta(category);
+              return { value: category, label: t(`cat_${category}`), icon, iconColor: color };
+            }),
+          }))}
+        />
       </FilterField>
 
       <FilterField className={advanced} id="filter-method" label={t("method")}>
-        <NativeSelect
+        <Select
           id="filter-method"
           value={filters.paymentMethod}
-          onChange={(event) =>
-            onFilterChange("paymentMethod", event.target.value)
-          }
-        >
-          <option value="">{t("all")}</option>
-          {PAYMENT_METHODS.map((method) => (
-            <option key={method} value={method}>
-              {t(`pm_${method}`)}
-            </option>
-          ))}
-        </NativeSelect>
+          onValueChange={(value) => onFilterChange("paymentMethod", value)}
+          options={[{ value: "", label: t("all") }, ...paymentMethodOptions(t)]}
+        />
       </FilterField>
 
       <FilterField className={advanced} id="filter-from" label={t("from")}>
-        <Input
+        <DatePicker
           id="filter-from"
-          type="date"
           value={filters.from}
           max={filters.to || undefined}
-          onChange={(event) => onFilterChange("from", event.target.value)}
+          onChange={(value) => onFilterChange("from", value)}
+          placeholder={t("anyDate")}
+          clearable
         />
       </FilterField>
 
       <FilterField className={advanced} id="filter-to" label={t("to")}>
-        <Input
+        <DatePicker
           id="filter-to"
-          type="date"
           value={filters.to}
           min={filters.from || undefined}
-          onChange={(event) => onFilterChange("to", event.target.value)}
+          onChange={(value) => onFilterChange("to", value)}
+          placeholder={t("anyDate")}
+          clearable
           aria-invalid={rangeError ? true : undefined}
           aria-describedby={rangeError ? "filter-range-error" : undefined}
         />
       </FilterField>
 
       <FilterField className={advanced} id="filter-sort" label={t("sortBy")}>
-        <NativeSelect
+        <Select
           id="filter-sort"
           value={filters.sort}
-          onChange={(event) => onFilterChange("sort", event.target.value)}
-        >
-          {SORT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {t(option.labelKey)}
-            </option>
-          ))}
-        </NativeSelect>
+          onValueChange={(value) => onFilterChange("sort", value)}
+          options={SORT_OPTIONS.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
+        />
       </FilterField>
 
       {(rangeError || hasFilters) && (
