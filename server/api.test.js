@@ -514,3 +514,36 @@ describe("datos de ejemplo", () => {
     assert.equal(res.status, 409);
   });
 });
+
+describe("borrar varios movimientos", () => {
+  test("borra solo los elegidos y solo los propios", async () => {
+    const create = (title) =>
+      json("/movements", {
+        method: "POST",
+        body: { type: "expense", title, amount: 10, currency: "ARS", date: `${MONTH}-02`, category: "food", paymentMethod: "cash", note: "" },
+      });
+    const a = await create("Borrar A");
+    const b = await create("Borrar B");
+    const keep = await create("Queda");
+    const other = await api.signup();
+    const foreign = await (
+      await api.request("/movements", {
+        method: "POST",
+        cookie: other.cookie,
+        body: { type: "expense", title: "Ajeno", amount: 10, currency: "ARS", date: `${MONTH}-02`, category: "food", paymentMethod: "cash", note: "" },
+      })
+    ).json();
+
+    const res = await request("/movements/bulk-delete", { method: "POST", body: { ids: [a.id, b.id, b.id, foreign.id] } });
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { deleted: 2 });
+    assert.equal((await request(`/movements/${a.id}`)).status, 404);
+    assert.equal((await request(`/movements/${keep.id}`)).status, 200);
+    assert.equal((await api.request(`/movements/${foreign.id}`, { cookie: other.cookie })).status, 200);
+  });
+
+  test("una lista vacia o invalida da 400", async () => {
+    assert.equal((await request("/movements/bulk-delete", { method: "POST", body: { ids: [] } })).status, 400);
+    assert.equal((await request("/movements/bulk-delete", { method: "POST", body: { ids: ["x"] } })).status, 400);
+  });
+});
