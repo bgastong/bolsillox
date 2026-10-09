@@ -77,19 +77,46 @@ export const movementSchema = z
   .object({ ...movementFields, date: isoDateSchema })
   .superRefine(checkCategoryMatchesType);
 
-// Regla que genera un movimiento todos los meses, el mismo dia que startDate.
+export const RECURRING_KINDS = ["recurring", "installments"];
+export const INSTALLMENTS_MAX = 360;
+
+// Numero entero que puede llegar como texto (desde un input) o como numero.
+const integerSchema = (error) =>
+  z.preprocess(
+    (value) => (value === "" || value === null || value === undefined ? undefined : Number(value)),
+    z.number({ error }).int({ error }),
+  );
+
+/*
+Regla que genera un movimiento todos los meses, el mismo dia que startDate.
+kind "installments": compra en cuotas. amount es lo que vale cada cuota,
+installmentFirst el numero de la cuota de startDate (1 si arranca ahora) e
+installmentsTotal la cantidad de cuotas. La fecha de fin se calcula sola.
+*/
 export const recurringSchema = z
   .object({
     ...movementFields,
+    kind: z.enum(RECURRING_KINDS).optional().default("recurring"),
     startDate: isoDateSchema,
     endDate: z
       .union([isoDateSchema, z.literal(""), z.null()])
       .optional()
       .transform((value) => value || null),
+    installmentsTotal: integerSchema("errorInstallmentsTotal").optional(),
+    installmentFirst: integerSchema("errorInstallmentFirst").optional(),
     active: z.boolean({ error: "errorActiveInvalid" }).optional().default(true),
   })
   .superRefine((data, ctx) => {
     checkCategoryMatchesType(data, ctx);
+    if (data.kind === "installments") {
+      const total = data.installmentsTotal;
+      if (!total || total < 2 || total > INSTALLMENTS_MAX) {
+        ctx.addIssue({ code: "custom", path: ["installmentsTotal"], message: "errorInstallmentsTotal" });
+      } else if (!data.installmentFirst || data.installmentFirst < 1 || data.installmentFirst > total) {
+        ctx.addIssue({ code: "custom", path: ["installmentFirst"], message: "errorInstallmentFirst" });
+      }
+      return;
+    }
     if (data.endDate && data.endDate < data.startDate) {
       ctx.addIssue({ code: "custom", path: ["endDate"], message: "errorEndBeforeStart" });
     }
