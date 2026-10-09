@@ -60,10 +60,11 @@ export function createBudgetsService(db) {
     };
   }
 
+  // Si la persona cambia un presupuesto de ejemplo, pasa a ser suyo (is_demo = FALSE).
   function set(userId, category, amount) {
     return db.run(sql`
       INSERT INTO budgets (user_id, category, amount) VALUES (${userId}, ${category}, ${amount})
-      ON CONFLICT (user_id, category) DO UPDATE SET amount = excluded.amount, updated_at = now()
+      ON CONFLICT (user_id, category) DO UPDATE SET amount = excluded.amount, is_demo = FALSE, updated_at = now()
     `);
   }
 
