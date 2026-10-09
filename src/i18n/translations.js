@@ -46,6 +46,12 @@ export const translations = {
     noFutureMonths: "Este es el mes actual",
     showMonth: "Ver {{month}}",
     nextMonth: "Mes siguiente",
+    today: "Hoy",
+    yesterday: "Ayer",
+    chooseDate: "Elegí una fecha",
+    clearDate: "Borrar",
+    noEndDate: "Sin fecha de fin",
+    anyDate: "Cualquier fecha",
 
     // Rediseño: buscador, flujo y vencimientos
     searchOrCreate: "Buscar o crear…",
@@ -486,6 +492,12 @@ export const translations = {
     noFutureMonths: "This is the current month",
     showMonth: "Show {{month}}",
     nextMonth: "Next month",
+    today: "Today",
+    yesterday: "Yesterday",
+    chooseDate: "Choose a date",
+    clearDate: "Clear",
+    noEndDate: "No end date",
+    anyDate: "Any date",
 
     // Redesign: search, cash flow and upcoming payments
     searchOrCreate: "Search or create…",
