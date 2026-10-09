@@ -1,10 +1,11 @@
-import { PencilIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { movementLabel } from "@/lib/movementLabel";
 import { netTotals } from "@/lib/money";
 import { useSettings } from "@/hooks/useSettings";
+import { cn } from "@/lib/utils";
 import { useLanguage } from "../../hooks/useLanguage";
 import { AmountText, CategoryBadge, CategoryIcon, RecurringMark } from "../Movements/MovementBits";
 import {
@@ -46,6 +47,20 @@ function RowActions({ movement, onEdit, onDelete }) {
   );
 }
 
+// Casilla para elegir movimientos (accesible, con el color de la app).
+function SelectBox({ checked, indeterminate = false, onChange, label }) {
+  return (
+    <input
+      type="checkbox"
+      checked={checked}
+      ref={(node) => node && (node.indeterminate = indeterminate)}
+      onChange={onChange}
+      aria-label={label}
+      className="size-[18px] shrink-0 cursor-pointer align-middle accent-[color:var(--primary)]"
+    />
+  );
+}
+
 export function TableHistorySkeleton() {
   return (
     <div className="grid gap-2" aria-hidden="true">
@@ -56,8 +71,14 @@ export function TableHistorySkeleton() {
   );
 }
 
-function TableHistory({ movements, onEdit, onDelete }) {
+/*
+selected: Set de ids elegidos; onToggle(id) y onToggleAll() para cambiarlos.
+selecting: en el celular, tocar una tarjeta la elige en vez de editarla.
+*/
+function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggleAll, selecting }) {
   const { t, locale } = useLanguage();
+  const selectedCount = movements.filter((movement) => selected.has(movement.id)).length;
+  const allSelected = selectedCount > 0 && selectedCount === movements.length;
   const { currency, rate } = useSettings();
   const net = netTotals(movements, currency, rate)
     .map((item) => formatCurrency(item.amount, locale, { signed: true, currency: item.currency }))
@@ -74,7 +95,15 @@ function TableHistory({ movements, onEdit, onDelete }) {
           <TableCaption className="sr-only">{t("footerhistory")}</TableCaption>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-11 pl-5 text-xs font-medium text-muted-foreground">
+              <TableHead className="w-12 pl-5">
+                <SelectBox
+                  checked={allSelected}
+                  indeterminate={selectedCount > 0 && !allSelected}
+                  onChange={onToggleAll}
+                  label={t("selectAll")}
+                />
+              </TableHead>
+              <TableHead className="h-11 text-xs font-medium text-muted-foreground">
                 {t("titleLabel")}
               </TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">{t("category")}</TableHead>
@@ -90,8 +119,19 @@ function TableHistory({ movements, onEdit, onDelete }) {
           </TableHeader>
           <TableBody>
             {movements.map((movement) => (
-              <TableRow key={movement.id} className="group hover:bg-fg/[0.02]">
-                <TableCell className="max-w-72 py-3 pl-5">
+              <TableRow
+                key={movement.id}
+                data-state={selected.has(movement.id) ? "selected" : undefined}
+                className="group hover:bg-fg/[0.02] data-[state=selected]:bg-fg/[0.04]"
+              >
+                <TableCell className="w-12 pl-5">
+                  <SelectBox
+                    checked={selected.has(movement.id)}
+                    onChange={() => onToggle(movement.id)}
+                    label={t("selectMovement", { title: movement.title })}
+                  />
+                </TableCell>
+                <TableCell className="max-w-72 py-3">
                   <div className="flex items-center gap-3">
                     <CategoryIcon category={movement.category} className="size-9 rounded-lg" />
                     <div className="min-w-0">
@@ -127,7 +167,7 @@ function TableHistory({ movements, onEdit, onDelete }) {
           </TableBody>
           <TableFooter className="bg-fg/[0.02]">
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={6} className="px-5 py-3 text-right text-sm text-muted-foreground">
+              <TableCell colSpan={7} className="px-5 py-3 text-right text-sm text-muted-foreground">
                 {summaryText}
               </TableCell>
             </TableRow>
@@ -139,14 +179,31 @@ function TableHistory({ movements, onEdit, onDelete }) {
       <div className="grid gap-3 md:hidden">
         <p className="m-0 px-1 text-sm text-muted-foreground">{summaryText}</p>
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
-          {movements.map((movement) => (
+          {movements.map((movement) => {
+            const isSelected = selected.has(movement.id);
+            return (
             <li key={movement.id}>
               <button
                 type="button"
-                onClick={() => onEdit(movement)}
+                onClick={() => (selecting ? onToggle(movement.id) : onEdit(movement))}
                 aria-label={movementLabel(movement, t, locale)}
-                className="flex w-full touch-manipulation items-center gap-3 rounded-2xl border bg-card p-3.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-fg/[0.04]"
+                aria-pressed={selecting ? isSelected : undefined}
+                className={cn(
+                  "flex w-full touch-manipulation items-center gap-3 rounded-2xl border bg-card p-3.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-fg/[0.04]",
+                  selecting && isSelected && "border-fg/30 bg-fg/[0.04]",
+                )}
               >
+                {selecting && (
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                      isSelected ? "border-primary bg-primary text-primary-foreground" : "border-fg/25",
+                    )}
+                  >
+                    {isSelected && <CheckIcon className="size-3.5" strokeWidth={3} />}
+                  </span>
+                )}
                 <CategoryIcon category={movement.category} className="size-11" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-2">
@@ -168,7 +225,8 @@ function TableHistory({ movements, onEdit, onDelete }) {
                 </div>
               </button>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </div>
     </>

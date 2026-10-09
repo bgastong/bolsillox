@@ -71,6 +71,7 @@ export const api = {
   confirmEmailChange: (data) => request("/auth/confirm-email-change", { method: "POST", body: data }),
   // Redireccion completa (no fetch): Google vuelve a /api/auth/google/callback.
   googleLoginUrl: `${BASE_URL}/auth/google`,
+  deleteMovements: (ids) => request("/movements/bulk-delete", { method: "POST", body: { ids } }),
   loadDemoData: () => request("/demo-data", { method: "POST" }),
   deleteDemoData: () => request("/demo-data", { method: "DELETE" }),
 

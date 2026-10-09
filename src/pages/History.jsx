@@ -1,16 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PlusIcon } from "lucide-react";
+import { CheckSquareIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import HistoryFilters from "@/components/History/HistoryFilters";
 import { PageHeader } from "@/components/Movements/MovementBits";
 import MovementTabs from "@/components/Recurring/MovementTabs";
 import { EmptyState, ErrorState } from "@/components/States/States";
 import TableHistory, { TableHistorySkeleton } from "../components/TableHistory/TableHistory";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { api } from "@/lib/api";
 import { useApiData } from "@/hooks/useApiData";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMovements } from "@/hooks/useMovements";
+import { useToast } from "@/hooks/useToast";
 
 const FILTER_KEYS = ["type", "category", "paymentMethod", "from", "to"];
 const DEFAULT_SORT = "date-desc";
@@ -18,9 +26,40 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 // Los filtros viven en la URL (?type=expense&q=super) para poder compartirlos
 // y no perderlos al recargar.
+// Barra que aparece al elegir movimientos: cuantos, deseleccionar y eliminar.
+function SelectionBar({ count, onClear, onDelete }) {
+  const { t } = useLanguage();
+  return (
+    <div
+      role="region"
+      aria-label={t("selectionBar")}
+      className="sticky bottom-[calc(96px+env(safe-area-inset-bottom))] z-20 mx-auto flex w-full max-w-xl min-w-0 items-center gap-2 rounded-2xl border border-fg/10 bg-popover/95 p-2 pl-4 shadow-2xl backdrop-blur-xl md:bottom-4"
+    >
+      <p className="m-0 min-w-0 flex-1 truncate text-sm font-medium" aria-live="polite">
+        {t("selectedCount", { count })}
+      </p>
+      {/* En el celular solo la cruz, para que entre en una linea */}
+      <Button variant="ghost" onClick={onClear} className="h-10 max-sm:w-10 max-sm:px-0 sm:h-9" aria-label={t("deselect")}>
+        <XIcon data-icon="inline-start" className="max-sm:m-0" />
+        <span className="max-sm:hidden">{t("deselect")}</span>
+      </Button>
+      <Button variant="destructive" onClick={onDelete} className="h-10 sm:h-9">
+        <Trash2Icon data-icon="inline-start" />
+        {t("delete")}
+      </Button>
+    </div>
+  );
+}
+
 function History() {
   const { t } = useLanguage();
-  const { openCreate, openEdit, openDelete, version } = useMovements();
+  const { toast } = useToast();
+  const { openCreate, openEdit, openDelete, notifyChange, version } = useMovements();
+  // Movimientos elegidos para borrar juntos. En el celular hay que activar "Seleccionar".
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const [selecting, setSelecting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const filters = {
@@ -96,6 +135,46 @@ function History() {
 
   const { data: movements, error, loading, reload } = useApiData(loadMovements);
 
+  // Solo cuentan los elegidos que se ven con los filtros actuales.
+  const selected = useMemo(
+    () => new Set((movements ?? []).filter((item) => selectedIds.has(item.id)).map((item) => item.id)),
+    [movements, selectedIds],
+  );
+
+  function toggle(id) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    const all = movements ?? [];
+    setSelectedIds(selected.size === all.length ? new Set() : new Set(all.map((item) => item.id)));
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+    setSelecting(false);
+  }
+
+  async function deleteSelected() {
+    setDeleting(true);
+    try {
+      const { deleted } = await api.deleteMovements([...selected]);
+      toast(t("movementsDeleted", { count: deleted }));
+      setConfirmOpen(false);
+      clearSelection();
+      notifyChange();
+    } catch {
+      toast(t("errorGeneric"), { variant: "error" });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   let content;
   if (error && !movements) {
     content = <ErrorState error={error} onRetry={reload} />;
@@ -123,6 +202,10 @@ function History() {
           movements={movements}
           onEdit={openEdit}
           onDelete={openDelete}
+          selected={selected}
+          onToggle={toggle}
+          onToggleAll={toggleAll}
+          selecting={selecting}
         />
       </div>
     );
@@ -158,7 +241,43 @@ function History() {
         {movements && !loading ? t("resultsCount", { count: movements.length }) : ""}
       </p>
 
+      {/* Celular: entrar o salir del modo de seleccion */}
+      {movements?.length > 0 && (
+        <div className="-mb-1 flex justify-end md:hidden">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => (selecting ? clearSelection() : setSelecting(true))}
+            aria-pressed={selecting}
+          >
+            {selecting ? <XIcon data-icon="inline-start" /> : <CheckSquareIcon data-icon="inline-start" />}
+            {selecting ? t("cancelSelection") : t("select")}
+          </Button>
+        </div>
+      )}
+
       <div aria-busy={loading}>{content}</div>
+
+      {selected.size > 0 && (
+        <SelectionBar count={selected.size} onClear={clearSelection} onDelete={() => setConfirmOpen(true)} />
+      )}
+
+      <Dialog open={confirmOpen} onOpenChange={(open) => !deleting && setConfirmOpen(open)}>
+        <DialogContent className="max-w-md" closeLabel={t("close")}>
+          <DialogHeader>
+            <DialogTitle>{t("deleteSelectedTitle", { count: selected.size })}</DialogTitle>
+            <DialogDescription>{t("deleteSelectedText")}</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={deleting}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" onClick={deleteSelected} disabled={deleting}>
+              {deleting ? t("deleting") : t("delete")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

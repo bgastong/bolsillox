@@ -78,6 +78,11 @@ export function createRepository(db) {
     return (await db.run(sql`DELETE FROM movements WHERE id = ${id} AND user_id = ${userId}`)) > 0;
   }
 
+  // Borra varios de una vez (solo los de este usuario). Devuelve cuantos borro.
+  async function removeMany(userId, ids) {
+    return db.run(sql`DELETE FROM movements WHERE user_id = ${userId} AND id = ANY(${ids}::int[])`);
+  }
+
   // Totales de ingresos y gastos en la moneda `target`.
   // from = null suma desde el principio (para el saldo acumulado).
   async function totalsBetween(userId, from, to, money = {}) {
@@ -113,5 +118,5 @@ export function createRepository(db) {
       .filter((row) => row.total > 0);
   }
 
-  return { list, get, create, update, remove, totalsBetween, expensesByCategory };
+  return { list, get, create, update, remove, removeMany, totalsBetween, expensesByCategory };
 }

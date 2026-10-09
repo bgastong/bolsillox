@@ -36,6 +36,12 @@ const listQuerySchema = z
 
 const idSchema = z.coerce.number().int().positive();
 
+// Borrado de varios movimientos elegidos en el historial.
+export const BULK_DELETE_MAX = 500;
+const bulkDeleteSchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1).max(BULK_DELETE_MAX),
+});
+
 // Los query params vacios (?type=) se ignoran.
 function compact(query) {
   return Object.fromEntries(
@@ -55,6 +61,12 @@ export function movementsRouter(repo) {
   router.get("/", async (req, res) => {
     const filters = listQuerySchema.parse(compact(req.query));
     res.json(await repo.list(req.user.id, filters));
+  });
+
+  // Antes de "/:id" para que "bulk-delete" no se tome como un id.
+  router.post("/bulk-delete", async (req, res) => {
+    const { ids } = bulkDeleteSchema.parse(req.body ?? {});
+    res.json({ deleted: await repo.removeMany(req.user.id, [...new Set(ids)]) });
   });
 
   router.get("/:id", async (req, res) => {
