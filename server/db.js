@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildSeed } from "./seed.js";
+import { buildSeed, SEED_SIGNATURES } from "./seed.js";
 import { sql } from "./sql.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -17,6 +17,38 @@ Todas las funciones devuelven promesas y reciben consultas armadas con sql``.
 */
 
 // Migraciones en orden; la tabla schema_migrations guarda cuales ya corrieron.
+// Texto SQL literal para la migracion v4 (son datos fijos del codigo, no del usuario).
+const literal = (value) =>
+  typeof value === "number" ? String(value) : `'${String(value).replaceAll("'", "''")}'`;
+const tuple = (values) => `(${values.map(literal).join(", ")})`;
+const SEED_MOVEMENT_ROWS = [
+  ...new Set(
+    SEED_SIGNATURES.movements.map((row) =>
+      tuple([row.type, row.title, row.category, row.amount, row.currency, row.paymentMethod]),
+    ),
+  ),
+].join(",\n    ");
+const SEED_BUDGET_ROWS = SEED_SIGNATURES.budgets
+  .map((row) => tuple([row.category, row.amount]))
+  .join(", ");
+
+// Marca como datos de ejemplo los que se cargaron antes de existir is_demo.
+// Exportado para probarlo (server/demoData.test.js).
+export const LEGACY_DEMO_SQL = `
+  UPDATE movements SET is_demo = TRUE
+  WHERE note = '' AND (type, title, category, amount, currency, payment_method) IN (
+    VALUES ${SEED_MOVEMENT_ROWS}
+  );
+  UPDATE recurring SET is_demo = TRUE
+  WHERE note = '' AND (type, title, category, amount, currency, payment_method) IN (
+    VALUES ${SEED_MOVEMENT_ROWS}
+  );
+  -- Presupuestos de ejemplo: solo en cuentas que tienen movimientos de ejemplo.
+  UPDATE budgets SET is_demo = TRUE
+  WHERE (category, amount) IN (VALUES ${SEED_BUDGET_ROWS})
+    AND user_id IN (SELECT user_id FROM movements WHERE is_demo);
+`;
+
 const MIGRATIONS = [
   // v1: usuarios, sesiones y todos los datos separados por usuario.
   `
@@ -144,6 +176,16 @@ const MIGRATIONS = [
     task   TEXT        PRIMARY KEY,
     ran_at TIMESTAMPTZ NOT NULL
   );
+  `,
+  // v4: marca de "datos de ejemplo", para poder borrarlos sin tocar lo que
+  // cargo la persona. Tambien marca los datos de ejemplo cargados antes de
+  // esta version (mismos titulos, montos y categorias que server/seed.js).
+  `
+  ALTER TABLE movements ADD COLUMN is_demo BOOLEAN NOT NULL DEFAULT FALSE;
+  ALTER TABLE recurring ADD COLUMN is_demo BOOLEAN NOT NULL DEFAULT FALSE;
+  ALTER TABLE budgets ADD COLUMN is_demo BOOLEAN NOT NULL DEFAULT FALSE;
+
+  ${LEGACY_DEMO_SQL}
   `,
 ];
 
@@ -274,10 +316,10 @@ export async function seedUser(db, userId, today = new Date()) {
     for (const { key, ...rule } of recurring) {
       const row = await tx.one(sql`
         INSERT INTO recurring (user_id, type, title, amount, currency, category, payment_method,
-                               note, day_of_month, start_date)
+                               note, day_of_month, start_date, is_demo)
         VALUES (${userId}, ${rule.type}, ${rule.title}, ${rule.amount}, ${rule.currency},
                 ${rule.category}, ${rule.paymentMethod}, ${rule.note}, ${rule.dayOfMonth},
-                ${rule.startDate})
+                ${rule.startDate}, TRUE)
         RETURNING id
       `);
       ruleIds[key] = row.id;
@@ -286,10 +328,10 @@ export async function seedUser(db, userId, today = new Date()) {
       const recurringId = recurringKey ? ruleIds[recurringKey] : null;
       await tx.run(sql`
         INSERT INTO movements (user_id, type, title, amount, currency, date, category,
-                               payment_method, note, recurring_id)
+                               payment_method, note, recurring_id, is_demo)
         VALUES (${userId}, ${movement.type}, ${movement.title}, ${movement.amount},
                 ${movement.currency}, ${movement.date}, ${movement.category},
-                ${movement.paymentMethod}, ${movement.note}, ${recurringId})
+                ${movement.paymentMethod}, ${movement.note}, ${recurringId}, TRUE)
       `);
       if (recurringId) {
         await tx.run(sql`
@@ -301,12 +343,39 @@ export async function seedUser(db, userId, today = new Date()) {
     }
     for (const budget of budgets) {
       await tx.run(sql`
-        INSERT INTO budgets (user_id, category, amount)
-        VALUES (${userId}, ${budget.category}, ${budget.amount})
+        INSERT INTO budgets (user_id, category, amount, is_demo)
+        VALUES (${userId}, ${budget.category}, ${budget.amount}, TRUE)
         ON CONFLICT DO NOTHING
       `);
     }
   });
 
   return movements.length;
+}
+
+// ¿La cuenta tiene datos de ejemplo?
+export async function hasDemoData(db, userId) {
+  const row = await db.one(sql`
+    SELECT EXISTS (SELECT 1 FROM movements WHERE user_id = ${userId} AND is_demo)
+        OR EXISTS (SELECT 1 FROM recurring WHERE user_id = ${userId} AND is_demo)
+        OR EXISTS (SELECT 1 FROM budgets WHERE user_id = ${userId} AND is_demo) AS found
+  `);
+  return Boolean(row.found);
+}
+
+/*
+Borra los datos de ejemplo de una cuenta: movimientos, recurrentes (y lo que
+generaron desde que se cargaron) y presupuestos. Lo que cargo la persona queda.
+*/
+export async function deleteDemoData(db, userId) {
+  return db.transaction(async (tx) => {
+    const movements = await tx.run(sql`
+      DELETE FROM movements
+      WHERE user_id = ${userId}
+        AND (is_demo OR recurring_id IN (SELECT id FROM recurring WHERE user_id = ${userId} AND is_demo))
+    `);
+    const recurring = await tx.run(sql`DELETE FROM recurring WHERE user_id = ${userId} AND is_demo`);
+    const budgets = await tx.run(sql`DELETE FROM budgets WHERE user_id = ${userId} AND is_demo`);
+    return { movements, recurring, budgets };
+  });
 }

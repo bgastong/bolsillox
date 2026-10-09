@@ -9,7 +9,7 @@ import { createRepository } from "./repository.js";
 import { createRecurringService, toISODate } from "./recurring.js";
 import { createBudgetsService } from "./budgets.js";
 import { createRatesService } from "./rates.js";
-import { seedUser } from "./db.js";
+import { deleteDemoData, hasDemoData, seedUser } from "./db.js";
 import { authRouter } from "./routes/auth.js";
 import { movementsRouter } from "./routes/movements.js";
 import { recurringRouter } from "./routes/recurring.js";
@@ -166,7 +166,9 @@ export function createApp(
     const month = parseMonth(req.query.month);
     const target = parseCurrency(req.query.currency);
     const rate = await rates.getActiveRate(req.user.id);
-    res.json(await buildSummary(repo, req.user.id, month, { target, rate }));
+    const summary = await buildSummary(repo, req.user.id, month, { target, rate });
+    // Con datos de ejemplo, el inicio ofrece borrarlos.
+    res.json({ ...summary, hasDemoData: await hasDemoData(db, req.user.id) });
   });
 
   app.get("/api/rates", async (req, res) => {
@@ -184,6 +186,11 @@ export function createApp(
     const created = await seedUser(db, req.user.id, now());
     if (!created) throw new HttpError(409, "account_not_empty");
     res.status(201).json({ created });
+  });
+
+  // Borra solo los datos de ejemplo (lo que cargo la persona queda).
+  app.delete("/api/demo-data", async (req, res) => {
+    res.json({ deleted: await deleteDemoData(db, req.user.id) });
   });
 
   app.use("/api", () => {

@@ -88,3 +88,21 @@ export function buildSeed(today = new Date()) {
 
   return { movements, recurring, budgets: seedBudgets };
 }
+
+/*
+Para reconocer los datos de ejemplo cargados antes de que existiera la marca
+is_demo (ver la migracion v4 en db.js): mismos titulos, montos y categorias.
+*/
+export const SEED_SIGNATURES = {
+  movements: [...seedMovements, ...seedRecurring].map(
+    ({ type, title, category, amount, currency = "ARS", paymentMethod }) => ({
+      type,
+      title,
+      category,
+      amount,
+      currency,
+      paymentMethod,
+    }),
+  ),
+  budgets: seedBudgets,
+};
