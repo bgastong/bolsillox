@@ -72,6 +72,7 @@ export const api = {
   // Redireccion completa (no fetch): Google vuelve a /api/auth/google/callback.
   googleLoginUrl: `${BASE_URL}/auth/google`,
   loadDemoData: () => request("/demo-data", { method: "POST" }),
+  deleteDemoData: () => request("/demo-data", { method: "DELETE" }),
 
   // Movimientos
   listMovements: (filters, options) =>

@@ -1,6 +1,14 @@
 import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRightIcon, CalendarX2Icon, PlusIcon, SparklesIcon, TriangleAlertIcon } from "lucide-react";
+import {
+  ArrowRightIcon,
+  CalendarX2Icon,
+  FlaskConicalIcon,
+  PlusIcon,
+  SparklesIcon,
+  Trash2Icon,
+  TriangleAlertIcon,
+} from "lucide-react";
 import {
   BalanceCard,
   FlowCard,
@@ -16,6 +24,13 @@ import Panel from "@/components/Dashboard/Panel";
 import MonthPicker from "@/components/MonthPicker/MonthPicker";
 import { EmptyState, ErrorState } from "@/components/States/States";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { currentMonthKey, formatCurrency, formatMonth } from "@/lib/format";
@@ -120,6 +135,66 @@ function WelcomeCard({ onCreate, onDemoLoaded }) {
   );
 }
 
+// Aviso mientras la cuenta tiene datos de ejemplo, con la opcion de borrarlos.
+function DemoDataNotice({ onDeleted }) {
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await api.deleteDemoData();
+      toast(t("demoDeleted"));
+      setConfirmOpen(false);
+      onDeleted();
+    } catch {
+      toast(t("errorGeneric"), { variant: "error" });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <section
+      aria-labelledby="demo-notice-title"
+      className="flex flex-col gap-3 rounded-xl border border-fg/10 bg-fg/[0.03] px-4 py-3 sm:flex-row sm:items-center"
+    >
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-fg/10 bg-fg/[0.04] max-sm:hidden">
+        <FlaskConicalIcon className="size-4" aria-hidden="true" />
+      </span>
+      <div className="grid flex-1 gap-0.5">
+        <h2 id="demo-notice-title" className="m-0 text-sm font-medium">
+          {t("demoNoticeTitle")}
+        </h2>
+        <p className="m-0 text-sm text-muted-foreground">{t("demoNoticeText")}</p>
+      </div>
+      <Button variant="outline" onClick={() => setConfirmOpen(true)} className="h-11 sm:h-9">
+        <Trash2Icon data-icon="inline-start" />
+        {t("demoDelete")}
+      </Button>
+
+      <Dialog open={confirmOpen} onOpenChange={(open) => !deleting && setConfirmOpen(open)}>
+        <DialogContent className="max-w-md" closeLabel={t("close")}>
+          <DialogHeader>
+            <DialogTitle>{t("demoDeleteTitle")}</DialogTitle>
+            <DialogDescription>{t("demoDeleteText")}</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={deleting}>
+              {t("cancel")}
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? t("deleting") : t("demoDelete")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}
+
 function PanelSkeleton({ className = "h-64" }) {
   return <Skeleton className={`w-full rounded-lg ${className}`} />;
 }
@@ -179,6 +254,7 @@ function Dashboard() {
       </header>
 
       {isEmptyAccount && <WelcomeCard onCreate={openCreate} onDemoLoaded={notifyChange} />}
+      {summary?.hasDemoData && <DemoDataNotice onDeleted={notifyChange} />}
 
       {summary?.unconverted > 0 && (
         <p
