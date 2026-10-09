@@ -62,6 +62,8 @@ export function MovementDialogs({
   const kind = form?.kind ?? "movement";
   const texts = TEXTS[kind];
   const isEdit = Boolean(form?.item);
+  // Compra en cuotas (una regla recurrente con cantidad de cuotas).
+  const isInstallments = kind === "recurring" && (form?.item?.kind ?? form?.preset) === "installments";
   const deleteTexts = TEXTS[toDelete?.kind ?? "movement"];
 
   // Despues de guardar un gasto, avisa si el presupuesto de su categoria
@@ -87,7 +89,7 @@ export function MovementDialogs({
       if (kind === "recurring") {
         if (isEdit) await api.updateRecurring(form.item.id, data);
         else await api.createRecurring(data);
-        toast(t(isEdit ? texts.updated : texts.created));
+        toast(t(data.kind === "installments" ? "installmentsSaved" : isEdit ? texts.updated : texts.created));
       } else if (repeat) {
         // "Se repite todos los meses": se crea la regla y genera este mes.
         const { date, ...rest } = data;
@@ -130,9 +132,11 @@ export function MovementDialogs({
       <Dialog open={Boolean(form)} onOpenChange={(open) => !open && onFormClose()}>
         <DialogContent closeLabel={t("close")}>
           <DialogHeader>
-            <DialogTitle>{t(isEdit ? texts.editTitle : texts.newTitle)}</DialogTitle>
+            <DialogTitle>
+              {t(isInstallments ? (isEdit ? "editInstallments" : "newInstallments") : isEdit ? texts.editTitle : texts.newTitle)}
+            </DialogTitle>
             <DialogDescription>
-              {t(isEdit ? texts.editDescription : texts.newDescription)}
+              {t(isInstallments ? "installmentsDescription" : isEdit ? texts.editDescription : texts.newDescription)}
             </DialogDescription>
           </DialogHeader>
           {form && (
@@ -140,6 +144,7 @@ export function MovementDialogs({
               key={form.key}
               item={form.item}
               mode={kind}
+              initialKind={form.preset}
               onSubmit={handleSubmit}
               onCancel={onFormClose}
               onDelete={

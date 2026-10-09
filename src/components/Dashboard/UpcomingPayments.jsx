@@ -79,7 +79,15 @@ function UpcomingPayments({ className }) {
               <li key={rule.id} className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-fg/[0.03]">
                 <CalendarDate date={rule.nextDate} />
                 <div className="min-w-0 flex-1">
-                  <p className="m-0 truncate text-sm">{rule.title}</p>
+                  <p className="m-0 truncate text-sm">
+                    {rule.title}
+                    {rule.kind === "installments" && rule.nextInstallment && (
+                      <span className="text-muted-foreground">
+                        {" "}
+                        ({rule.nextInstallment}/{rule.installmentsTotal})
+                      </span>
+                    )}
+                  </p>
                   <p className="m-0 truncate text-xs text-[color:var(--text-4)]">
                     {days <= 0 ? t("dueToday") : t("dueInDays", { count: days })} · {t(`pm_${rule.paymentMethod}`)}
                   </p>

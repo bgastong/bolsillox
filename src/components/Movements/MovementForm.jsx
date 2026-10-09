@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { ArrowDownLeftIcon, ArrowUpRightIcon, RepeatIcon, Trash2Icon } from "lucide-react";
+import {
+  ArrowDownLeftIcon,
+  ArrowUpRightIcon,
+  CreditCardIcon,
+  RepeatIcon,
+  Trash2Icon,
+} from "lucide-react";
 import {
   CATEGORIES_BY_TYPE,
   CURRENCIES,
@@ -7,6 +13,7 @@ import {
   TITLE_MAX_LENGTH,
 } from "@shared/catalog.js";
 import {
+  INSTALLMENTS_MAX,
   issuesToFieldErrors,
   movementSchema,
   recurringSchema,
@@ -19,16 +26,17 @@ import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { todayISO } from "@/lib/format";
+import { formatCurrency, formatDate, todayISO } from "@/lib/format";
 import { getCategoryMeta } from "@/lib/categories";
 import { paymentMethodOptions } from "@/lib/paymentMethods";
 import { useLanguage } from "@/hooks/useLanguage";
 
 /*
 mode "movement": un movimiento (al crearlo se puede marcar "se repite").
-mode "recurring": una regla recurrente (inicio, fin opcional, activa).
+mode "recurring": una regla recurrente (inicio, fin opcional, activa) o una
+compra en cuotas (kind "installments": cuota actual, total y fecha de esa cuota).
 */
-function toFormValues(item, mode) {
+function toFormValues(item, mode, initialKind) {
   const base = {
     type: item?.type ?? "expense",
     title: item?.title ?? "",
@@ -39,10 +47,14 @@ function toFormValues(item, mode) {
     note: item?.note ?? "",
   };
   if (mode === "recurring") {
+    const kind = item?.kind ?? initialKind ?? "recurring";
     return {
       ...base,
+      kind,
       startDate: item?.startDate ?? todayISO(),
-      endDate: item?.endDate ?? "",
+      endDate: kind === "installments" ? "" : (item?.endDate ?? ""),
+      installmentFirst: String(item?.installmentFirst ?? 1),
+      installmentsTotal: String(item?.installmentsTotal ?? 12),
       active: item?.active ?? true,
     };
   }
@@ -70,6 +82,16 @@ function Field({ id, label, error, hint, children, className }) {
       )}
     </div>
   );
+}
+
+// "YYYY-MM-DD" + n meses (mismo dia, o el ultimo si el mes es mas corto).
+function addMonthsISO(iso, months) {
+  const [year, month, day] = iso.split("-").map(Number);
+  const target = new Date(year, month - 1 + months, 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(day, lastDay));
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())}`;
 }
 
 // Control segmentado reutilizable (radiogroup accesible).
@@ -112,15 +134,38 @@ Formulario de alta/edicion. Valida en el front con el mismo schema (zod)
 que usa el back, y muestra tambien los errores que devuelva el servidor.
 onSubmit(data, { repeat }) — repeat indica "crear como recurrente".
 */
-function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete }) {
-  const { t } = useLanguage();
-  const [values, setValues] = useState(() => toFormValues(item, mode));
+function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel, onDelete }) {
+  const { t, locale } = useLanguage();
+  const [values, setValues] = useState(() => toFormValues(item, mode, initialKind));
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const isRecurring = mode === "recurring";
+  const isInstallments = isRecurring && values.kind === "installments";
   const isNew = !item;
+
+  // Resumen de las cuotas mientras se completan: ultima fecha y cuanto falta pagar.
+  const first = Number(values.installmentFirst);
+  const total = Number(values.installmentsTotal);
+  const amount = Number(values.amount);
+  const installmentsValid =
+    Number.isInteger(first) && Number.isInteger(total) && total >= 2 && first >= 1 && first <= total;
+  const installmentsSummary =
+    isInstallments && installmentsValid && values.startDate
+      ? t("installmentsSummary", {
+          last: formatDate(addMonthsISO(values.startDate, total - first), locale, {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+          count: total - first + 1,
+          amount:
+            amount > 0
+              ? formatCurrency(amount * (total - first + 1), locale, { currency: values.currency })
+              : "—",
+        })
+      : null;
   const categories = CATEGORIES_BY_TYPE[values.type] ?? [];
 
   function update(field, value) {
@@ -196,6 +241,22 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
         </p>
       )}
 
+      {/* Regla: algo que se repite siempre, o una compra en cuotas */}
+      {isRecurring && (
+        <fieldset className="m-0 grid gap-2 border-0 p-0" disabled={saving || !isNew}>
+          <legend className="sr-only">{t("recurringKind")}</legend>
+          <Segmented
+            label={t("recurringKind")}
+            value={values.kind}
+            onChange={(value) => update("kind", value)}
+            options={[
+              { value: "recurring", label: t("kindRecurring"), icon: RepeatIcon },
+              { value: "installments", label: t("kindInstallments"), icon: CreditCardIcon },
+            ]}
+          />
+        </fieldset>
+      )}
+
       <fieldset className="m-0 grid gap-2 border-0 p-0" disabled={saving}>
         <legend className="sr-only">{t("type")}</legend>
         <Segmented
@@ -228,7 +289,9 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
       {/* Monto + moneda */}
       <div className="grid gap-2">
         <div className="flex items-end justify-between gap-3">
-          <Label htmlFor="movement-amount">{t("amount")}</Label>
+          <Label htmlFor="movement-amount">
+            {isInstallments ? t("installmentAmount") : t("amount")}
+          </Label>
           <Segmented
             label={t("currency")}
             value={values.currency}
@@ -272,7 +335,56 @@ function MovementForm({ item, mode = "movement", onSubmit, onCancel, onDelete })
         )}
       </div>
 
-      {isRecurring ? (
+      {isInstallments ? (
+        <div className="grid gap-4">
+          <div className="grid grid-cols-2 items-start gap-4">
+            <Field
+              id="movement-installmentFirst"
+              label={t("installmentFirst")}
+              hint={t("installmentFirstHint")}
+              error={errorText("installmentFirst")}
+            >
+              <Input
+                {...fieldProps("installmentFirst")}
+                type="number"
+                inputMode="numeric"
+                min="1"
+                max={values.installmentsTotal || INSTALLMENTS_MAX}
+                step="1"
+                className="tabular-nums"
+              />
+            </Field>
+            <Field
+              id="movement-installmentsTotal"
+              label={t("installmentsTotal")}
+              error={errorText("installmentsTotal")}
+            >
+              <Input
+                {...fieldProps("installmentsTotal")}
+                type="number"
+                inputMode="numeric"
+                min="2"
+                max={INSTALLMENTS_MAX}
+                step="1"
+                className="tabular-nums"
+              />
+            </Field>
+          </div>
+          <Field
+            id="movement-startDate"
+            label={t("installmentDate", {
+              number: installmentsValid ? first : "",
+            })}
+            hint={installmentsSummary ?? t("installmentDateHint")}
+            error={errorText("startDate")}
+          >
+            <DatePicker
+              {...pickerProps("startDate")}
+              onChange={(value) => update("startDate", value)}
+            />
+          </Field>
+        </div>
+      ) : isRecurring ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
             id="movement-startDate"
