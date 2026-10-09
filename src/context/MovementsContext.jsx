@@ -22,6 +22,7 @@ export function MovementsProvider({ children }) {
     openCreate,
     openEdit,
     openCreateRecurring,
+    openCreateInstallments,
     openEditRecurring,
     openDelete,
     closeForm,
@@ -49,12 +50,22 @@ export function MovementsProvider({ children }) {
       openCreate,
       openEdit,
       openCreateRecurring,
+      openCreateInstallments,
       openEditRecurring,
       openDelete,
       notifyChange: handleChange,
       version,
     }),
-    [openCreate, openEdit, openCreateRecurring, openEditRecurring, openDelete, handleChange, version],
+    [
+      openCreate,
+      openEdit,
+      openCreateRecurring,
+      openCreateInstallments,
+      openEditRecurring,
+      openDelete,
+      handleChange,
+      version,
+    ],
   );
 
   return (

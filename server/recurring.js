@@ -5,11 +5,15 @@ Movimientos recurrentes: una regla genera un movimiento por mes, el dia
 day_of_month (si el mes es mas corto, el ultimo dia). Solo se generan las
 fechas que ya llegaron. Cada mes generado queda en recurring_occurrences,
 asi el proceso es idempotente y un movimiento borrado no se vuelve a crear.
+
+Cuotas: una regla con installmentsTotal es una compra en cuotas. Termina sola
+en la ultima cuota y cada movimiento lleva el numero en el titulo: "TV (3/12)".
 */
 
 const COLUMNS = raw(`
   id, type, title, amount, currency, category, payment_method AS "paymentMethod", note,
   day_of_month AS "dayOfMonth", start_date AS "startDate", end_date AS "endDate", active,
+  installments_total AS "installmentsTotal", installment_first AS "installmentFirst",
   created_at AS "createdAt", updated_at AS "updatedAt"
 `);
 
@@ -38,7 +42,30 @@ export function occurrenceDate(monthKey, dayOfMonth) {
   return `${monthKey}-${pad(Math.min(dayOfMonth, lastDay))}`;
 }
 
+// Meses entre dos "YYYY-MM" (b - a).
+function monthsBetween(a, b) {
+  const [yearA, monthA] = a.split("-").map(Number);
+  const [yearB, monthB] = b.split("-").map(Number);
+  return (yearB - yearA) * 12 + (monthB - monthA);
+}
+
+// Numero de cuota del movimiento de un mes ("YYYY-MM").
+export function installmentNumber(rule, month) {
+  return rule.installmentFirst + monthsBetween(rule.startDate.slice(0, 7), month);
+}
+
 function ruleParams(data) {
+  const dayOfMonth = Number(data.startDate.slice(8, 10));
+  if (data.kind === "installments") {
+    // La ultima cuota: tantos meses despues de startDate como cuotas faltan.
+    const lastMonth = addMonths(data.startDate.slice(0, 7), data.installmentsTotal - data.installmentFirst);
+    return {
+      ...ruleParams({ ...data, kind: "recurring" }),
+      endDate: occurrenceDate(lastMonth, dayOfMonth),
+      installmentsTotal: data.installmentsTotal,
+      installmentFirst: data.installmentFirst,
+    };
+  }
   return {
     type: data.type,
     title: data.title,
@@ -47,10 +74,12 @@ function ruleParams(data) {
     category: data.category,
     paymentMethod: data.paymentMethod,
     note: data.note ?? "",
-    dayOfMonth: Number(data.startDate.slice(8, 10)),
+    dayOfMonth,
     startDate: data.startDate,
     endDate: data.endDate ?? null,
     active: data.active !== false,
+    installmentsTotal: null,
+    installmentFirst: null,
   };
 }
 
@@ -86,11 +115,20 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
     const done = await occurrencesByRule(db, rules.map((rule) => rule.id));
     return rules.map((rule) => {
       const months = [...done[rule.id]].sort();
-      return {
-        ...rule,
-        nextDate: nextDate(rule, done[rule.id]),
+      const next = nextDate(rule, done[rule.id]);
+      const extras = {
+        kind: rule.installmentsTotal ? "installments" : "recurring",
+        nextDate: next,
         lastGeneratedMonth: months.at(-1) ?? null,
       };
+      if (rule.installmentsTotal) {
+        // Pagadas: las de antes de cargarla mas las que ya se generaron.
+        const paid = Math.min(rule.installmentsTotal, rule.installmentFirst - 1 + months.length);
+        extras.installmentsPaid = paid;
+        extras.nextInstallment = next ? installmentNumber(rule, next.slice(0, 7)) : null;
+        extras.remainingAmount = (rule.installmentsTotal - paid) * rule.amount;
+      }
+      return { ...rule, ...extras };
     });
   }
 
@@ -138,10 +176,13 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
             ON CONFLICT DO NOTHING
           `);
           if (!inserted) continue;
+          const title = rule.installmentsTotal
+            ? `${rule.title} (${installmentNumber(rule, month)}/${rule.installmentsTotal})`
+            : rule.title;
           await tx.run(sql`
             INSERT INTO movements (user_id, type, title, amount, currency, date, category,
                                    payment_method, note, recurring_id)
-            VALUES (${userId}, ${rule.type}, ${rule.title}, ${rule.amount}, ${rule.currency},
+            VALUES (${userId}, ${rule.type}, ${title}, ${rule.amount}, ${rule.currency},
                     ${date}, ${rule.category}, ${rule.paymentMethod}, ${rule.note}, ${rule.id})
           `);
           created++;
@@ -155,10 +196,12 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
     const rule = ruleParams(data);
     const { id } = await db.one(sql`
       INSERT INTO recurring (user_id, type, title, amount, currency, category, payment_method,
-                             note, day_of_month, start_date, end_date, active)
+                             note, day_of_month, start_date, end_date, active,
+                             installments_total, installment_first)
       VALUES (${userId}, ${rule.type}, ${rule.title}, ${rule.amount}, ${rule.currency},
               ${rule.category}, ${rule.paymentMethod}, ${rule.note}, ${rule.dayOfMonth},
-              ${rule.startDate}, ${rule.endDate}, ${rule.active})
+              ${rule.startDate}, ${rule.endDate}, ${rule.active},
+              ${rule.installmentsTotal}, ${rule.installmentFirst})
       RETURNING id
     `);
     await generateDue(userId);
@@ -174,7 +217,9 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
           currency = ${rule.currency}, category = ${rule.category},
           payment_method = ${rule.paymentMethod}, note = ${rule.note},
           day_of_month = ${rule.dayOfMonth}, start_date = ${rule.startDate},
-          end_date = ${rule.endDate}, active = ${rule.active}, updated_at = now()
+          end_date = ${rule.endDate}, active = ${rule.active},
+          installments_total = ${rule.installmentsTotal},
+          installment_first = ${rule.installmentFirst}, updated_at = now()
       WHERE id = ${id} AND user_id = ${userId}
     `);
     if (!changed) return null;

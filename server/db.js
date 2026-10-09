@@ -187,6 +187,13 @@ const MIGRATIONS = [
 
   ${LEGACY_DEMO_SQL}
   `,
+  // v5: compras en cuotas. Una regla recurrente con installments_total es un
+  // plan de cuotas: installment_first es el numero de la cuota de start_date
+  // (por ejemplo, 3 si ya se pagaron 2) y end_date es la fecha de la ultima.
+  `
+  ALTER TABLE recurring ADD COLUMN installments_total INTEGER CHECK (installments_total BETWEEN 2 AND 360);
+  ALTER TABLE recurring ADD COLUMN installment_first INTEGER CHECK (installment_first >= 1);
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.
