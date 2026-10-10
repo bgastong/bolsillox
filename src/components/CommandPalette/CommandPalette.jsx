@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import {
+  CreditCardIcon,
   HistoryIcon,
   LayoutDashboardIcon,
   MoonIcon,
@@ -25,6 +26,7 @@ const PAGES = [
   { to: "/", labelKey: "home", icon: LayoutDashboardIcon },
   { to: "/history", labelKey: "history", icon: HistoryIcon },
   { to: "/recurring", labelKey: "recurringTitle", icon: RepeatIcon },
+  { to: "/installments", labelKey: "installmentsTitle", icon: CreditCardIcon },
   { to: "/budgets", labelKey: "budgetsTitle", icon: PiggyBankIcon },
   { to: "/settings", labelKey: "settingsTitle", icon: SettingsIcon },
 ];
@@ -67,7 +69,7 @@ y Esc para cerrar. Envuelve la app y expone `open()` via useCommandPalette.
 function CommandPalette({ children }) {
   const { t, locale } = useLanguage();
   const navigate = useNavigate();
-  const { openCreate, openCreateRecurring, openEdit } = useMovements();
+  const { openCreate, openCreateRecurring, openCreateInstallments, openEdit } = useMovements();
   const { resolvedTheme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -119,6 +121,12 @@ function CommandPalette({ children }) {
     const actions = [
       { id: "new", label: t("cmdNewMovement"), icon: PlusIcon, run: openCreate, hint: "N" },
       { id: "new-recurring", label: t("cmdNewRecurring"), icon: RepeatIcon, run: openCreateRecurring },
+      {
+        id: "new-installments",
+        label: t("newInstallments"),
+        icon: CreditCardIcon,
+        run: openCreateInstallments,
+      },
       resolvedTheme === "dark"
         ? { id: "theme", label: t("themeToLight"), icon: SunIcon, run: () => setTheme("light") }
         : { id: "theme", label: t("themeToDark"), icon: MoonIcon, run: () => setTheme("dark") },
@@ -140,7 +148,18 @@ function CommandPalette({ children }) {
       { title: t("cmdMovements"), items: found },
       { title: t("cmdGoTo"), items: pages },
     ].filter((group) => group.items.length);
-  }, [query, movements, t, navigate, openCreate, openCreateRecurring, openEdit, resolvedTheme, setTheme]);
+  }, [
+    query,
+    movements,
+    t,
+    navigate,
+    openCreate,
+    openCreateRecurring,
+    openCreateInstallments,
+    openEdit,
+    resolvedTheme,
+    setTheme,
+  ]);
 
   const flat = groups.flatMap((group) => group.items);
   const current = Math.min(active, Math.max(flat.length - 1, 0));

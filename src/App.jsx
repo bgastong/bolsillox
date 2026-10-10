@@ -15,12 +15,14 @@ const pages = {
   dashboard: () => import("./pages/Dashboard"),
   history: () => import("./pages/History"),
   recurring: () => import("./pages/Recurring"),
+  installments: () => import("./pages/Installments"),
   budgets: () => import("./pages/Budgets"),
   settings: () => import("./pages/Settings"),
 };
 const Dashboard = lazy(pages.dashboard);
 const History = lazy(pages.history);
 const Recurring = lazy(pages.recurring);
+const Installments = lazy(pages.installments);
 const Budgets = lazy(pages.budgets);
 const Settings = lazy(pages.settings);
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -118,6 +120,7 @@ function AppShell() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/history" element={<History />} />
             <Route path="/recurring" element={<Recurring />} />
+            <Route path="/installments" element={<Installments />} />
             <Route path="/budgets" element={<Budgets />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />

@@ -176,9 +176,11 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
             ON CONFLICT DO NOTHING
           `);
           if (!inserted) continue;
-          const title = rule.installmentsTotal
-            ? `${rule.title} (${installmentNumber(rule, month)}/${rule.installmentsTotal})`
-            : rule.title;
+          // Una sola cuota (un pago diferido) no lleva numero en el titulo.
+          const title =
+            rule.installmentsTotal > 1
+              ? `${rule.title} (${installmentNumber(rule, month)}/${rule.installmentsTotal})`
+              : rule.title;
           await tx.run(sql`
             INSERT INTO movements (user_id, type, title, amount, currency, date, category,
                                    payment_method, note, recurring_id)

@@ -53,7 +53,7 @@ function MobileNav() {
         <NavItem to="/" end icon={LayoutDashboardIcon} label={t("home")} />
         <NavItem
           to="/history"
-          also={["/recurring"]}
+          also={["/recurring", "/installments"]}
           icon={HistoryIcon}
           label={t("history")}
         />

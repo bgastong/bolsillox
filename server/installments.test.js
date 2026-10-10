@@ -74,11 +74,32 @@ describe("compras en cuotas", () => {
 
   test("valida la cantidad y el numero de cuota", async () => {
     const body = { ...base, kind: "installments", startDate: "2026-10-01" };
-    const single = await request("/recurring", { method: "POST", body: { ...body, installmentFirst: 1, installmentsTotal: 1 } });
-    assert.equal(single.status, 400);
-    assert.equal((await single.json()).fields.installmentsTotal, "errorInstallmentsTotal");
+    const none = await request("/recurring", { method: "POST", body: { ...body, installmentFirst: 1, installmentsTotal: 0 } });
+    assert.equal(none.status, 400);
+    assert.equal((await none.json()).fields.installmentsTotal, "errorInstallmentsTotal");
     const past = await request("/recurring", { method: "POST", body: { ...body, installmentFirst: 7, installmentsTotal: 6 } });
     assert.equal((await past.json()).fields.installmentFirst, "errorInstallmentFirst");
+  });
+
+  test("una sola cuota para el mes que viene", async () => {
+    const rule = await json("/recurring", {
+      method: "POST",
+      body: { ...base, title: "Pasaje", kind: "installments", installmentFirst: 1, installmentsTotal: 1, startDate: "2026-11-15" },
+    });
+    assert.equal(rule.kind, "installments");
+    assert.equal(rule.endDate, "2026-11-15");
+    assert.equal(rule.nextDate, "2026-11-15");
+    assert.equal(rule.nextInstallment, 1);
+    assert.equal(rule.remainingAmount, 1000);
+  });
+
+  test("una sola cuota que ya vencio se carga sin numero en el titulo", async () => {
+    await json("/recurring", {
+      method: "POST",
+      body: { ...base, title: "Seña", kind: "installments", installmentFirst: 1, installmentsTotal: 1, startDate: "2026-10-03" },
+    });
+    const items = await json("/movements?q=Seña");
+    assert.deepEqual(items.map((item) => item.title), ["Seña"]);
   });
 
   test("un recurrente comun sigue igual", async () => {
