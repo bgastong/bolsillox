@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { CreditCardIcon } from "lucide-react";
 import { PageHeader } from "@/components/Movements/MovementBits";
 import InstallmentRow from "@/components/Recurring/InstallmentRow";
+import InstallmentsByMonth from "@/components/Recurring/InstallmentsByMonth";
 import MovementTabs from "@/components/Recurring/MovementTabs";
 import { EmptyState, ErrorState } from "@/components/States/States";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,8 @@ function Installments() {
               <p className="col-span-2 m-0 text-xs text-warn">{t("rateMissingShort")}</p>
             )}
           </section>
+
+          <InstallmentsByMonth plans={ongoing} currency={currency} rate={rate} />
 
           {ongoing.length > 0 && (
             <ul aria-label={t("installmentsOngoing")} className="m-0 flex list-none flex-col gap-2 p-0">
