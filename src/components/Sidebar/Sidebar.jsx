@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
 import {
+  CreditCardIcon,
   HistoryIcon,
   LayoutDashboardIcon,
   PiggyBankIcon,
@@ -31,6 +32,7 @@ const NAV_ITEMS = [
   { to: "/", labelKey: "home", icon: LayoutDashboardIcon, end: true },
   { to: "/history", labelKey: "history", icon: HistoryIcon },
   { to: "/recurring", labelKey: "recurringTitle", icon: RepeatIcon },
+  { to: "/installments", labelKey: "installmentsTitle", icon: CreditCardIcon },
   { to: "/budgets", labelKey: "budgetsTitle", icon: PiggyBankIcon },
   { to: "/settings", labelKey: "settingsTitle", icon: SettingsIcon },
 ];

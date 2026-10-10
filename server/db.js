@@ -194,6 +194,12 @@ const MIGRATIONS = [
   ALTER TABLE recurring ADD COLUMN installments_total INTEGER CHECK (installments_total BETWEEN 2 AND 360);
   ALTER TABLE recurring ADD COLUMN installment_first INTEGER CHECK (installment_first >= 1);
   `,
+  // v6: se permite una sola cuota (por ejemplo, un pago para el mes que viene).
+  `
+  ALTER TABLE recurring DROP CONSTRAINT IF EXISTS recurring_installments_total_check;
+  ALTER TABLE recurring ADD CONSTRAINT recurring_installments_total_check
+    CHECK (installments_total BETWEEN 1 AND 360);
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.

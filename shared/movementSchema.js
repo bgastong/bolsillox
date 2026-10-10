@@ -110,7 +110,7 @@ export const recurringSchema = z
     checkCategoryMatchesType(data, ctx);
     if (data.kind === "installments") {
       const total = data.installmentsTotal;
-      if (!total || total < 2 || total > INSTALLMENTS_MAX) {
+      if (!total || total < 1 || total > INSTALLMENTS_MAX) {
         ctx.addIssue({ code: "custom", path: ["installmentsTotal"], message: "errorInstallmentsTotal" });
       } else if (!data.installmentFirst || data.installmentFirst < 1 || data.installmentFirst > total) {
         ctx.addIssue({ code: "custom", path: ["installmentFirst"], message: "errorInstallmentFirst" });
