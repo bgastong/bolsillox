@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   ArrowDownLeftIcon,
   ArrowUpRightIcon,
-  CreditCardIcon,
   RepeatIcon,
   Trash2Icon,
 } from "lucide-react";
@@ -31,6 +30,16 @@ import { getCategoryMeta } from "@/lib/categories";
 import { paymentMethodOptions } from "@/lib/paymentMethods";
 import { useLanguage } from "@/hooks/useLanguage";
 
+// "YYYY-MM-DD" + n meses (mismo dia, o el ultimo si el mes es mas corto).
+function addMonthsISO(iso, months) {
+  const [year, month, day] = iso.split("-").map(Number);
+  const target = new Date(year, month - 1 + months, 1);
+  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(day, lastDay));
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())}`;
+}
+
 /*
 mode "movement": un movimiento (al crearlo se puede marcar "se repite").
 mode "recurring": una regla recurrente (inicio, fin opcional, activa) o una
@@ -48,10 +57,13 @@ function toFormValues(item, mode, initialKind) {
   };
   if (mode === "recurring") {
     const kind = item?.kind ?? initialKind ?? "recurring";
+    // Una compra en cuotas nueva arranca el mes que viene (la primera cuota
+    // suele vencer con el proximo resumen de la tarjeta).
+    const defaultStart = kind === "installments" ? addMonthsISO(todayISO(), 1) : todayISO();
     return {
       ...base,
       kind,
-      startDate: item?.startDate ?? todayISO(),
+      startDate: item?.startDate ?? defaultStart,
       endDate: kind === "installments" ? "" : (item?.endDate ?? ""),
       installmentFirst: String(item?.installmentFirst ?? 1),
       installmentsTotal: String(item?.installmentsTotal ?? 12),
@@ -82,16 +94,6 @@ function Field({ id, label, error, hint, children, className }) {
       )}
     </div>
   );
-}
-
-// "YYYY-MM-DD" + n meses (mismo dia, o el ultimo si el mes es mas corto).
-function addMonthsISO(iso, months) {
-  const [year, month, day] = iso.split("-").map(Number);
-  const target = new Date(year, month - 1 + months, 1);
-  const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
-  target.setDate(Math.min(day, lastDay));
-  const pad = (value) => String(value).padStart(2, "0");
-  return `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())}`;
 }
 
 // Control segmentado reutilizable (radiogroup accesible).
@@ -150,7 +152,7 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
   const total = Number(values.installmentsTotal);
   const amount = Number(values.amount);
   const installmentsValid =
-    Number.isInteger(first) && Number.isInteger(total) && total >= 2 && first >= 1 && first <= total;
+    Number.isInteger(first) && Number.isInteger(total) && total >= 1 && first >= 1 && first <= total;
   const installmentsSummary =
     isInstallments && installmentsValid && values.startDate
       ? t("installmentsSummary", {
@@ -239,22 +241,6 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
           <RepeatIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           {t("generatedOccurrenceHint")}
         </p>
-      )}
-
-      {/* Regla: algo que se repite siempre, o una compra en cuotas */}
-      {isRecurring && (
-        <fieldset className="m-0 grid gap-2 border-0 p-0" disabled={saving || !isNew}>
-          <legend className="sr-only">{t("recurringKind")}</legend>
-          <Segmented
-            label={t("recurringKind")}
-            value={values.kind}
-            onChange={(value) => update("kind", value)}
-            options={[
-              { value: "recurring", label: t("kindRecurring"), icon: RepeatIcon },
-              { value: "installments", label: t("kindInstallments"), icon: CreditCardIcon },
-            ]}
-          />
-        </fieldset>
       )}
 
       <fieldset className="m-0 grid gap-2 border-0 p-0" disabled={saving}>
@@ -363,7 +349,7 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
                 {...fieldProps("installmentsTotal")}
                 type="number"
                 inputMode="numeric"
-                min="2"
+                min="1"
                 max={INSTALLMENTS_MAX}
                 step="1"
                 className="tabular-nums"
@@ -372,9 +358,11 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
           </div>
           <Field
             id="movement-startDate"
-            label={t("installmentDate", {
-              number: installmentsValid ? first : "",
-            })}
+            label={
+              installmentsValid && total === 1
+                ? t("installmentSingleDate")
+                : t("installmentDate", { number: installmentsValid ? first : "" })
+            }
             hint={installmentsSummary ?? t("installmentDateHint")}
             error={errorText("startDate")}
           >
