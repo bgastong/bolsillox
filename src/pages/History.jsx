@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CheckSquareIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
+import { CheckSquareIcon, DownloadIcon, PlusIcon, Trash2Icon, XIcon } from "lucide-react";
 import HistoryFilters from "@/components/History/HistoryFilters";
 import { PageHeader } from "@/components/Movements/MovementBits";
 import MovementTabs from "@/components/Recurring/MovementTabs";
@@ -14,7 +14,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { api } from "@/lib/api";
+import { todayISO } from "@/lib/format";
+import { downloadFile, EXPORT_FORMATS, movementsTable } from "@/lib/exportMovements";
 import { useApiData } from "@/hooks/useApiData";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMovements } from "@/hooks/useMovements";
@@ -48,6 +57,44 @@ function SelectionBar({ count, onClear, onDelete }) {
         {t("delete")}
       </Button>
     </div>
+  );
+}
+
+// Descarga lo que se ve en la lista (con los filtros aplicados) en Excel o CSV.
+function ExportMenu({ movements, filters }) {
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const count = movements?.length ?? 0;
+
+  function exportAs(format) {
+    const { extension, mime, build } = EXPORT_FORMATS[format];
+    const { columns, rows } = movementsTable(movements, {
+      t,
+      categoryName: (key) => t(`cat_${key}`),
+      methodName: (key) => t(`pm_${key}`),
+    });
+    // El nombre lleva el rango filtrado, o la fecha de hoy si no hay.
+    const range = [filters.from, filters.to].filter(Boolean).join("_") || todayISO();
+    downloadFile(build(columns, rows, t("exportSheetName")), `bolsillox-${range}.${extension}`, mime);
+    toast(t("exportDone", { count }));
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" disabled={!count} aria-label={t("exportLabel", { count })}>
+          <DownloadIcon data-icon="inline-start" />
+          {t("export")}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuLabel className="text-xs font-normal tracking-normal text-muted-foreground normal-case">
+          {t("exportHint", { count })}
+        </DropdownMenuLabel>
+        <DropdownMenuItem onSelect={() => exportAs("xlsx")}>{t("exportExcel")}</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => exportAs("csv")}>{t("exportCsv")}</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -217,10 +264,13 @@ function History() {
         title={t("titleHistory")}
         subtitle={t("historySubtitle")}
         actions={
-          <Button onClick={openCreate} className="max-md:hidden">
-            <PlusIcon data-icon="inline-start" />
-            {t("newMovement")}
-          </Button>
+          <>
+            <ExportMenu movements={movements} filters={filters} />
+            <Button onClick={openCreate} className="max-md:hidden">
+              <PlusIcon data-icon="inline-start" />
+              {t("newMovement")}
+            </Button>
+          </>
         }
       />
 
