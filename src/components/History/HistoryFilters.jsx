@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from "@shared/catalog.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select } from "@/components/ui/select";
-import { getCategoryMeta } from "@/lib/categories";
+import { useCategories } from "@/hooks/useCategories";
 import { paymentMethodOptions } from "@/lib/paymentMethods";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -40,6 +39,7 @@ function HistoryFilters({
   rangeError,
 }) {
   const { t } = useLanguage();
+  const { keysOf, metaOf, nameOf } = useCategories();
   // En mobile los filtros avanzados se pliegan para no ocupar toda la pantalla.
   const [expanded, setExpanded] = useState(false);
   const advanced = expanded ? "" : "max-sm:hidden";
@@ -51,18 +51,10 @@ function HistoryFilters({
     "to",
   ].filter((key) => filters[key]).length;
 
-  const categoryGroups = filters.type
-    ? [
-        {
-          type: filters.type,
-          items:
-            filters.type === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES,
-        },
-      ]
-    : [
-        { type: "expense", items: EXPENSE_CATEGORIES },
-        { type: "income", items: INCOME_CATEGORIES },
-      ];
+  const categoryGroups = (filters.type ? [filters.type] : ["expense", "income"]).map((type) => ({
+    type,
+    items: keysOf(type),
+  }));
 
   return (
     <section
@@ -169,8 +161,8 @@ function HistoryFilters({
           groups={categoryGroups.map((group) => ({
             label: t(group.type === "income" ? "incomes" : "expenses"),
             options: group.items.map((category) => {
-              const { color, icon } = getCategoryMeta(category);
-              return { value: category, label: t(`cat_${category}`), icon, iconColor: color };
+              const { color, icon } = metaOf(category);
+              return { value: category, label: nameOf(category), icon, iconColor: color };
             }),
           }))}
         />

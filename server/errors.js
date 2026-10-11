@@ -2,10 +2,12 @@ import { ZodError } from "zod";
 import { issuesToFieldErrors } from "../shared/movementSchema.js";
 
 export class HttpError extends Error {
-  constructor(status, code) {
+  // fields: { campo: claveDeTraduccion }, igual que los errores de zod.
+  constructor(status, code, fields = null) {
     super(code);
     this.status = status;
     this.code = code;
+    this.fields = fields;
   }
 }
 
@@ -20,7 +22,7 @@ export async function errorHandler(err, req, res, next) {
     });
   }
   if (err instanceof HttpError) {
-    return res.status(err.status).json({ error: err.code });
+    return res.status(err.status).json({ error: err.code, ...(err.fields && { fields: err.fields }) });
   }
   if (err?.type === "entity.parse.failed") {
     return res.status(400).json({ error: "invalid_json" });

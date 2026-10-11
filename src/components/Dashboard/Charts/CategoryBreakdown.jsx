@@ -1,5 +1,6 @@
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "../../Movements/MovementBits";
 
@@ -29,7 +30,8 @@ function CategoryVariation({ value }) {
 // Desglose de gastos por categoria: barra apilada en grises arriba y
 // lista con icono, monto, barra relativa y variacion contra el mes anterior.
 function CategoryBreakdown({ data, currency = "ARS" }) {
-  const { t, locale } = useLanguage();
+  const { locale } = useLanguage();
+  const { nameOf } = useCategories();
   const total = data.reduce((sum, item) => sum + item.total, 0);
   const top = data[0]?.total || 1;
   const share = (value) => (total ? (value / total) * 100 : 0);
@@ -52,7 +54,7 @@ function CategoryBreakdown({ data, currency = "ARS" }) {
 
       <ul className="-mx-2 m-0 flex list-none flex-col p-0">
         {data.map((item, index) => {
-          const name = t(`cat_${item.category}`);
+          const name = nameOf(item.category);
           return (
             <li
               key={item.category}

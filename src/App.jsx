@@ -4,6 +4,7 @@ import DashboardLayout from "./layouts/DashboardLayout/DashboardLayout";
 import Splash from "./components/Brand/Splash";
 import { BrandMark } from "./components/Brand/BrandIcons";
 import { SettingsProvider } from "./context/SettingsContext";
+import { CategoriesProvider } from "./context/CategoriesContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -114,19 +115,21 @@ function AppShell() {
 
   return (
     <SettingsProvider>
-      <DashboardLayout>
-        <Suspense fallback={<PageFallback />}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/recurring" element={<Recurring />} />
-            <Route path="/installments" element={<Installments />} />
-            <Route path="/budgets" element={<Budgets />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </DashboardLayout>
+      <CategoriesProvider>
+        <DashboardLayout>
+          <Suspense fallback={<PageFallback />}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/history" element={<History />} />
+              <Route path="/recurring" element={<Recurring />} />
+              <Route path="/installments" element={<Installments />} />
+              <Route path="/budgets" element={<Budgets />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </DashboardLayout>
+      </CategoriesProvider>
     </SettingsProvider>
   );
 }
