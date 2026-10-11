@@ -8,12 +8,14 @@ import { createAuthService, cookieOptions, parseCookies, SESSION_COOKIE } from "
 import { createRepository } from "./repository.js";
 import { createRecurringService, toISODate } from "./recurring.js";
 import { createBudgetsService } from "./budgets.js";
+import { createCategoriesService } from "./categories.js";
 import { createRatesService } from "./rates.js";
 import { deleteDemoData, hasDemoData, seedUser } from "./db.js";
 import { authRouter } from "./routes/auth.js";
 import { movementsRouter } from "./routes/movements.js";
 import { recurringRouter } from "./routes/recurring.js";
 import { budgetsRouter } from "./routes/budgets.js";
+import { categoriesRouter } from "./routes/categories.js";
 import { buildSummary } from "./summary.js";
 import { parseCurrency, parseMonth } from "./params.js";
 import { errorHandler, HttpError } from "./errors.js";
@@ -67,6 +69,7 @@ export function createApp(
   const repo = createRepository(db);
   const recurring = createRecurringService(db, { now });
   const budgets = createBudgetsService(db);
+  const categories = createCategoriesService(db);
   const rates = createRatesService(db, { now, fetchImpl });
   const maintenance = createMaintenance(db, { now });
   const reporter = createErrorReporter({ mailer, to: alertEmail, now });
@@ -158,9 +161,10 @@ export function createApp(
     next();
   });
 
-  app.use("/api/movements", movementsRouter(repo));
-  app.use("/api/recurring", recurringRouter(recurring));
-  app.use("/api/budgets", budgetsRouter(budgets, rates));
+  app.use("/api/movements", movementsRouter(repo, categories));
+  app.use("/api/recurring", recurringRouter(recurring, categories));
+  app.use("/api/budgets", budgetsRouter(budgets, rates, categories));
+  app.use("/api/categories", categoriesRouter(categories));
 
   app.get("/api/summary", async (req, res) => {
     const month = parseMonth(req.query.month);

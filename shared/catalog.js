@@ -56,3 +56,64 @@ export const DEFAULT_RATE_SOURCE = "blue";
 
 // Umbral (en %) a partir del cual un presupuesto se marca "cerca del limite".
 export const BUDGET_WARNING_PERCENT = 80;
+
+// Categorias propias: se guardan en la tabla categories y los movimientos
+// usan la clave "custom_<id>". Las de la lista de arriba no se pueden cambiar.
+export const CUSTOM_CATEGORY_PREFIX = "custom_";
+export const CUSTOM_CATEGORIES_MAX = 50;
+export const CATEGORY_NAME_MAX_LENGTH = 30;
+
+export function isCustomCategory(key) {
+  return typeof key === "string" && /^custom_[1-9]\d*$/.test(key);
+}
+
+export function customCategoryKey(id) {
+  return `${CUSTOM_CATEGORY_PREFIX}${id}`;
+}
+
+// A donde pasan los movimientos cuando se borra una categoria propia.
+export const FALLBACK_CATEGORY = { expense: "other", income: "otherIncome" };
+
+// Iconos y colores que se pueden elegir (el front traduce el nombre a un icono).
+export const CATEGORY_ICONS = [
+  "tag",
+  "car",
+  "fuel",
+  "plane",
+  "dog",
+  "baby",
+  "shirt",
+  "dumbbell",
+  "gamepad",
+  "music",
+  "book",
+  "coffee",
+  "pizza",
+  "beer",
+  "pill",
+  "scissors",
+  "wrench",
+  "phone",
+  "wifi",
+  "gift",
+  "heart",
+  "piggyBank",
+  "briefcase",
+  "home",
+];
+
+export const CATEGORY_COLORS = [
+  "#fbbf24",
+  "#fb923c",
+  "#f87171",
+  "#f472b6",
+  "#e879f9",
+  "#a78bfa",
+  "#818cf8",
+  "#38bdf8",
+  "#22d3ee",
+  "#2dd4bf",
+  "#34d399",
+  "#a3e635",
+  "#94a3b8",
+];

@@ -2,11 +2,11 @@ import { useState } from "react";
 import {
   ArrowDownLeftIcon,
   ArrowUpRightIcon,
+  PlusIcon,
   RepeatIcon,
   Trash2Icon,
 } from "lucide-react";
 import {
-  CATEGORIES_BY_TYPE,
   CURRENCIES,
   NOTE_MAX_LENGTH,
   TITLE_MAX_LENGTH,
@@ -26,8 +26,9 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate, todayISO } from "@/lib/format";
-import { getCategoryMeta } from "@/lib/categories";
 import { paymentMethodOptions } from "@/lib/paymentMethods";
+import CategoryDialog from "@/components/Categories/CategoryDialog";
+import { useCategories } from "@/hooks/useCategories";
 import { useLanguage } from "@/hooks/useLanguage";
 
 // "YYYY-MM-DD" + n meses (mismo dia, o el ultimo si el mes es mas corto).
@@ -138,6 +139,9 @@ onSubmit(data, { repeat }) — repeat indica "crear como recurrente".
 */
 function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel, onDelete }) {
   const { t, locale } = useLanguage();
+  const { keysOf, metaOf, nameOf } = useCategories();
+  // Dialogo para crear una categoria sin salir del formulario.
+  const [newCategory, setNewCategory] = useState(null);
   const [values, setValues] = useState(() => toFormValues(item, mode, initialKind));
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
@@ -168,12 +172,12 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
               : "—",
         })
       : null;
-  const categories = CATEGORIES_BY_TYPE[values.type] ?? [];
+  const categories = keysOf(values.type);
 
   function update(field, value) {
     const next = { ...values, [field]: value };
     // Si cambia el tipo y la categoria ya no corresponde, se limpia.
-    if (field === "type" && !CATEGORIES_BY_TYPE[value]?.includes(next.category)) {
+    if (field === "type" && !keysOf(value).includes(next.category)) {
       next.category = "";
     }
     setValues(next);
@@ -235,297 +239,312 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
   const errorText = (field) => (errors[field] ? t(errors[field]) : null);
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="grid gap-4">
-      {!isRecurring && item?.recurringId && (
-        <p className="m-0 flex items-start gap-2 rounded-xl bg-fg/[0.04] px-3 py-2.5 text-sm text-muted-foreground">
-          <RepeatIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          {t("generatedOccurrenceHint")}
-        </p>
-      )}
-
-      <fieldset className="m-0 grid gap-2 border-0 p-0" disabled={saving}>
-        <legend className="sr-only">{t("type")}</legend>
-        <Segmented
-          label={t("type")}
-          value={values.type}
-          onChange={(value) => update("type", value)}
-          options={[
-            { value: "expense", label: t("expense"), icon: ArrowUpRightIcon },
-            { value: "income", label: t("income"), icon: ArrowDownLeftIcon, activeClass: "text-income" },
-          ]}
-        />
-        {errors.type && (
-          <p role="alert" className="m-0 text-xs text-destructive">
-            {t(errors.type)}
+    <>
+      <form noValidate onSubmit={handleSubmit} className="grid gap-4">
+        {!isRecurring && item?.recurringId && (
+          <p className="m-0 flex items-start gap-2 rounded-xl bg-fg/[0.04] px-3 py-2.5 text-sm text-muted-foreground">
+            <RepeatIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            {t("generatedOccurrenceHint")}
           </p>
         )}
-      </fieldset>
 
-      <Field id="movement-title" label={t("titleLabel")} error={errorText("title")}>
-        <Input
-          {...fieldProps("title")}
-          placeholder={t("titlePlaceholder")}
-          maxLength={TITLE_MAX_LENGTH}
-          autoComplete="off"
-          autoCapitalize="sentences"
-          enterKeyHint="next"
-        />
-      </Field>
-
-      {/* Monto + moneda */}
-      <div className="grid gap-2">
-        <div className="flex items-end justify-between gap-3">
-          <Label htmlFor="movement-amount">
-            {isInstallments ? t("installmentAmount") : t("amount")}
-          </Label>
+        <fieldset className="m-0 grid gap-2 border-0 p-0" disabled={saving}>
+          <legend className="sr-only">{t("type")}</legend>
           <Segmented
-            label={t("currency")}
-            value={values.currency}
-            onChange={(value) => update("currency", value)}
-            size="sm"
-            className="w-32"
-            options={CURRENCIES.map((code) => ({ value: code, label: code }))}
+            label={t("type")}
+            value={values.type}
+            onChange={(value) => update("type", value)}
+            options={[
+              { value: "expense", label: t("expense"), icon: ArrowUpRightIcon },
+              { value: "income", label: t("income"), icon: ArrowDownLeftIcon, activeClass: "text-income" },
+            ]}
           />
-        </div>
-        <div className="relative">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-lg font-medium text-muted-foreground sm:text-base"
-          >
-            {values.currency === "USD" ? "US$" : "$"}
-          </span>
-          <Input
-            {...fieldProps("amount")}
-            type="number"
-            inputMode="decimal"
-            enterKeyHint="next"
-            min="0"
-            step="0.01"
-            placeholder="0"
-            aria-label={`${t("amount")} (${values.currency})`}
-            className={cn(
-              "text-lg font-medium tabular-nums sm:text-base",
-              values.currency === "USD" ? "pl-14" : "pl-7",
-            )}
-          />
-        </div>
-        {errors.amount && (
-          <p id="movement-amount-error" role="alert" className="m-0 text-xs text-destructive">
-            {t(errors.amount)}
-          </p>
-        )}
-        {errors.currency && (
-          <p role="alert" className="m-0 text-xs text-destructive">
-            {t(errors.currency)}
-          </p>
-        )}
-      </div>
+          {errors.type && (
+            <p role="alert" className="m-0 text-xs text-destructive">
+              {t(errors.type)}
+            </p>
+          )}
+        </fieldset>
 
-      {isInstallments ? (
-        <div className="grid gap-4">
-          <div className="grid grid-cols-2 items-start gap-4">
-            <Field
-              id="movement-installmentFirst"
-              label={t("installmentFirst")}
-              hint={t("installmentFirstHint")}
-              error={errorText("installmentFirst")}
+        <Field id="movement-title" label={t("titleLabel")} error={errorText("title")}>
+          <Input
+            {...fieldProps("title")}
+            placeholder={t("titlePlaceholder")}
+            maxLength={TITLE_MAX_LENGTH}
+            autoComplete="off"
+            autoCapitalize="sentences"
+            enterKeyHint="next"
+          />
+        </Field>
+
+        {/* Monto + moneda */}
+        <div className="grid gap-2">
+          <div className="flex items-end justify-between gap-3">
+            <Label htmlFor="movement-amount">
+              {isInstallments ? t("installmentAmount") : t("amount")}
+            </Label>
+            <Segmented
+              label={t("currency")}
+              value={values.currency}
+              onChange={(value) => update("currency", value)}
+              size="sm"
+              className="w-32"
+              options={CURRENCIES.map((code) => ({ value: code, label: code }))}
+            />
+          </div>
+          <div className="relative">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-lg font-medium text-muted-foreground sm:text-base"
             >
-              <Input
-                {...fieldProps("installmentFirst")}
-                type="number"
-                inputMode="numeric"
-                min="1"
-                max={values.installmentsTotal || INSTALLMENTS_MAX}
-                step="1"
-                className="tabular-nums"
-              />
-            </Field>
+              {values.currency === "USD" ? "US$" : "$"}
+            </span>
+            <Input
+              {...fieldProps("amount")}
+              type="number"
+              inputMode="decimal"
+              enterKeyHint="next"
+              min="0"
+              step="0.01"
+              placeholder="0"
+              aria-label={`${t("amount")} (${values.currency})`}
+              className={cn(
+                "text-lg font-medium tabular-nums sm:text-base",
+                values.currency === "USD" ? "pl-14" : "pl-7",
+              )}
+            />
+          </div>
+          {errors.amount && (
+            <p id="movement-amount-error" role="alert" className="m-0 text-xs text-destructive">
+              {t(errors.amount)}
+            </p>
+          )}
+          {errors.currency && (
+            <p role="alert" className="m-0 text-xs text-destructive">
+              {t(errors.currency)}
+            </p>
+          )}
+        </div>
+
+        {isInstallments ? (
+          <div className="grid gap-4">
+            <div className="grid grid-cols-2 items-start gap-4">
+              <Field
+                id="movement-installmentFirst"
+                label={t("installmentFirst")}
+                hint={t("installmentFirstHint")}
+                error={errorText("installmentFirst")}
+              >
+                <Input
+                  {...fieldProps("installmentFirst")}
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  max={values.installmentsTotal || INSTALLMENTS_MAX}
+                  step="1"
+                  className="tabular-nums"
+                />
+              </Field>
+              <Field
+                id="movement-installmentsTotal"
+                label={t("installmentsTotal")}
+                error={errorText("installmentsTotal")}
+              >
+                <Input
+                  {...fieldProps("installmentsTotal")}
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  max={INSTALLMENTS_MAX}
+                  step="1"
+                  className="tabular-nums"
+                />
+              </Field>
+            </div>
             <Field
-              id="movement-installmentsTotal"
-              label={t("installmentsTotal")}
-              error={errorText("installmentsTotal")}
+              id="movement-startDate"
+              label={
+                installmentsValid && total === 1
+                  ? t("installmentSingleDate")
+                  : t("installmentDate", { number: installmentsValid ? first : "" })
+              }
+              hint={installmentsSummary ?? t("installmentDateHint")}
+              error={errorText("startDate")}
             >
-              <Input
-                {...fieldProps("installmentsTotal")}
-                type="number"
-                inputMode="numeric"
-                min="1"
-                max={INSTALLMENTS_MAX}
-                step="1"
-                className="tabular-nums"
+              <DatePicker
+                {...pickerProps("startDate")}
+                onChange={(value) => update("startDate", value)}
               />
             </Field>
           </div>
-          <Field
-            id="movement-startDate"
-            label={
-              installmentsValid && total === 1
-                ? t("installmentSingleDate")
-                : t("installmentDate", { number: installmentsValid ? first : "" })
-            }
-            hint={installmentsSummary ?? t("installmentDateHint")}
-            error={errorText("startDate")}
-          >
+        ) : isRecurring ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              id="movement-startDate"
+              label={t("startDate")}
+              hint={t("startDateHint")}
+              error={errorText("startDate")}
+            >
+              <DatePicker
+                {...pickerProps("startDate")}
+                onChange={(value) => update("startDate", value)}
+              />
+            </Field>
+            <Field
+              id="movement-endDate"
+              label={t("endDateOptional")}
+              hint={t("endDateHint")}
+              error={errorText("endDate")}
+            >
+              <DatePicker
+                {...pickerProps("endDate")}
+                onChange={(value) => update("endDate", value)}
+                min={values.startDate || undefined}
+                placeholder={t("noEndDate")}
+                clearable
+              />
+            </Field>
+          </div>
+        ) : (
+          <Field id="movement-date" label={t("date")} error={errorText("date")}>
             <DatePicker
-              {...pickerProps("startDate")}
-              onChange={(value) => update("startDate", value)}
+              {...pickerProps("date")}
+              onChange={(value) => update("date", value)}
+              shortcuts
             />
           </Field>
-        </div>
-      ) : isRecurring ? (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            id="movement-startDate"
-            label={t("startDate")}
-            hint={t("startDateHint")}
-            error={errorText("startDate")}
-          >
-            <DatePicker
-              {...pickerProps("startDate")}
-              onChange={(value) => update("startDate", value)}
-            />
-          </Field>
-          <Field
-            id="movement-endDate"
-            label={t("endDateOptional")}
-            hint={t("endDateHint")}
-            error={errorText("endDate")}
-          >
-            <DatePicker
-              {...pickerProps("endDate")}
-              onChange={(value) => update("endDate", value)}
-              min={values.startDate || undefined}
-              placeholder={t("noEndDate")}
-              clearable
-            />
-          </Field>
-        </div>
-      ) : (
-        <Field id="movement-date" label={t("date")} error={errorText("date")}>
-          <DatePicker
-            {...pickerProps("date")}
-            onChange={(value) => update("date", value)}
-            shortcuts
+        )}
+
+        <fieldset
+          className="m-0 grid gap-2 border-0 p-0"
+          disabled={saving}
+          aria-describedby={errors.category ? "movement-category-error" : undefined}
+        >
+          <legend className="mb-2 text-sm font-medium">{t("category")}</legend>
+          {/* Chips de categoria, cada una con su color e icono */}
+          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("category")}>
+            {categories.map((category, index) => {
+              const { color, icon: Icon } = metaOf(category);
+              const active = values.category === category;
+              return (
+                <button
+                  key={category}
+                  id={index === 0 ? "movement-category" : undefined}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => update("category", category)}
+                  className={cn(
+                    "inline-flex h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none sm:h-9 sm:px-3",
+                    active
+                      ? "font-medium text-foreground"
+                      : "border-input text-muted-foreground hover:border-fg/20 hover:text-foreground",
+                    errors.category && !active && "border-destructive/50",
+                  )}
+                  style={
+                    active
+                      ? {
+                          borderColor: color,
+                          background: `color-mix(in srgb, ${color} 16%, transparent)`,
+                        }
+                      : undefined
+                  }
+                >
+                  <Icon className="size-3.5" style={{ color }} aria-hidden="true" />
+                  {nameOf(category)}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => setNewCategory({ type: values.type })}
+              className="inline-flex h-11 items-center gap-1.5 rounded-full border border-dashed border-fg/20 px-3.5 text-sm text-muted-foreground transition-colors hover:border-fg/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none sm:h-9 sm:px-3"
+            >
+              <PlusIcon className="size-3.5" aria-hidden="true" />
+              {t("newCategory")}
+            </button>
+          </div>
+          {errors.category && (
+            <p id="movement-category-error" role="alert" className="m-0 text-xs text-destructive">
+              {t(errors.category)}
+            </p>
+          )}
+        </fieldset>
+
+        <Field id="movement-paymentMethod" label={t("method")} error={errorText("paymentMethod")}>
+          <Select
+            {...pickerProps("paymentMethod")}
+            onValueChange={(value) => update("paymentMethod", value)}
+            options={paymentMethodOptions(t)}
+            placeholder={t("selectPlaceholder")}
           />
         </Field>
-      )}
 
-      <fieldset
-        className="m-0 grid gap-2 border-0 p-0"
-        disabled={saving}
-        aria-describedby={errors.category ? "movement-category-error" : undefined}
-      >
-        <legend className="mb-2 text-sm font-medium">{t("category")}</legend>
-        {/* Chips de categoria, cada una con su color e icono */}
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("category")}>
-          {categories.map((category, index) => {
-            const { color, icon: Icon } = getCategoryMeta(category);
-            const active = values.category === category;
-            return (
-              <button
-                key={category}
-                id={index === 0 ? "movement-category" : undefined}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => update("category", category)}
-                className={cn(
-                  "inline-flex h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-all focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none sm:h-9 sm:px-3",
-                  active
-                    ? "font-medium text-foreground"
-                    : "border-input text-muted-foreground hover:border-fg/20 hover:text-foreground",
-                  errors.category && !active && "border-destructive/50",
-                )}
-                style={
-                  active
-                    ? {
-                        borderColor: color,
-                        background: `color-mix(in srgb, ${color} 16%, transparent)`,
-                      }
-                    : undefined
-                }
-              >
-                <Icon className="size-3.5" style={{ color }} aria-hidden="true" />
-                {t(`cat_${category}`)}
-              </button>
-            );
-          })}
-        </div>
-        {errors.category && (
-          <p id="movement-category-error" role="alert" className="m-0 text-xs text-destructive">
-            {t(errors.category)}
-          </p>
-        )}
-      </fieldset>
-
-      <Field id="movement-paymentMethod" label={t("method")} error={errorText("paymentMethod")}>
-        <Select
-          {...pickerProps("paymentMethod")}
-          onValueChange={(value) => update("paymentMethod", value)}
-          options={paymentMethodOptions(t)}
-          placeholder={t("selectPlaceholder")}
-        />
-      </Field>
-
-      <Field id="movement-note" label={t("note")} error={errorText("note")}>
-        <Textarea
-          {...fieldProps("note")}
-          placeholder={t("notePlaceholder")}
-          maxLength={NOTE_MAX_LENGTH}
-          rows={2}
-        />
-      </Field>
-
-      {/* Repetir todos los meses (al crear) / regla activa (al editar una regla) */}
-      {((!isRecurring && isNew) || (isRecurring && !isNew)) && (
-        <label
-          htmlFor="movement-toggle"
-          className="flex cursor-pointer items-center gap-3 rounded-xl border bg-fg/[0.02] p-3.5"
-        >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <RepeatIcon className="size-[18px]" aria-hidden="true" />
-          </span>
-          <span className="grid min-w-0 flex-1 gap-0.5">
-            <span className="text-sm font-medium">
-              {isRecurring ? t("recurringActive") : t("repeatMonthly")}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {isRecurring ? t("recurringActiveHint") : t("repeatMonthlyHint")}
-            </span>
-          </span>
-          <Switch
-            id="movement-toggle"
-            checked={isRecurring ? values.active : values.repeat}
-            onCheckedChange={(checked) => update(isRecurring ? "active" : "repeat", checked)}
-            disabled={saving}
+        <Field id="movement-note" label={t("note")} error={errorText("note")}>
+          <Textarea
+            {...fieldProps("note")}
+            placeholder={t("notePlaceholder")}
+            maxLength={NOTE_MAX_LENGTH}
+            rows={2}
           />
-        </label>
-      )}
+        </Field>
 
-      {/* Acciones fijas abajo: siempre visibles aunque el teclado este abierto */}
-      <div className="sticky bottom-0 -mx-5 mt-1 flex flex-col gap-2 border-t bg-popover px-5 pt-3 pb-1 sm:static sm:mx-0 sm:flex-row sm:items-center sm:border-0 sm:p-0">
-        {onDelete && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onDelete}
-            disabled={saving}
-            className="order-3 text-destructive hover:bg-destructive/10 hover:text-destructive sm:order-none sm:mr-auto"
+        {/* Repetir todos los meses (al crear) / regla activa (al editar una regla) */}
+        {((!isRecurring && isNew) || (isRecurring && !isNew)) && (
+          <label
+            htmlFor="movement-toggle"
+            className="flex cursor-pointer items-center gap-3 rounded-xl border bg-fg/[0.02] p-3.5"
           >
-            <Trash2Icon data-icon="inline-start" />
-            {t("delete")}
-          </Button>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <RepeatIcon className="size-[18px]" aria-hidden="true" />
+            </span>
+            <span className="grid min-w-0 flex-1 gap-0.5">
+              <span className="text-sm font-medium">
+                {isRecurring ? t("recurringActive") : t("repeatMonthly")}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {isRecurring ? t("recurringActiveHint") : t("repeatMonthlyHint")}
+              </span>
+            </span>
+            <Switch
+              id="movement-toggle"
+              checked={isRecurring ? values.active : values.repeat}
+              onCheckedChange={(checked) => update(isRecurring ? "active" : "repeat", checked)}
+              disabled={saving}
+            />
+          </label>
         )}
-        <div className="grid grid-cols-2 gap-2 sm:ml-auto sm:flex">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
-            {t("cancel")}
-          </Button>
-          <Button type="submit" disabled={saving}>
-            {saving ? t("saving") : t("save")}
-          </Button>
+
+        {/* Acciones fijas abajo: siempre visibles aunque el teclado este abierto */}
+        <div className="sticky bottom-0 -mx-5 mt-1 flex flex-col gap-2 border-t bg-popover px-5 pt-3 pb-1 sm:static sm:mx-0 sm:flex-row sm:items-center sm:border-0 sm:p-0">
+          {onDelete && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onDelete}
+              disabled={saving}
+              className="order-3 text-destructive hover:bg-destructive/10 hover:text-destructive sm:order-none sm:mr-auto"
+            >
+              <Trash2Icon data-icon="inline-start" />
+              {t("delete")}
+            </Button>
+          )}
+          <div className="grid grid-cols-2 gap-2 sm:ml-auto sm:flex">
+            <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
+              {t("cancel")}
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? t("saving") : t("save")}
+            </Button>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+      <CategoryDialog
+        target={newCategory}
+        onClose={() => setNewCategory(null)}
+        onDone={({ saved }) => saved && update("category", saved.key)}
+      />
+    </>
   );
 }
 

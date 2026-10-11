@@ -200,6 +200,19 @@ const MIGRATIONS = [
   ALTER TABLE recurring ADD CONSTRAINT recurring_installments_total_check
     CHECK (installments_total BETWEEN 1 AND 360);
   `,
+  // v7: categorias propias. Los movimientos las guardan como "custom_<id>".
+  `
+  CREATE TABLE categories (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    type       TEXT        NOT NULL CHECK (type IN ('income', 'expense')),
+    name       TEXT        NOT NULL,
+    icon       TEXT        NOT NULL,
+    color      TEXT        NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX idx_categories_user ON categories (user_id);
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.

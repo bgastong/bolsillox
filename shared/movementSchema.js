@@ -2,9 +2,13 @@ import { z } from "zod";
 import {
   AMOUNT_MAX,
   CATEGORIES_BY_TYPE,
+  CATEGORY_COLORS,
+  CATEGORY_ICONS,
+  CATEGORY_NAME_MAX_LENGTH,
   CURRENCIES,
   DEFAULT_CURRENCY,
   EXPENSE_CATEGORIES,
+  isCustomCategory,
   MOVEMENT_TYPES,
   NOTE_MAX_LENGTH,
   PAYMENT_METHODS,
@@ -62,7 +66,10 @@ const movementFields = {
     .default(""),
 };
 
+// Las categorias propias ("custom_<id>") las valida el servidor contra la
+// base (que existan, sean de la persona y del mismo tipo).
 function checkCategoryMatchesType(data, ctx) {
+  if (isCustomCategory(data.category)) return;
   const allowed = CATEGORIES_BY_TYPE[data.type];
   if (allowed && !allowed.includes(data.category)) {
     ctx.addIssue({
@@ -124,9 +131,24 @@ export const recurringSchema = z
 
 // Presupuesto mensual (en ARS) para una categoria de gasto.
 export const budgetSchema = z.object({ amount: amountSchema });
-export const budgetCategorySchema = z.enum(EXPENSE_CATEGORIES, {
-  error: "errorCategoryInvalid",
+export const budgetCategorySchema = z
+  .string()
+  .refine((value) => EXPENSE_CATEGORIES.includes(value) || isCustomCategory(value), {
+    error: "errorCategoryInvalid",
+  });
+
+// Categoria propia. El tipo no se puede cambiar despues (los movimientos ya la usan).
+export const categorySchema = z.object({
+  type: z.enum(MOVEMENT_TYPES, { error: "errorTypeInvalid" }),
+  name: z
+    .string({ error: "errorCategoryNameRequired" })
+    .trim()
+    .min(1, { error: "errorCategoryNameRequired" })
+    .max(CATEGORY_NAME_MAX_LENGTH, { error: "errorCategoryNameTooLong" }),
+  icon: z.enum(CATEGORY_ICONS, { error: "errorCategoryIconInvalid" }),
+  color: z.enum(CATEGORY_COLORS, { error: "errorCategoryColorInvalid" }),
 });
+export const categoryUpdateSchema = categorySchema.omit({ type: true });
 
 // Preferencia de cotizacion del dolar.
 export const rateSettingsSchema = z
