@@ -1,6 +1,27 @@
 import {
+  BabyIcon,
+  BeerIcon,
+  BookOpenIcon,
   BriefcaseIcon,
   BusIcon,
+  CarIcon,
+  CoffeeIcon,
+  DogIcon,
+  DumbbellIcon,
+  FuelIcon,
+  Gamepad2Icon,
+  HeartIcon,
+  MusicIcon,
+  PiggyBankIcon,
+  PillIcon,
+  PizzaIcon,
+  PlaneIcon,
+  ScissorsIcon,
+  ShirtIcon,
+  SmartphoneIcon,
+  TagIcon,
+  WifiIcon,
+  WrenchIcon,
   CircleEllipsisIcon,
   FilmIcon,
   GiftIcon,
@@ -38,8 +59,41 @@ export const CATEGORY_META = {
   otherIncome: { color: "#86efac", icon: PlusCircleIcon },
 };
 
-const FALLBACK = { color: "#94a3b8", icon: CircleEllipsisIcon };
+// Iconos que se pueden elegir para una categoria propia (ver CATEGORY_ICONS en shared/catalog.js).
+export const CUSTOM_CATEGORY_ICONS = {
+  tag: TagIcon,
+  car: CarIcon,
+  fuel: FuelIcon,
+  plane: PlaneIcon,
+  dog: DogIcon,
+  baby: BabyIcon,
+  shirt: ShirtIcon,
+  dumbbell: DumbbellIcon,
+  gamepad: Gamepad2Icon,
+  music: MusicIcon,
+  book: BookOpenIcon,
+  coffee: CoffeeIcon,
+  pizza: PizzaIcon,
+  beer: BeerIcon,
+  pill: PillIcon,
+  scissors: ScissorsIcon,
+  wrench: WrenchIcon,
+  phone: SmartphoneIcon,
+  wifi: WifiIcon,
+  gift: GiftIcon,
+  heart: HeartIcon,
+  piggyBank: PiggyBankIcon,
+  briefcase: BriefcaseIcon,
+  home: HouseIcon,
+};
 
+export const FALLBACK_META = { color: "#94a3b8", icon: CircleEllipsisIcon };
+
+// Solo las categorias fijas; para las propias usar useCategories().metaOf.
 export function getCategoryMeta(category) {
-  return CATEGORY_META[category] ?? FALLBACK;
+  return CATEGORY_META[category] ?? FALLBACK_META;
+}
+
+export function customCategoryMeta(category) {
+  return { color: category.color, icon: CUSTOM_CATEGORY_ICONS[category.icon] ?? TagIcon };
 }

@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   ALL_CATEGORIES,
   CURRENCIES,
+  isCustomCategory,
   MOVEMENT_TYPES,
   PAYMENT_METHODS,
   SORT_FIELDS,
@@ -19,7 +20,10 @@ const optionalDate = z
 const listQuerySchema = z
   .object({
     type: z.enum(MOVEMENT_TYPES).optional(),
-    category: z.enum(ALL_CATEGORIES).optional(),
+    category: z
+      .string()
+      .refine((value) => ALL_CATEGORIES.includes(value) || isCustomCategory(value))
+      .optional(),
     paymentMethod: z.enum(PAYMENT_METHODS).optional(),
     currency: z.enum(CURRENCIES).optional(),
     from: optionalDate,
@@ -55,7 +59,7 @@ function parseId(raw) {
   return result.data;
 }
 
-export function movementsRouter(repo) {
+export function movementsRouter(repo, categories) {
   const router = Router();
 
   router.get("/", async (req, res) => {
@@ -77,12 +81,14 @@ export function movementsRouter(repo) {
 
   router.post("/", async (req, res) => {
     const data = movementSchema.parse(req.body ?? {});
+    await categories.assertUsable(req.user.id, data.type, data.category);
     res.status(201).json(await repo.create(req.user.id, data));
   });
 
   router.put("/:id", async (req, res) => {
     const id = parseId(req.params.id);
     const data = movementSchema.parse(req.body ?? {});
+    await categories.assertUsable(req.user.id, data.type, data.category);
     const movement = await repo.update(req.user.id, id, data);
     if (!movement) throw new HttpError(404, "not_found");
     res.json(movement);

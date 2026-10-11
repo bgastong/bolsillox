@@ -99,6 +99,12 @@ export const api = {
     request(`/budgets/${category}`, { method: "PUT", body: { amount } }),
   deleteBudget: (category) => request(`/budgets/${category}`, { method: "DELETE" }),
 
+  // Categorias propias
+  listCategories: (options) => request("/categories", options),
+  createCategory: (data) => request("/categories", { method: "POST", body: data }),
+  updateCategory: (id, data) => request(`/categories/${id}`, { method: "PUT", body: data }),
+  deleteCategory: (id) => request(`/categories/${id}`, { method: "DELETE" }),
+
   // Cotizacion del dolar
   getRates: (options) => request("/rates", options),
   saveRateSettings: (settings) =>

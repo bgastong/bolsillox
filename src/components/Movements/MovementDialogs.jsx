@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useCategories } from "@/hooks/useCategories";
 import { useToast } from "@/hooks/useToast";
 import MovementForm from "./MovementForm";
 
@@ -56,6 +57,7 @@ export function MovementDialogs({
   onRequestDelete,
 }) {
   const { t } = useLanguage();
+  const { nameOf } = useCategories();
   const { toast } = useToast();
   const [deleting, setDeleting] = useState(false);
 
@@ -75,7 +77,7 @@ export function MovementDialogs({
       const { items } = await api.getBudgets(month);
       const budget = items.find((item) => item.category === data.category);
       if (!budget || budget.status === "ok") return;
-      const vars = { category: t(`cat_${budget.category}`), percent: Math.round(budget.percent) };
+      const vars = { category: nameOf(budget.category), percent: Math.round(budget.percent) };
       toast(t(budget.status === "over" ? "budgetOverToast" : "budgetWarningToast", vars), {
         variant: "warning",
       });

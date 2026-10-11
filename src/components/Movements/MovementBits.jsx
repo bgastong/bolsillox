@@ -1,7 +1,7 @@
 import { RepeatIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
-import { getCategoryMeta } from "@/lib/categories";
+import { useCategories } from "@/hooks/useCategories";
 import { useLanguage } from "@/hooks/useLanguage";
 
 // Monto con signo: + ingreso (verde) / - gasto (neutro), en su moneda.
@@ -24,11 +24,11 @@ export function AmountText({ type, amount, currency = "ARS", className }) {
 // Icono de la categoria en una ficha neutra: en este estilo el color se
 // reserva para el dinero (verde entra, rojo sale).
 export function CategoryIcon({ category, className }) {
-  const { t } = useLanguage();
-  const { icon: Icon } = getCategoryMeta(category);
+  const { nameOf, metaOf } = useCategories();
+  const { icon: Icon } = metaOf(category);
   return (
     <span
-      title={t(`cat_${category}`)}
+      title={nameOf(category)}
       className={cn(
         "inline-flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-fg/[0.07] bg-fg/[0.04] text-[color:var(--text-2)]",
         className,
@@ -41,8 +41,8 @@ export function CategoryIcon({ category, className }) {
 
 // Etiqueta de categoria con punto de color.
 export function CategoryBadge({ category, className }) {
-  const { t } = useLanguage();
-  const { color } = getCategoryMeta(category);
+  const { nameOf, metaOf } = useCategories();
+  const { color } = metaOf(category);
   return (
     <span
       className={cn(
@@ -56,7 +56,7 @@ export function CategoryBadge({ category, className }) {
       }}
     >
       <span className="size-1.5 rounded-full" style={{ background: color }} aria-hidden="true" />
-      {t(`cat_${category}`)}
+      {nameOf(category)}
     </span>
   );
 }

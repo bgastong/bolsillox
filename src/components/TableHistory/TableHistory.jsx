@@ -5,6 +5,7 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { movementLabel } from "@/lib/movementLabel";
 import { netTotals } from "@/lib/money";
 import { useSettings } from "@/hooks/useSettings";
+import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../../hooks/useLanguage";
 import { AmountText, CategoryBadge, CategoryIcon, RecurringMark } from "../Movements/MovementBits";
@@ -77,6 +78,7 @@ selecting: en el celular, tocar una tarjeta la elige en vez de editarla.
 */
 function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggleAll, selecting }) {
   const { t, locale } = useLanguage();
+  const { nameOf } = useCategories();
   const selectedCount = movements.filter((movement) => selected.has(movement.id)).length;
   const allSelected = selectedCount > 0 && selectedCount === movements.length;
   const { currency, rate } = useSettings();
@@ -186,7 +188,7 @@ function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggl
               <button
                 type="button"
                 onClick={() => (selecting ? onToggle(movement.id) : onEdit(movement))}
-                aria-label={movementLabel(movement, t, locale)}
+                aria-label={movementLabel(movement, t, locale, nameOf)}
                 aria-pressed={selecting ? isSelected : undefined}
                 className={cn(
                   "flex w-full touch-manipulation items-center gap-3 rounded-2xl border bg-card p-3.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring active:bg-fg/[0.04]",
