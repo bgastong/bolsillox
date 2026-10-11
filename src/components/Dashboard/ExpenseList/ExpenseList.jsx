@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate, todayISO } from "@/lib/format";
 import { movementLabel } from "@/lib/movementLabel";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useCategories } from "@/hooks/useCategories";
 import { AmountText, CategoryIcon, RecurringMark } from "../../Movements/MovementBits";
 
 function yesterdayISO() {
@@ -55,6 +56,7 @@ function DayHeader({ date, items }) {
 // grande (comodo para el pulgar) que abre la edicion.
 function ExpenseList({ movements, onEdit }) {
   const { t, locale } = useLanguage();
+  const { nameOf } = useCategories();
 
   return (
     <div className="-mx-2 -mt-2">
@@ -67,7 +69,7 @@ function ExpenseList({ movements, onEdit }) {
                 <button
                   type="button"
                   onClick={() => onEdit(movement)}
-                  aria-label={movementLabel(movement, t, locale)}
+                  aria-label={movementLabel(movement, t, locale, nameOf)}
                   className="group flex min-h-14 w-full touch-manipulation items-center gap-3 rounded-[10px] px-2 py-2 text-left transition-colors outline-none hover:bg-fg/[0.035] focus-visible:ring-2 focus-visible:ring-ring active:bg-fg/[0.05]"
                 >
                   <CategoryIcon category={movement.category} />
@@ -77,7 +79,7 @@ function ExpenseList({ movements, onEdit }) {
                       {movement.recurringId && <RecurringMark />}
                     </p>
                     <p className="m-0 truncate text-xs text-[color:var(--text-4)]">
-                      {t(`cat_${movement.category}`)}
+                      {nameOf(movement.category)}
                     </p>
                   </div>
                   {movement.paymentMethod && (

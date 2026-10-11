@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import { PlusIcon } from "lucide-react";
-import { EXPENSE_CATEGORIES } from "@shared/catalog.js";
 import BudgetDialog from "@/components/Budgets/BudgetDialog";
 import BudgetRow from "@/components/Budgets/BudgetRow";
 import MonthPicker from "@/components/MonthPicker/MonthPicker";
@@ -11,11 +10,13 @@ import { api } from "@/lib/api";
 import { currentMonthKey, formatCurrency } from "@/lib/format";
 import { useApiData } from "@/hooks/useApiData";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useCategories } from "@/hooks/useCategories";
 import { useMovements } from "@/hooks/useMovements";
 import { useSettings } from "@/hooks/useSettings";
 
 function Budgets() {
   const { t, locale } = useLanguage();
+  const { keysOf, nameOf } = useCategories();
   const { version } = useMovements();
   const { rate } = useSettings();
   const [month, setMonth] = useState(currentMonthKey);
@@ -32,7 +33,7 @@ function Budgets() {
   const { data, error, loading, reload } = useApiData(loadBudgets);
 
   const budgeted = new Set(data?.items.map((item) => item.category));
-  const unbudgeted = EXPENSE_CATEGORIES.filter((category) => !budgeted.has(category));
+  const unbudgeted = keysOf("expense").filter((category) => !budgeted.has(category));
   const alerts = data?.items.filter((item) => item.status !== "ok").length ?? 0;
 
   return (
@@ -130,7 +131,7 @@ function Budgets() {
                       className="flex min-h-14 w-full touch-manipulation items-center gap-3 rounded-2xl border border-dashed bg-transparent px-3 py-2.5 text-left text-sm transition-colors outline-none hover:border-fg/20 hover:bg-fg/[0.02] focus-visible:ring-2 focus-visible:ring-ring active:bg-fg/[0.04]"
                     >
                       <CategoryIcon category={category} className="size-9 rounded-lg" />
-                      <span className="flex-1 font-medium">{t(`cat_${category}`)}</span>
+                      <span className="flex-1 font-medium">{nameOf(category)}</span>
                       <PlusIcon className="size-4 text-muted-foreground" aria-hidden="true" />
                       <span className="sr-only">{t("budgetsAddFor")}</span>
                     </button>

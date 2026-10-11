@@ -2,6 +2,7 @@ import { ChevronRightIcon, CircleAlertIcon, CircleCheckIcon, TriangleAlertIcon }
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useCategories } from "@/hooks/useCategories";
 import { CategoryIcon } from "../Movements/MovementBits";
 
 // Estados del presupuesto: siempre icono + texto, nunca solo color.
@@ -56,7 +57,8 @@ export function BudgetBar({ item, label }) {
 // Fila de presupuesto: categoria, gastado / tope, barra y estado.
 function BudgetRow({ item, onClick, compact = false }) {
   const { t, locale } = useLanguage();
-  const name = t(`cat_${item.category}`);
+  const { nameOf } = useCategories();
+  const name = nameOf(item.category);
 
   const content = (
     <>

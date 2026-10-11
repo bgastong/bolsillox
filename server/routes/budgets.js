@@ -4,7 +4,7 @@ import { HttpError } from "../errors.js";
 import { monthRange } from "../summary.js";
 import { parseMonth } from "../params.js";
 
-export function budgetsRouter(budgets, rates) {
+export function budgetsRouter(budgets, rates, categories) {
   const router = Router();
 
   router.get("/", async (req, res) => {
@@ -17,6 +17,7 @@ export function budgetsRouter(budgets, rates) {
   router.put("/:category", async (req, res) => {
     const category = parseCategory(req.params.category);
     const { amount } = budgetSchema.parse(req.body ?? {});
+    await categories.assertUsable(req.user.id, "expense", category);
     await budgets.set(req.user.id, category, amount);
     res.json({ category, amount });
   });

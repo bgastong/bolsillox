@@ -11,7 +11,7 @@ function parseId(raw) {
   return result.data;
 }
 
-export function recurringRouter(recurring) {
+export function recurringRouter(recurring, categories) {
   const router = Router();
 
   router.get("/", async (req, res) => {
@@ -26,12 +26,14 @@ export function recurringRouter(recurring) {
 
   router.post("/", async (req, res) => {
     const data = recurringSchema.parse(req.body ?? {});
+    await categories.assertUsable(req.user.id, data.type, data.category);
     res.status(201).json(await recurring.create(req.user.id, data));
   });
 
   router.put("/:id", async (req, res) => {
     const id = parseId(req.params.id);
     const data = recurringSchema.parse(req.body ?? {});
+    await categories.assertUsable(req.user.id, data.type, data.category);
     const rule = await recurring.update(req.user.id, id, data);
     if (!rule) throw new HttpError(404, "not_found");
     res.json(rule);

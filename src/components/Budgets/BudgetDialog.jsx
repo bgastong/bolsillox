@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useCategories } from "@/hooks/useCategories";
 import { useToast } from "@/hooks/useToast";
 import { CategoryIcon } from "../Movements/MovementBits";
 
@@ -125,7 +126,8 @@ function BudgetForm({ category, current, onDone, onCancel }) {
 // target: { category, current: presupuesto existente | null } o null si esta cerrado.
 function BudgetDialog({ target, onClose, onSaved }) {
   const { t } = useLanguage();
-  const name = target ? t(`cat_${target.category}`) : "";
+  const { nameOf } = useCategories();
+  const name = target ? nameOf(target.category) : "";
 
   return (
     <Dialog open={Boolean(target)} onOpenChange={(open) => !open && onClose()}>
