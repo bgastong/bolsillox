@@ -238,6 +238,11 @@ function Dashboard() {
   // La cuenta tiene datos, pero el mes elegido esta vacio.
   const isEmptyMonth = summary && summary.hasMovements && summary.count === 0;
   const hasMonthlyData = summary?.monthly.some((item) => item.income || item.expense);
+  // El grafico arranca en el primer mes con movimientos (al menos 2 meses para que haya linea).
+  const firstWithData = summary?.monthly.findIndex((item) => item.income || item.expense) ?? -1;
+  const monthlyData = hasMonthlyData
+    ? summary.monthly.slice(Math.min(firstWithData, summary.monthly.length - 2))
+    : [];
   const showSkeleton = loading && !summary;
 
   return (
@@ -295,7 +300,7 @@ function Dashboard() {
             className="order-last lg:order-none lg:col-span-8"
             title={t("cashflowTitle")}
             titleId="cashflow-title"
-            hint={t("chartMonthlyHint")}
+            hint={t("chartMonthlyHint", { count: monthlyData.length || summary?.monthly.length || 6 })}
             action={
               <span className="flex gap-3.5 text-xs text-[color:var(--text-3)]" aria-hidden="true">
                 <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded bg-income" />{t("incomes")}</span>
@@ -306,7 +311,7 @@ function Dashboard() {
             {showSkeleton ? (
               <PanelSkeleton className="h-60 sm:h-64" />
             ) : hasMonthlyData ? (
-              <MonthlyChart data={summary.monthly} currency={summary.currency} />
+              <MonthlyChart data={monthlyData} currency={summary.currency} />
             ) : (
               <EmptyState message={t("chartEmpty")} />
             )}
