@@ -200,9 +200,12 @@ function FlowRow({ label, amount, tone, series, variation, inverse, currency }) 
           <Sparkline values={series} color={tone === "text-income" ? "var(--income)" : "var(--expense)"} />
         </span>
       </div>
-      <span className="flex flex-wrap items-center gap-2 text-xs text-[color:var(--text-4)]">
-        <VariationChip value={variation} inverse={inverse} />
-      </span>
+      {/* Sin variacion (0% o sin mes anterior) no se muestra el chip */}
+      {Boolean(variation) && (
+        <span className="flex flex-wrap items-center gap-2 text-xs text-[color:var(--text-4)]">
+          <VariationChip value={variation} inverse={inverse} />
+        </span>
+      )}
     </div>
   );
 }
@@ -210,6 +213,9 @@ function FlowRow({ label, amount, tone, series, variation, inverse, currency }) 
 // Ingresos y gastos del mes, cada uno con su tendencia de 6 meses.
 export function FlowCard({ summary, className }) {
   const { t } = useLanguage();
+  // Los meses sin movimientos del principio no se dibujan (si no, parece que se arranco de cero).
+  const first = summary.monthly.findIndex((item) => item.income || item.expense);
+  const monthly = first === -1 ? [] : summary.monthly.slice(first);
   return (
     <section
       aria-label={t("cashflowTitle")}
@@ -223,7 +229,7 @@ export function FlowCard({ summary, className }) {
         amount={summary.income}
         currency={summary.currency}
         tone="text-income"
-        series={summary.monthly.map((item) => item.income)}
+        series={monthly.map((item) => item.income)}
         variation={summary.variation.income}
       />
       <FlowRow
@@ -231,7 +237,7 @@ export function FlowCard({ summary, className }) {
         amount={summary.expense}
         currency={summary.currency}
         tone="text-expense"
-        series={summary.monthly.map((item) => item.expense)}
+        series={monthly.map((item) => item.expense)}
         variation={summary.variation.expense}
         inverse
       />
