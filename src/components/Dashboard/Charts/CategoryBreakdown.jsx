@@ -4,10 +4,6 @@ import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "../../Movements/MovementBits";
 
-// Grises para la barra apilada (de la categoria mas grande a la mas chica).
-// Son el color del texto con menos opacidad, asi funcionan en los dos temas.
-const SHADES = [0.9, 0.68, 0.5, 0.34, 0.24, 0.16].map((alpha) => `rgb(var(--fg-rgb) / ${alpha})`);
-
 // Variacion contra el mes anterior: gastar mas es malo (rojo), menos es bueno (verde).
 function CategoryVariation({ value }) {
   const { t, locale } = useLanguage();
@@ -27,11 +23,12 @@ function CategoryVariation({ value }) {
   );
 }
 
-// Desglose de gastos por categoria: barra apilada en grises arriba y
-// lista con icono, monto, barra relativa y variacion contra el mes anterior.
+// Desglose de gastos por categoria: barra apilada con el color de cada
+// categoria arriba y lista con icono, monto, porcentaje, barra relativa y
+// variacion contra el mes anterior.
 function CategoryBreakdown({ data, currency = "ARS" }) {
   const { locale } = useLanguage();
-  const { nameOf } = useCategories();
+  const { metaOf, nameOf } = useCategories();
   const total = data.reduce((sum, item) => sum + item.total, 0);
   const top = data[0]?.total || 1;
   const share = (value) => (total ? (value / total) * 100 : 0);
@@ -45,7 +42,7 @@ function CategoryBreakdown({ data, currency = "ARS" }) {
             className="grow-x h-full rounded-[2px]"
             style={{
               width: `${share(item.total)}%`,
-              background: SHADES[Math.min(index, SHADES.length - 1)],
+              background: metaOf(item.category).color,
               animationDelay: `${0.2 + index * 0.05}s`,
             }}
           />
@@ -55,6 +52,7 @@ function CategoryBreakdown({ data, currency = "ARS" }) {
       <ul className="-mx-2 m-0 flex list-none flex-col p-0">
         {data.map((item, index) => {
           const name = nameOf(item.category);
+          const { color } = metaOf(item.category);
           return (
             <li
               key={item.category}
@@ -63,7 +61,13 @@ function CategoryBreakdown({ data, currency = "ARS" }) {
               <CategoryIcon category={item.category} className="size-8 rounded-lg" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2 text-sm">
-                  <span className="truncate">{name}</span>
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="size-1.5 shrink-0 rounded-full" style={{ background: color }} aria-hidden="true" />
+                    <span className="truncate">{name}</span>
+                    <span className="text-[11.5px] text-[color:var(--text-4)] tabular-nums">
+                      {Math.round(share(item.total))}%
+                    </span>
+                  </span>
                   <span className="text-[12.5px] text-[color:var(--text-2)] tabular-nums">
                     {formatCurrency(item.total, locale, { currency })}
                   </span>
@@ -73,13 +77,12 @@ function CategoryBreakdown({ data, currency = "ARS" }) {
                     className="grow-x h-full rounded-full"
                     style={{
                       width: `${Math.max((item.total / top) * 100, 2)}%`,
-                      background: item.variation > 0 ? "var(--expense)" : "var(--text-2)",
+                      background: color,
                       animationDelay: `${0.25 + index * 0.05}s`,
                     }}
                   />
                 </div>
               </div>
-              <span className="sr-only">{Math.round(share(item.total))}%</span>
               <CategoryVariation value={item.variation} />
             </li>
           );

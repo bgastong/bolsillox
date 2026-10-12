@@ -286,6 +286,21 @@ describe("resumen y conversion de moneda", () => {
     assert.equal(typeof summary.variation.expense, "number");
   });
 
+  test("la evolucion del saldo va dia por dia hasta hoy y termina en el saldo", async () => {
+    const summary = await json(`/summary?month=${MONTH}`);
+    // El reloj de los tests es el 15 de octubre.
+    assert.equal(summary.daily.length, 15);
+    assert.equal(summary.daily[0].date, `${MONTH}-01`);
+    assert.equal(summary.daily.at(-1).date, `${MONTH}-15`);
+    const net = summary.daily.at(-1).balance - summary.previous.balance;
+    const rows = (await monthRows()).filter((row) => row.date <= `${MONTH}-15`);
+    const expected = sumIn(rows, "income", "ARS", 1200) - sumIn(rows, "expense", "ARS", 1200);
+    assert.ok(Math.abs(net - expected) < 0.02);
+    // Un mes pasado tiene todos sus dias; uno futuro, ninguno.
+    assert.equal((await json("/summary?month=2026-09")).daily.length, 30);
+    assert.equal((await json("/summary?month=2027-01")).daily.length, 0);
+  });
+
   test("cada categoria trae el gasto del mes anterior y su variacion", async () => {
     const summary = await json(`/summary?month=${MONTH}`);
     const previous = await json(`/summary?month=${summary.previous.month}`);
