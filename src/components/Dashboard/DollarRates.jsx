@@ -63,12 +63,15 @@ function DollarRates({ className }) {
           <h2 id="dollar-rates-title" className="m-0 text-[13.5px] font-medium tracking-[-0.01em]">
             {t("dollarTodayTitle")}
           </h2>
-          <p className="m-0 flex items-center gap-1.5 text-xs text-[color:var(--text-4)]">
-            {hasData && <span className="live-dot" aria-hidden="true" />}
-            {rates.fetchedAt
-              ? t("rateUpdatedShort", { date: formatDateTime(rates.fetchedAt, locale) })
-              : t("rateNeverUpdated")}
-          </p>
+          {/* Sin cotizacion, el aviso de abajo ya lo explica */}
+          {hasData && (
+            <p className="m-0 flex items-center gap-1.5 text-xs text-[color:var(--text-4)]">
+              <span className="live-dot" aria-hidden="true" />
+              {rates.fetchedAt
+                ? t("rateUpdatedShort", { date: formatDateTime(rates.fetchedAt, locale) })
+                : t("rateNeverUpdated")}
+            </p>
+          )}
         </div>
         <Link
           to="/settings"
@@ -92,8 +95,8 @@ function DollarRates({ className }) {
           ))}
         </ul>
       ) : (
-        <p className="m-0 flex items-center gap-2 text-sm text-warn-strong">
-          <TriangleAlertIcon className="size-4 shrink-0" aria-hidden="true" />
+        <p className="m-0 flex items-start gap-1.5 text-xs text-[color:var(--text-4)]">
+          <TriangleAlertIcon className="mt-px size-3.5 shrink-0" aria-hidden="true" />
           {t("rateUnavailableShort")}
         </p>
       )}
