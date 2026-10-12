@@ -25,6 +25,7 @@ import { api } from "@/lib/api";
 import { todayISO } from "@/lib/format";
 import { downloadFile, EXPORT_FORMATS, movementsTable } from "@/lib/exportMovements";
 import { useApiData } from "@/hooks/useApiData";
+import { useCategories } from "@/hooks/useCategories";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMovements } from "@/hooks/useMovements";
 import { useToast } from "@/hooks/useToast";
@@ -63,6 +64,7 @@ function SelectionBar({ count, onClear, onDelete }) {
 // Descarga lo que se ve en la lista (con los filtros aplicados) en Excel o CSV.
 function ExportMenu({ movements, filters }) {
   const { t } = useLanguage();
+  const { nameOf } = useCategories();
   const { toast } = useToast();
   const count = movements?.length ?? 0;
 
@@ -70,7 +72,7 @@ function ExportMenu({ movements, filters }) {
     const { extension, mime, build } = EXPORT_FORMATS[format];
     const { columns, rows } = movementsTable(movements, {
       t,
-      categoryName: (key) => t(`cat_${key}`),
+      categoryName: nameOf,
       methodName: (key) => t(`pm_${key}`),
     });
     // El nombre lleva el rango filtrado, o la fecha de hoy si no hay.
