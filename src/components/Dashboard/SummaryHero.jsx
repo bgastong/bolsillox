@@ -1,7 +1,7 @@
 import { ArrowDownRightIcon, ArrowUpRightIcon, MinusIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency, formatMonth, formatPercent } from "@/lib/format";
+import { formatCurrency, formatDate, formatMonth, formatPercent } from "@/lib/format";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -48,6 +48,61 @@ function BigAmount({ amount, currency }) {
   );
 }
 
+// Evolucion del saldo en el mes, dia por dia (llena el espacio libre de la tarjeta).
+// Arranca en el saldo con que cerro el mes anterior.
+function BalanceTrend({ start, daily, currency }) {
+  const { t, locale } = useLanguage();
+  if (daily.length < 2) return null;
+  const values = [start, ...daily.map((item) => item.balance)];
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const width = 100;
+  const height = 40;
+  const points = values.map((value, index) => [
+    (index * width) / (values.length - 1),
+    height - 2 - ((value - lo) / (hi - lo || 1)) * (height - 4),
+  ]);
+  const line = points.map(([x, y], index) => `${index ? "L" : "M"}${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
+  // Rojo si en el mes se perdio plata (termina mas bajo que como arranco) o si el saldo es negativo.
+  const loss = values.at(-1) < values[0] || values.at(-1) < 0;
+  const color = loss ? "var(--expense)" : "var(--income)";
+  const format = (value) => formatCurrency(value, locale, { currency });
+
+  return (
+    <figure className="m-0 flex flex-1 flex-col justify-end gap-1.5">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        className="h-14 w-full overflow-visible"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="balance-trend-fill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.16" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={`${line} L${width},${height} L0,${height} Z`} fill="url(#balance-trend-fill)" />
+        <path
+          d={line}
+          fill="none"
+          stroke={color}
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <figcaption className="flex justify-between text-[11px] text-[color:var(--text-4)] tabular-nums">
+        <span className="sr-only">
+          {t("balanceTrendLabel", { from: format(values[0]), to: format(values.at(-1)) })}
+        </span>
+        <span aria-hidden="true">{formatDate(daily[0].date, locale, { day: "numeric", month: "short" })}</span>
+        <span aria-hidden="true">{formatDate(daily.at(-1).date, locale, { day: "numeric", month: "short" })}</span>
+      </figcaption>
+    </figure>
+  );
+}
+
 // Saldo: el numero protagonista, su variacion y cuanto se gasto de lo que entro.
 export function BalanceCard({ summary, className }) {
   const { t, locale } = useLanguage();
@@ -57,7 +112,7 @@ export function BalanceCard({ summary, className }) {
   return (
     <section
       aria-labelledby="balance-title"
-      className={cn("surface flex min-w-0 flex-col justify-between gap-6 rounded-[14px] p-5 sm:p-[22px]", className)}
+      className={cn("surface flex min-w-0 flex-col gap-5 rounded-[14px] p-5 sm:p-[22px]", className)}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
@@ -71,6 +126,8 @@ export function BalanceCard({ summary, className }) {
           <span className="text-xs text-[color:var(--text-4)]">{t("cardBalanceHint")}</span>
         </div>
       </div>
+
+      <BalanceTrend start={summary.previous.balance} daily={summary.daily ?? []} currency={summary.currency} />
 
       {spent !== null && (
         <div className="grid gap-2.5">

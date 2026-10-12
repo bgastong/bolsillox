@@ -118,5 +118,18 @@ export function createRepository(db) {
       .filter((row) => row.total > 0);
   }
 
-  return { list, get, create, update, remove, removeMany, totalsBetween, expensesByCategory };
+  // Ingresos menos gastos de cada dia con movimientos: [{ date, net }].
+  async function netByDay(userId, from, to, money = {}) {
+    const rows = await db.all(sql`
+      SELECT date,
+        SUM(CASE WHEN type = 'income' THEN 1 ELSE -1 END * ${convertedAmountSql(money)}) AS net
+      FROM movements
+      WHERE user_id = ${userId} AND date BETWEEN ${from} AND ${to}
+      GROUP BY date
+      ORDER BY date
+    `);
+    return rows.map((row) => ({ date: row.date, net: roundMoney(row.net) }));
+  }
+
+  return { list, get, create, update, remove, removeMany, totalsBetween, expensesByCategory, netByDay };
 }

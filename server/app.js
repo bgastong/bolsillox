@@ -170,7 +170,7 @@ export function createApp(
     const month = parseMonth(req.query.month);
     const target = parseCurrency(req.query.currency);
     const rate = await rates.getActiveRate(req.user.id);
-    const summary = await buildSummary(repo, req.user.id, month, { target, rate });
+    const summary = await buildSummary(repo, req.user.id, month, { target, rate, today: toISODate(now()) });
     // Con datos de ejemplo, el inicio ofrece borrarlos.
     res.json({ ...summary, hasDemoData: await hasDemoData(db, req.user.id) });
   });
