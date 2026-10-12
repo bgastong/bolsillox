@@ -33,11 +33,13 @@ export async function buildSummary(
   repo,
   userId,
   monthKey,
-  { months = 6, recent = 7, target = "ARS", rate = null } = {},
+  { months = 6, recent = 7, target = "ARS", rate = null, today = null } = {},
 ) {
   const money = { target, rate };
   const current = monthRange(monthKey);
   const previous = monthRange(monthKey, -1);
+  // La evolucion del saldo llega hasta hoy (o hasta fin de mes si el mes ya paso).
+  const dailyTo = today && today < current.to ? today : current.to;
   const ranges = [];
   for (let offset = months - 1; offset >= 0; offset--) ranges.push(monthRange(monthKey, -offset));
 
@@ -50,6 +52,7 @@ export async function buildSummary(
     previousByCategory,
     recentRows,
     latestRows,
+    netByDay,
     ...series
   ] = await Promise.all([
     repo.totalsBetween(userId, current.from, current.to, money),
@@ -61,6 +64,7 @@ export async function buildSummary(
     repo.list(userId, { to: current.to, sort: "date", order: "desc", limit: recent }),
     // El movimiento mas reciente de toda la cuenta (sin importar el mes elegido).
     repo.list(userId, { sort: "date", order: "desc", limit: 1 }),
+    dailyTo >= current.from ? repo.netByDay(userId, current.from, dailyTo, money) : [],
     ...ranges.map((range) => repo.totalsBetween(userId, range.from, range.to, money)),
   ]);
 
@@ -76,6 +80,17 @@ export async function buildSummary(
     previous: previousByKey.get(item.category) ?? 0,
     variation: percentChange(item.total, previousByKey.get(item.category) ?? 0),
   }));
+
+  // Saldo al final de cada dia del mes, arrancando del saldo con que cerro el anterior.
+  const netOn = new Map(netByDay.map((item) => [item.date, item.net]));
+  const daily = [];
+  let running = previousBalance;
+  const lastDay = dailyTo >= current.from ? Number(dailyTo.slice(8, 10)) : 0;
+  for (let day = 1; day <= lastDay; day++) {
+    const date = `${current.key}-${pad(day)}`;
+    running = round(running + (netOn.get(date) ?? 0));
+    daily.push({ date, balance: running });
+  }
 
   const monthly = ranges.map((range, index) => ({
     month: range.key,
@@ -110,6 +125,7 @@ export async function buildSummary(
     },
     byCategory,
     monthly,
+    daily,
     recent: recentRows,
     // Si la cuenta tiene algun movimiento y el ultimo mes con datos: sirven
     // para distinguir una cuenta nueva de un mes que quedo vacio.
