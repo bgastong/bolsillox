@@ -313,7 +313,7 @@ function Dashboard() {
           </Panel>
 
           <Panel
-            className="lg:col-span-4"
+            className="lg:col-span-4 lg:self-start"
             title={t("chartByCategory")}
             titleId="categories-title"
             action={<span className="text-xs text-[color:var(--text-4)]">{t("vsLastMonth")}</span>}
