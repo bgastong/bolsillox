@@ -24,7 +24,9 @@ function groupByDay(movements) {
   return groups;
 }
 
-// Encabezado del dia: "Hoy · lun 5 oct" y el neto del dia (si es una sola moneda).
+// Encabezado del dia: "Hoy · lun 5 oct" y el neto del dia. El neto solo se
+// muestra si hay mas de un movimiento (con uno repetiria el monto de la fila)
+// y si son todos de la misma moneda.
 function DayHeader({ date, items }) {
   const { t, locale } = useLanguage();
   const pretty = formatDate(date, locale, { weekday: "short", day: "numeric", month: "short" });
@@ -36,7 +38,7 @@ function DayHeader({ date, items }) {
         : pretty;
   const currencies = new Set(items.map((item) => item.currency));
   const net =
-    currencies.size === 1
+    items.length > 1 && currencies.size === 1
       ? items.reduce((sum, item) => sum + (item.type === "income" ? item.amount : -item.amount), 0)
       : null;
 
