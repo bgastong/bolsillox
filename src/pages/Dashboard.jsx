@@ -54,7 +54,7 @@ function EmptyMonthCard({ summary, month, onCreate, onGoTo }) {
   return (
     <section
       aria-labelledby="empty-month-title"
-      className="surface flex flex-col gap-5 rounded-[14px] p-5 sm:flex-row sm:items-center sm:p-6 lg:col-span-12"
+      className="surface flex flex-col gap-5 rounded-[14px] p-5 sm:flex-row sm:items-center sm:p-6 xl:col-span-12"
     >
       <span className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-fg/10 bg-fg/[0.04] text-[color:var(--text-2)]">
         <CalendarX2Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
@@ -277,7 +277,7 @@ function Dashboard() {
         <DollarRates />
       ) : (
         <div
-          className="stagger grid gap-3 transition-opacity sm:gap-4 lg:grid-cols-12"
+          className="stagger grid grid-cols-1 gap-3 transition-opacity sm:gap-4 xl:grid-cols-12"
           style={{ opacity: loading && summary ? 0.6 : 1 }}
           aria-busy={loading}
         >
@@ -287,13 +287,13 @@ function Dashboard() {
             <EmptyMonthCard summary={summary} month={month} onCreate={openCreate} onGoTo={setMonth} />
           ) : (
             <>
-              <BalanceCard summary={summary} className="lg:col-span-8" />
-              <FlowCard summary={summary} className="lg:col-span-4" />
+              <BalanceCard summary={summary} className="xl:col-span-8" />
+              <FlowCard summary={summary} className="xl:col-span-4" />
             </>
           )}
 
           <Panel
-            className="order-last lg:order-none lg:col-span-8"
+            className="order-last xl:order-none xl:col-span-8"
             title={t("cashflowTitle")}
             titleId="cashflow-title"
             hint={t("cashflowHint")}
@@ -308,7 +308,7 @@ function Dashboard() {
           </Panel>
 
           <Panel
-            className="lg:col-span-4 lg:self-start"
+            className="xl:col-span-4 xl:self-start"
             title={t("chartByCategory")}
             titleId="categories-title"
             action={<span className="text-xs text-[color:var(--text-4)]">{t("vsLastMonth")}</span>}
@@ -323,7 +323,7 @@ function Dashboard() {
           </Panel>
 
           <Panel
-            className="lg:col-span-8 lg:self-start"
+            className="xl:col-span-8 xl:self-start"
             title={t("recentMovements")}
             titleId="recent-title"
             action={<PanelLink to="/history">{t("viewAll")}</PanelLink>}
@@ -346,7 +346,7 @@ function Dashboard() {
             )}
           </Panel>
 
-          <div className="grid content-start gap-3 sm:gap-4 lg:col-span-4">
+          <div className="grid content-start gap-3 sm:gap-4 xl:col-span-4">
             <Panel
               title={t("budgetsTitle")}
               titleId="budgets-title"

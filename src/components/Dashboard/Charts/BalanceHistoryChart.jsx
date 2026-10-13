@@ -129,7 +129,7 @@ function BalanceHistoryChart({ history, currency = "ARS" }) {
 
   return (
     <>
-      <div className="relative h-60 sm:h-64 lg:h-auto lg:min-h-64 lg:flex-1" aria-hidden="true">
+      <div className="relative h-60 sm:h-64 xl:h-auto xl:min-h-64 xl:flex-1" aria-hidden="true">
         <Line key={resolvedTheme} data={chartData} options={options} />
       </div>
       {/* Version accesible del grafico para lectores de pantalla. El sr-only va en

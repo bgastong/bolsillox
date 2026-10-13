@@ -196,7 +196,8 @@ function FlowRow({ label, amount, tone, series, variation, inverse, currency }) 
             {formatCurrency(Math.round(animated), locale, { currency })}
           </span>
         </span>
-        <span className="max-sm:hidden">
+        {/* Solo con lugar: en celular y tablet el monto ocupa todo el ancho */}
+        <span className="hidden xl:inline">
           <Sparkline values={series} color={tone === "text-income" ? "var(--income)" : "var(--expense)"} />
         </span>
       </div>
@@ -220,7 +221,7 @@ export function FlowCard({ summary, className }) {
     <section
       aria-label={t("cashflowTitle")}
       className={cn(
-        "surface grid min-w-0 grid-cols-2 rounded-[14px] lg:grid-cols-1 lg:grid-rows-2 [&>*+*]:border-l [&>*+*]:border-fg/[0.065] lg:[&>*+*]:border-t lg:[&>*+*]:border-l-0",
+        "surface grid min-w-0 grid-cols-2 rounded-[14px] xl:grid-cols-1 xl:grid-rows-2 [&>*+*]:border-l [&>*+*]:border-fg/[0.065] xl:[&>*+*]:border-t xl:[&>*+*]:border-l-0",
         className,
       )}
     >
@@ -248,8 +249,8 @@ export function FlowCard({ summary, className }) {
 export function SummaryHeroSkeleton() {
   return (
     <>
-      <Skeleton className="h-52 rounded-[14px] lg:col-span-8" />
-      <Skeleton className="h-52 rounded-[14px] lg:col-span-4" />
+      <Skeleton className="h-52 rounded-[14px] xl:col-span-8" />
+      <Skeleton className="h-52 rounded-[14px] xl:col-span-4" />
     </>
   );
 }
