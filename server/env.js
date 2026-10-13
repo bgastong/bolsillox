@@ -3,5 +3,5 @@
 try {
   process.loadEnvFile();
 } catch {
-  // Sin .env: se usan las variables del sistema (como en Render).
+  // Sin .env: se usan las variables del sistema (como en Vercel).
 }

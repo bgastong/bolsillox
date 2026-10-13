@@ -1,8 +1,8 @@
 import { createAppFromEnv } from "./setup.js";
 
 /*
-Servidor de Node (desarrollo y Render). Las variables de entorno estan en setup.js.
-- PORT: puerto (Render lo define solo).
+Servidor de Node (desarrollo y `npm start`). Las variables de entorno estan en setup.js.
+- PORT: puerto (3001 si no se define).
 - NODE_ENV=production o --production: sirve el build y usa cookies seguras.
 */
 const PORT = Number(process.env.PORT) || 3001;
