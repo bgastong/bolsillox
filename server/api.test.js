@@ -301,6 +301,24 @@ describe("resumen y conversion de moneda", () => {
     assert.equal((await json("/summary?month=2027-01")).daily.length, 0);
   });
 
+  test("el historial del saldo sube con cada ingreso y baja con cada gasto", async () => {
+    const summary = await json(`/summary?month=${MONTH}`);
+    const { start, days } = summary.history;
+    assert.ok(days.length > 0);
+    // Cada dia: saldo anterior + lo que entro menos lo que salio ese dia.
+    let running = start;
+    for (const day of days) {
+      running = Math.round((running + day.change) * 100) / 100;
+      assert.equal(day.balance, running);
+    }
+    // Termina en el saldo de hoy (15 de octubre) y no trae dias futuros.
+    assert.ok(days.at(-1).date <= `${MONTH}-15`);
+    assert.equal(days.at(-1).balance, summary.daily.at(-1).balance);
+    const rows = await json(`/movements?from=${days[0].date}&to=${days[0].date}`);
+    const expected = sumIn(rows, "income", "ARS", 1200) - sumIn(rows, "expense", "ARS", 1200);
+    assert.ok(Math.abs(days[0].change - expected) < 0.02);
+  });
+
   test("cada categoria trae el gasto del mes anterior y su variacion", async () => {
     const summary = await json(`/summary?month=${MONTH}`);
     const previous = await json(`/summary?month=${summary.previous.month}`);
