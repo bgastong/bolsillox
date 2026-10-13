@@ -178,7 +178,7 @@ function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggl
       </div>
 
       {/* Mobile: tarjetas; toda la tarjeta es un boton para editar */}
-      <div className="grid gap-3 md:hidden">
+      <div className="grid grid-cols-1 gap-3 md:hidden">
         <p className="m-0 px-1 text-sm text-muted-foreground">{summaryText}</p>
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {movements.map((movement) => {

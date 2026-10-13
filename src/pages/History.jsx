@@ -261,7 +261,7 @@ function History() {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       <PageHeader
         title={t("titleHistory")}
         subtitle={t("historySubtitle")}

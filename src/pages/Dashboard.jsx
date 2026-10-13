@@ -242,7 +242,7 @@ function Dashboard() {
   const showSkeleton = loading && !summary;
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {/* El titulo queda para lectores de pantalla: arriba ya esta la marca */}
       <h1 className="sr-only">{t("dashboardTitle")}</h1>
       <header className="flex items-center justify-between gap-3">

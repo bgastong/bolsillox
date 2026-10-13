@@ -37,7 +37,7 @@ function Budgets() {
   const alerts = data?.items.filter((item) => item.status !== "ok").length ?? 0;
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <PageHeader
         title={t("budgetsTitle")}
         subtitle={t("budgetsSubtitle")}
@@ -54,7 +54,7 @@ function Budgets() {
           ))}
         </div>
       ) : (
-        <div className="grid gap-6 transition-opacity" style={{ opacity: loading ? 0.6 : 1 }}>
+        <div className="grid grid-cols-1 gap-6 transition-opacity" style={{ opacity: loading ? 0.6 : 1 }}>
           {data.items.length > 0 && (
             <section
               aria-label={t("budgetsTotal")}

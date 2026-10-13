@@ -103,7 +103,7 @@ function Recurring() {
   );
 
   return (
-    <div className="grid gap-5">
+    <div className="grid grid-cols-1 gap-5">
       <PageHeader title={t("recurringTitle")} subtitle={t("recurringSubtitle")} actions={addButton} />
       <MovementTabs />
 
@@ -118,7 +118,7 @@ function Recurring() {
       ) : rules.length === 0 ? (
         <EmptyState message={t("recurringEmpty")}>{addButton}</EmptyState>
       ) : (
-        <div className="grid gap-4 transition-opacity" style={{ opacity: loading ? 0.6 : 1 }}>
+        <div className="grid grid-cols-1 gap-4 transition-opacity" style={{ opacity: loading ? 0.6 : 1 }}>
           <section
             aria-label={t("recurringMonthlyTotal")}
             className="surface grid grid-cols-2 gap-3 rounded-2xl bg-card p-4 sm:p-5"
