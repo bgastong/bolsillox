@@ -91,8 +91,8 @@ function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggl
 
   return (
     <>
-      {/* Escritorio: tabla */}
-      <div className="surface hidden overflow-hidden rounded-2xl bg-card md:block">
+      {/* Pantallas grandes: tabla (con el menu lateral, en tablet no entra) */}
+      <div className="surface hidden overflow-x-auto rounded-2xl bg-card xl:block">
         <Table>
           <TableCaption className="sr-only">{t("footerhistory")}</TableCaption>
           <TableHeader>
@@ -178,7 +178,7 @@ function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggl
       </div>
 
       {/* Mobile: tarjetas; toda la tarjeta es un boton para editar */}
-      <div className="grid grid-cols-1 gap-3 md:hidden">
+      <div className="grid grid-cols-1 gap-3 xl:hidden">
         <p className="m-0 px-1 text-sm text-muted-foreground">{summaryText}</p>
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {movements.map((movement) => {
