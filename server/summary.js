@@ -42,6 +42,9 @@ export async function buildSummary(
   const dailyTo = today && today < current.to ? today : current.to;
   const ranges = [];
   for (let offset = months - 1; offset >= 0; offset--) ranges.push(monthRange(monthKey, -offset));
+  // Historial del saldo (flujo de caja): desde el primer mes del grafico hasta hoy.
+  const historyFrom = ranges[0].from;
+  const beforeHistory = monthRange(monthKey, -months).to;
 
   const [
     currentTotals,
@@ -53,6 +56,8 @@ export async function buildSummary(
     recentRows,
     latestRows,
     netByDay,
+    historyStart,
+    historyDays,
     ...series
   ] = await Promise.all([
     repo.totalsBetween(userId, current.from, current.to, money),
@@ -65,6 +70,8 @@ export async function buildSummary(
     // El movimiento mas reciente de toda la cuenta (sin importar el mes elegido).
     repo.list(userId, { sort: "date", order: "desc", limit: 1 }),
     dailyTo >= current.from ? repo.netByDay(userId, current.from, dailyTo, money) : [],
+    repo.totalsBetween(userId, null, beforeHistory, money),
+    dailyTo >= historyFrom ? repo.netByDay(userId, historyFrom, dailyTo, money) : [],
     ...ranges.map((range) => repo.totalsBetween(userId, range.from, range.to, money)),
   ]);
 
@@ -91,6 +98,17 @@ export async function buildSummary(
     running = round(running + (netOn.get(date) ?? 0));
     daily.push({ date, balance: running });
   }
+
+  // Saldo despues de cada dia con movimientos: sube con los ingresos y baja
+  // con los gastos. start es el saldo antes del primer mes del grafico.
+  let historyBalance = round(historyStart.income - historyStart.expense);
+  const history = {
+    start: historyBalance,
+    days: historyDays.map(({ date, net: change }) => {
+      historyBalance = round(historyBalance + change);
+      return { date, change, balance: historyBalance };
+    }),
+  };
 
   const monthly = ranges.map((range, index) => ({
     month: range.key,
@@ -126,6 +144,7 @@ export async function buildSummary(
     byCategory,
     monthly,
     daily,
+    history,
     recent: recentRows,
     // Si la cuenta tiene algun movimiento y el ultimo mes con datos: sirven
     // para distinguir una cuenta nueva de un mes que quedo vacio.

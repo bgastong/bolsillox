@@ -18,7 +18,7 @@ import UpcomingPayments from "@/components/Dashboard/UpcomingPayments";
 import BudgetRow from "@/components/Budgets/BudgetRow";
 import DollarRates from "@/components/Dashboard/DollarRates";
 import CategoryBreakdown from "@/components/Dashboard/Charts/CategoryBreakdown";
-import MonthlyChart from "@/components/Dashboard/Charts/MonthlyChart";
+import BalanceHistoryChart from "@/components/Dashboard/Charts/BalanceHistoryChart";
 import ExpenseList from "@/components/Dashboard/ExpenseList/ExpenseList";
 import Panel from "@/components/Dashboard/Panel";
 import MonthPicker from "@/components/MonthPicker/MonthPicker";
@@ -237,12 +237,8 @@ function Dashboard() {
   const isEmptyAccount = summary && !summary.hasMovements;
   // La cuenta tiene datos, pero el mes elegido esta vacio.
   const isEmptyMonth = summary && summary.hasMovements && summary.count === 0;
-  const hasMonthlyData = summary?.monthly.some((item) => item.income || item.expense);
-  // El grafico arranca en el primer mes con movimientos (al menos 2 meses para que haya linea).
-  const firstWithData = summary?.monthly.findIndex((item) => item.income || item.expense) ?? -1;
-  const monthlyData = hasMonthlyData
-    ? summary.monthly.slice(Math.min(firstWithData, summary.monthly.length - 2))
-    : [];
+  // El flujo de caja necesita al menos un dia con movimientos en los ultimos meses.
+  const hasHistory = Boolean(summary?.history?.days.length);
   const showSkeleton = loading && !summary;
 
   return (
@@ -300,12 +296,12 @@ function Dashboard() {
             className="order-last lg:order-none lg:col-span-8"
             title={t("cashflowTitle")}
             titleId="cashflow-title"
-            hint={t("chartMonthlyHint", { count: monthlyData.length || summary?.monthly.length || 6 })}
+            hint={t("cashflowHint")}
           >
             {showSkeleton ? (
               <PanelSkeleton className="h-60 sm:h-64" />
-            ) : hasMonthlyData ? (
-              <MonthlyChart data={monthlyData} currency={summary.currency} />
+            ) : hasHistory ? (
+              <BalanceHistoryChart history={summary.history} currency={summary.currency} />
             ) : (
               <EmptyState message={t("chartEmpty")} />
             )}
