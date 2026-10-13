@@ -5,20 +5,22 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useTheme } from "@/hooks/useTheme";
 import { chartColors, tooltipStyle } from "./chartSetup";
 
-// Degradado vertical bajo cada linea (se calcula con el tamaño real del grafico).
-function areaFill(color, alpha) {
+// Degradado bajo la linea, desde arriba hasta el cero (se calcula con el
+// tamaño real del grafico).
+function neutralFill(colors) {
   return (context) => {
     const { ctx, chartArea } = context.chart;
     if (!chartArea) return "transparent";
     const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-    gradient.addColorStop(0, `${color}${alpha}`);
-    gradient.addColorStop(1, `${color}00`);
+    gradient.addColorStop(0, colors.fg(0.12));
+    gradient.addColorStop(1, colors.fg(0));
     return gradient;
   };
 }
 
-// Lineas con area: ingresos vs. gastos de los ultimos meses. El ultimo
-// punto (el mes elegido) queda marcado.
+// Neto de cada mes (ingresos menos gastos) en una sola linea neutra. Los
+// meses negativos se marcan con un punto rojo y el ultimo mes (el elegido)
+// con un punto mas grande. Al pasar por un mes se ven ingresos, gastos y neto.
 function MonthlyChart({ data, currency = "ARS" }) {
   const { t, locale } = useLanguage();
   const { resolvedTheme } = useTheme();
@@ -26,29 +28,27 @@ function MonthlyChart({ data, currency = "ARS" }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const colors = useMemo(() => chartColors(), [resolvedTheme]);
   const last = data.length - 1;
-  const pointRadius = (context) => (context.dataIndex === last ? 4.5 : 0);
-
-  const series = (key, label, color, alpha) => ({
-    label,
-    data: data.map((item) => item[key]),
-    borderColor: color,
-    borderWidth: 2,
-    backgroundColor: areaFill(color, alpha),
-    fill: true,
-    // Curva suave que no "inventa" picos ni baja de cero entre puntos.
-    cubicInterpolationMode: "monotone",
-    pointRadius,
-    pointHoverRadius: 5,
-    pointBackgroundColor: colors.base,
-    pointBorderColor: color,
-    pointBorderWidth: 2,
-  });
+  const net = data.map((item) => item.income - item.expense);
+  const negative = (index) => net[index] < 0;
 
   const chartData = {
     labels: data.map((item) => formatMonth(item.month, locale, true)),
     datasets: [
-      series("income", t("incomes"), colors.income, "38"),
-      series("expense", t("expenses"), colors.expense, "1f"),
+      {
+        label: t("netLabel"),
+        data: net,
+        borderColor: colors.soft,
+        borderWidth: 2,
+        backgroundColor: neutralFill(colors),
+        fill: "origin",
+        // Curva suave que no "inventa" picos entre puntos.
+        cubicInterpolationMode: "monotone",
+        pointRadius: (context) => (context.dataIndex === last ? 4.5 : negative(context.dataIndex) ? 3.5 : 0),
+        pointHoverRadius: 5,
+        pointBackgroundColor: (context) => (negative(context.dataIndex) ? colors.expense : colors.base),
+        pointBorderColor: (context) => (negative(context.dataIndex) ? colors.expense : colors.soft),
+        pointBorderWidth: 2,
+      },
     ],
   };
 
@@ -61,13 +61,19 @@ function MonthlyChart({ data, currency = "ARS" }) {
       legend: { display: false },
       tooltip: {
         ...tooltipStyle(colors),
+        // Una sola serie: sin el cuadradito de color al lado de cada linea.
+        displayColors: false,
         callbacks: {
           title: (items) => formatMonth(data[items[0].dataIndex].month, locale),
-          label: (ctx) => ` ${ctx.dataset.label}  ${formatCurrency(ctx.parsed.y, locale, { currency })}`,
-          footer: (items) => {
-            const item = data[items[0].dataIndex];
-            return `${t("netLabel")}  ${formatCurrency(item.income - item.expense, locale, { currency, signed: true })}`;
+          label: (ctx) => {
+            const item = data[ctx.dataIndex];
+            return [
+              ` ${t("incomes")}  ${formatCurrency(item.income, locale, { currency })}`,
+              ` ${t("expenses")}  ${formatCurrency(item.expense, locale, { currency })}`,
+            ];
           },
+          footer: (items) =>
+            `${t("netLabel")}  ${formatCurrency(net[items[0].dataIndex], locale, { currency, signed: true })}`,
         },
       },
     },
@@ -84,7 +90,11 @@ function MonthlyChart({ data, currency = "ARS" }) {
       y: {
         beginAtZero: true,
         grace: "8%",
-        grid: { color: colors.grid, drawTicks: false },
+        // La linea del cero se marca mas: arriba ahorraste, abajo gastaste de mas.
+        grid: {
+          color: (context) => (context.tick?.value === 0 ? colors.zero : colors.grid),
+          drawTicks: false,
+        },
         border: { display: false, dash: [2, 5] },
         ticks: {
           color: colors.muted,
@@ -109,14 +119,16 @@ function MonthlyChart({ data, currency = "ARS" }) {
             <th scope="col">{t("month")}</th>
             <th scope="col">{t("incomes")}</th>
             <th scope="col">{t("expenses")}</th>
+            <th scope="col">{t("netLabel")}</th>
           </tr>
         </thead>
         <tbody>
-          {data.map((item) => (
+          {data.map((item, index) => (
             <tr key={item.month}>
               <th scope="row">{formatMonth(item.month, locale)}</th>
               <td>{formatCurrency(item.income, locale, { currency })}</td>
               <td>{formatCurrency(item.expense, locale, { currency })}</td>
+              <td>{formatCurrency(net[index], locale, { currency, signed: true })}</td>
             </tr>
           ))}
         </tbody>
