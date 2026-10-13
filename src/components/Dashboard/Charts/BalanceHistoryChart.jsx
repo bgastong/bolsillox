@@ -132,8 +132,10 @@ function BalanceHistoryChart({ history, currency = "ARS" }) {
       <div className="relative h-60 sm:h-64 lg:h-auto lg:min-h-64 lg:flex-1" aria-hidden="true">
         <Line key={resolvedTheme} data={chartData} options={options} />
       </div>
-      {/* Version accesible del grafico para lectores de pantalla */}
-      <table className="sr-only">
+      {/* Version accesible del grafico para lectores de pantalla. El sr-only va en
+          un div: una tabla no se achica a 1px y ensanchaba la pagina en el celular. */}
+      <div className="sr-only">
+      <table>
         <caption>{t("cashflowTitle")}</caption>
         <thead>
           <tr>
@@ -152,6 +154,7 @@ function BalanceHistoryChart({ history, currency = "ARS" }) {
           ))}
         </tbody>
       </table>
+      </div>
     </>
   );
 }
