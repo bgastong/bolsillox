@@ -18,7 +18,7 @@ Arma la app a partir de las variables de entorno (ver DEPLOY.md):
 - ALERT_EMAIL: email donde avisar los errores inesperados (usa el mismo Resend).
 - COOKIE_SECURE=false: cookies sin HTTPS (solo para probar el build en local).
 
-La usan server/index.js (Render y desarrollo) y api/index.js (Vercel).
+La usan server/index.js (desarrollo y `npm start`) y api/index.js (Vercel).
 - isProduction: cookies seguras y detras de un proxy; sin cuenta de prueba.
 - serveStatic: el mismo servidor sirve el build (en Vercel lo sirve su CDN).
 - requireDatabase: falla si no hay DATABASE_URL (en Vercel no hay disco para PGlite).

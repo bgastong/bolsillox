@@ -2,7 +2,7 @@
 
 La app queda en tu dominio (por ejemplo `https://bolsillox.com.ar`), cada persona crea su cuenta y sus datos se guardan en una base Postgres en la nube.
 
-- **Vercel** publica la web y ejecuta la API. Siempre está activa: no se "duerme" como el plan gratis de Render.
+- **Vercel** publica la web y ejecuta la API. Siempre está activa: no se "duerme".
 - **Neon** guarda la base de datos Postgres.
 - **Resend** manda los emails con códigos (opcional).
 
@@ -12,7 +12,7 @@ Vercel publica lo que hay en la rama `master`: mergeá los PRs antes de empezar.
 
 ## 1. Base de datos en Neon
 
-Si ya tenés la base de Neon que usaba Render, **usá esa misma**: tus cuentas y movimientos siguen ahí. Solo necesitás la URL "pooled" (punto 3).
+Si ya tenés una base de Neon con datos, **usá esa misma**: tus cuentas y movimientos siguen ahí. Solo necesitás la URL "pooled" (punto 3).
 
 1. Entrá a [neon.tech](https://neon.tech) y creá una cuenta. Podés usar tu cuenta de GitHub.
 2. Creá un proyecto:
@@ -131,15 +131,6 @@ Los textos están en `src/lib/legalContent.js`. Antes de publicar:
 1. Completá tus datos en `OWNER`: nombre o razón social, CUIT/CUIL, domicilio, email de contacto y ciudad.
 2. Hacelos revisar por un abogado.
 3. Si después cambiás los textos, actualizá la fecha en `shared/legal.js`. Cada persona queda registrada con la versión que aceptó.
-
-## 9. Apagar Render (si venías de ahí)
-
-Cuando tu dominio ya ande en Vercel y hayas probado entrar con tu cuenta:
-
-1. En Render, abrí el servicio **bolsillox** → **Settings** → **Suspend Web Service** (o **Delete Web Service**).
-2. La base de Neon no se toca: es la misma que usa Vercel.
-
-`render.yaml` sigue en el repo por si alguna vez querés volver a Render: ahí el servidor sirve la web y la API juntas (`npm start`).
 
 ## Problemas comunes
 
