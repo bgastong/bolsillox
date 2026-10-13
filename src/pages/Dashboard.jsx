@@ -301,12 +301,6 @@ function Dashboard() {
             title={t("cashflowTitle")}
             titleId="cashflow-title"
             hint={t("chartMonthlyHint", { count: monthlyData.length || summary?.monthly.length || 6 })}
-            action={
-              <span className="flex gap-3.5 text-xs text-[color:var(--text-3)]" aria-hidden="true">
-                <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded bg-income" />{t("incomes")}</span>
-                <span className="flex items-center gap-1.5"><span className="h-0.5 w-3 rounded bg-expense" />{t("expenses")}</span>
-              </span>
-            }
           >
             {showSkeleton ? (
               <PanelSkeleton className="h-60 sm:h-64" />

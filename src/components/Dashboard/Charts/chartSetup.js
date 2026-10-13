@@ -40,6 +40,9 @@ export function chartColors() {
     soft: read("--text-2"),
     base: read("--surface-base"),
     grid: `rgba(${fgRgb}, 0.06)`,
+    // Linea del cero (referencia para el neto) y tinta neutra con transparencia.
+    zero: `rgba(${fgRgb}, 0.28)`,
+    fg: (alpha) => `rgba(${fgRgb}, ${alpha})`,
     tooltipBg: read("--elevated"),
     tooltipBorder: read("--border-strong"),
   };
