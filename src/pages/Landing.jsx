@@ -20,6 +20,7 @@ import LiveBalance from "@/components/Landing/LiveBalance";
 import { LanguageToggle } from "@/components/Auth/AuthLayout";
 import { ThemeToggle } from "@/components/Theme/ThemeControls";
 import { buttonVariants } from "@/components/ui/button";
+import { REPO_URL } from "@/lib/links";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCountUp } from "@/hooks/useCountUp";
@@ -235,17 +236,25 @@ function Landing() {
       <footer className="border-t border-fg/[0.06]">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 pb-[max(24px,env(safe-area-inset-bottom))] text-sm text-[color:var(--text-4)] sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p className="m-0">{t("footerRights", { year: new Date().getFullYear() })}</p>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <Link to="/terminos" className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline">
                 {t("footerTerms")}
               </Link>
               <Link to="/privacidad" className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline">
                 {t("footerPrivacy")}
               </Link>
+              <a
+                href={REPO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="whitespace-nowrap text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline"
+              >
+                {t("footerOpenSource")}
+              </a>
             </div>
             {/* Tema e idioma en el celular: alineados a la derecha, no se mueven al cambiar de idioma. */}
-            <div className="flex items-center gap-2 sm:hidden">
+            <div className="ml-auto flex items-center gap-2 sm:hidden">
               <ThemeToggle />
               <LanguageToggle />
             </div>

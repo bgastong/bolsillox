@@ -183,6 +183,10 @@ src/
   pages/          Login, registro, Dashboard, Historial, Recurrentes, Presupuestos, Ajustes, 404
 ```
 
+## Licencia
+
+Código abierto bajo la [licencia MIT](LICENSE): podés usarlo, modificarlo y compartirlo, manteniendo el aviso de copyright.
+
 ## Autor
 
 Proyecto desarrollado por [bgastong](https://github.com/bgastong).
