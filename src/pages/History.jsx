@@ -261,7 +261,7 @@ function History() {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       <PageHeader
         title={t("titleHistory")}
         subtitle={t("historySubtitle")}
@@ -293,9 +293,9 @@ function History() {
         {movements && !loading ? t("resultsCount", { count: movements.length }) : ""}
       </p>
 
-      {/* Celular: entrar o salir del modo de seleccion */}
+      {/* Celular y tablet (tarjetas): entrar o salir del modo de seleccion */}
       {movements?.length > 0 && (
-        <div className="-mb-1 flex justify-end md:hidden">
+        <div className="-mb-1 flex justify-end xl:hidden">
           <Button
             variant="ghost"
             size="sm"

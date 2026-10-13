@@ -35,7 +35,7 @@ function InstallmentRow({ rule, onEdit }) {
       )}
     >
       <CategoryIcon category={rule.category} className="size-11" />
-      <div className="grid min-w-0 flex-1 gap-1.5">
+      <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5">
         <div className="flex items-baseline justify-between gap-2">
           <p className="m-0 truncate text-[15px] font-medium">{rule.title}</p>
           <AmountText type={rule.type} amount={rule.amount} currency={rule.currency} className="text-[15px]" />

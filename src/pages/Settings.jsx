@@ -233,7 +233,7 @@ function Settings() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="grid gap-5">
+    <div className="grid grid-cols-1 gap-5">
       <PageHeader title={t("settingsTitle")} subtitle={t("settingsSubtitle")} />
 
       <AccountSection Section={Section} />
