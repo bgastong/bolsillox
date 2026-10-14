@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import compression from "compression";
 import express from "express";
-import { rateSettingsSchema } from "../shared/movementSchema.js";
+import { notificationSettingsSchema, rateSettingsSchema } from "../shared/movementSchema.js";
 import { createAuthService, cookieOptions, parseCookies, SESSION_COOKIE } from "./auth.js";
 import { createRepository } from "./repository.js";
 import { createRecurringService, toISODate } from "./recurring.js";
@@ -22,6 +22,7 @@ import { errorHandler, HttpError } from "./errors.js";
 import { disabledMailer } from "./mailer.js";
 import { createErrorReporter } from "./alerts.js";
 import { createMaintenance } from "./maintenance.js";
+import { createReminders } from "./reminders.js";
 import { createRateLimiter } from "./rateLimit.js";
 import { clientErrorSchema } from "./clientErrors.js";
 
@@ -48,6 +49,7 @@ options:
 - authLimits: { login, register, code, send } limites de intentos (los tests los suben).
 - mailer: envio de emails con codigos (ver mailer.js). Sin el, no se piden codigos.
 - alertEmail: a donde avisar los errores inesperados (ver alerts.js). Sin el, solo van a los logs.
+- cronSecret: clave del cron de Vercel para /api/cron/reminders (CRON_SECRET). Sin ella, esa ruta no existe.
 */
 export function createApp(
   db,
@@ -62,6 +64,7 @@ export function createApp(
     authLimits,
     mailer = disabledMailer,
     alertEmail = null,
+    cronSecret = null,
   } = {},
 ) {
   const app = express();
@@ -71,7 +74,8 @@ export function createApp(
   const budgets = createBudgetsService(db);
   const categories = createCategoriesService(db);
   const rates = createRatesService(db, { now, fetchImpl });
-  const maintenance = createMaintenance(db, { now });
+  const reminders = createReminders(db, { recurring, mailer, appUrl: publicUrl });
+  const maintenance = createMaintenance(db, { now, reminders });
   const reporter = createErrorReporter({ mailer, to: alertEmail, now });
   const clientErrorLimiter = createRateLimiter({
     db,
@@ -89,6 +93,14 @@ export function createApp(
 
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // Cron diario de Vercel (vercel.json): manda los recordatorios de cuotas.
+  // Vercel firma el pedido con "Authorization: Bearer <CRON_SECRET>".
+  app.get("/api/cron/reminders", async (req, res) => {
+    if (!cronSecret) throw new HttpError(404, "not_found");
+    if (req.get("authorization") !== `Bearer ${cronSecret}`) throw new HttpError(401, "unauthorized");
+    res.json({ sent: await reminders.sendDue() });
   });
 
   // Proteccion CSRF: los pedidos que modifican datos tienen que venir de la
@@ -173,6 +185,15 @@ export function createApp(
     const summary = await buildSummary(repo, req.user.id, month, { target, rate, today: toISODate(now()) });
     // Con datos de ejemplo, el inicio ofrece borrarlos.
     res.json({ ...summary, hasDemoData: await hasDemoData(db, req.user.id) });
+  });
+
+  // Avisos por email de cuotas por vencer (se pueden apagar) e idioma de los emails.
+  app.get("/api/notifications", async (req, res) => {
+    res.json(await reminders.getSettings(req.user.id));
+  });
+
+  app.put("/api/notifications", async (req, res) => {
+    res.json(await reminders.saveSettings(req.user.id, notificationSettingsSchema.parse(req.body ?? {})));
   });
 
   app.get("/api/rates", async (req, res) => {

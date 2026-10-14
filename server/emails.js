@@ -143,3 +143,103 @@ ${links}
 </html>`;
   return { subject, text, html };
 }
+
+const REMINDER_COPY = {
+  es: {
+    subjectOne: "Cuota de {{title}}: {{due}}",
+    subjectMany: "Tenés {{count}} cuotas para pagar",
+    title: "Cuotas para pagar",
+    intro: "Cuando las pagues, entrá a bolsillox y tocá «Ya la pagué»: así se cargan en tus gastos.",
+    due: { overdue: "venció sin pagar", 0: "vence hoy", 1: "vence mañana", 2: "vence en 2 días" },
+    cta: "Abrir bolsillox",
+    settings: "Podés apagar estos avisos en Ajustes.",
+    tagline: "Tu plata, clara.",
+  },
+  en: {
+    subjectOne: "{{title}} installment: {{due}}",
+    subjectMany: "You have {{count}} installments to pay",
+    title: "Installments to pay",
+    intro: "When you pay them, open bolsillox and tap “Mark as paid” so they're added to your expenses.",
+    due: { overdue: "overdue, unpaid", 0: "due today", 1: "due tomorrow", 2: "due in 2 days" },
+    cta: "Open bolsillox",
+    settings: "You can turn these reminders off in Settings.",
+    tagline: "Your money, clear.",
+  },
+};
+
+function formatAmount(amount, currency, language) {
+  return new Intl.NumberFormat(language === "en" ? "en-US" : "es-AR", {
+    style: "currency",
+    currency,
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+/*
+Recordatorio de cuotas: una lista con las que vencen en 2 dias, mañana, hoy o
+que vencieron sin pagar. items: [{ title, number, total, amount, currency, daysLeft }].
+*/
+export function installmentReminderEmail({ items, language = "es", appUrl = null }) {
+  const copy = REMINDER_COPY[language] ?? REMINDER_COPY.es;
+  const dueText = (item) => (item.daysLeft < 0 ? copy.due.overdue : copy.due[item.daysLeft]);
+  const label = (item) => (item.total > 1 ? `${item.title} (${item.number}/${item.total})` : item.title);
+  const subject =
+    items.length === 1
+      ? fill(copy.subjectOne, { title: label(items[0]), due: dueText(items[0]) })
+      : fill(copy.subjectMany, { count: String(items.length) });
+
+  const lines = items.map(
+    (item) => `- ${label(item)}: ${formatAmount(item.amount, item.currency, language)} · ${dueText(item)}`,
+  );
+  const text = `${copy.title}\n\n${lines.join("\n")}\n\n${copy.intro}\n${appUrl ? `\n${appUrl}\n` : ""}\n${copy.settings}\n\n— bolsillox`;
+
+  const rows = items
+    .map((item) => {
+      const color = item.daysLeft < 0 ? "#c9393e" : item.daysLeft === 0 ? "#a16207" : C.muted;
+      return `<tr><td style="padding:12px 0;border-top:1px solid ${C.border}">
+<p style="margin:0;font-family:${FONT};font-size:15px;line-height:1.4;color:${C.text}">${escapeHtml(label(item))}</p>
+<p style="margin:2px 0 0;font-family:${FONT};font-size:13px;line-height:1.4;color:${color}">${escapeHtml(dueText(item))}</p>
+</td>
+<td align="right" valign="top" style="padding:12px 0 12px 12px;border-top:1px solid ${C.border};font-family:${MONO};font-size:14px;white-space:nowrap;color:${C.text}">${escapeHtml(formatAmount(item.amount, item.currency, language))}</td></tr>`;
+    })
+    .join("");
+
+  const button = appUrl
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px"><tr><td style="background:${C.text};border-radius:10px">
+<a href="${escapeHtml(appUrl)}" style="display:inline-block;padding:12px 20px;font-family:${FONT};font-size:14px;font-weight:600;color:#ffffff;text-decoration:none">${escapeHtml(copy.cta)}</a>
+</td></tr></table>`
+    : "";
+
+  const html = `<!doctype html>
+<html lang="${language === "en" ? "en" : "es"}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>${escapeHtml(subject)}</title>
+</head>
+<body style="margin:0;padding:0;background:${C.page};-webkit-text-size-adjust:100%">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.page}">${escapeHtml(lines.join(" · "))}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.page}">
+<tr><td align="center" style="padding:40px 16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:460px">
+<tr><td style="padding:0 4px 20px">${logo()}</td></tr>
+<tr><td style="background:${C.card};border:1px solid ${C.border};border-radius:16px;padding:32px 28px">
+<h1 style="margin:0 0 16px;font-family:${FONT};font-size:22px;line-height:1.25;font-weight:600;letter-spacing:-0.4px;color:${C.text}">${escapeHtml(copy.title)}</h1>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>
+<p style="margin:16px 0 0;padding-top:16px;border-top:1px solid ${C.border};font-family:${FONT};font-size:14px;line-height:1.55;color:${C.muted}">${escapeHtml(copy.intro)}</p>
+${button}
+</td></tr>
+<tr><td align="center" style="padding:20px 4px 0">
+<p style="margin:0;font-family:${FONT};font-size:12px;color:${C.faint}">${escapeHtml(copy.settings)}</p>
+<p style="margin:8px 0 0;font-family:${FONT};font-size:12px;color:${C.faint}">bolsillox · ${escapeHtml(copy.tagline)}</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+  return { subject, text, html };
+}

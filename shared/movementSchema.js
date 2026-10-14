@@ -150,6 +150,12 @@ export const categorySchema = z.object({
 });
 export const categoryUpdateSchema = categorySchema.omit({ type: true });
 
+// Avisos por email: recordatorios de cuotas e idioma en que llegan.
+export const notificationSettingsSchema = z.object({
+  installmentEmails: z.boolean().optional(),
+  language: z.enum(["es", "en"]).optional(),
+});
+
 // Preferencia de cotizacion del dolar.
 export const rateSettingsSchema = z
   .object({

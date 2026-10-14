@@ -8,6 +8,7 @@ import { CURRENCIES } from "@shared/catalog.js";
 import { issuesToFieldErrors, rateSettingsSchema } from "@shared/movementSchema.js";
 import AccountSection from "@/components/Account/AccountSection";
 import CategoriesSection from "@/components/Categories/CategoriesSection";
+import NotificationsSection from "@/components/Settings/NotificationsSection";
 import { PageHeader } from "@/components/Movements/MovementBits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -261,6 +262,8 @@ function Settings() {
       <RateSettings />
 
       <CategoriesSection Section={Section} />
+
+      <NotificationsSection Section={Section} />
 
       <Section id="settings-theme" title={t("themeTitle")} description={t("themeDescription")}>
         <div role="radiogroup" aria-label={t("themeTitle")} className="grid gap-2 sm:grid-cols-3">

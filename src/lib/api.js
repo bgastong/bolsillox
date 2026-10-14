@@ -108,6 +108,10 @@ export const api = {
   updateCategory: (id, data) => request(`/categories/${id}`, { method: "PUT", body: data }),
   deleteCategory: (id) => request(`/categories/${id}`, { method: "DELETE" }),
 
+  // Avisos por email (recordatorios de cuotas) e idioma en que llegan
+  getNotificationSettings: (options) => request("/notifications", options),
+  saveNotificationSettings: (settings) => request("/notifications", { method: "PUT", body: settings }),
+
   // Cotizacion del dolar
   getRates: (options) => request("/rates", options),
   saveRateSettings: (settings) =>
