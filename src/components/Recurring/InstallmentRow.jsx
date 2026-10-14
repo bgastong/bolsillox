@@ -8,10 +8,13 @@ import { useLanguage } from "@/hooks/useLanguage";
 function InstallmentRow({ rule, onEdit }) {
   const { t, locale } = useLanguage();
   const finished = !rule.nextDate;
+  const overdue = (rule.pending ?? []).filter((item) => item.daysLeft < 0);
   const percent = Math.round((rule.installmentsPaid / rule.installmentsTotal) * 100);
   const status = !rule.active
     ? t("recurringPaused")
-    : finished
+    : overdue.length
+      ? t("installmentRowOverdue", { number: overdue[0].number, total: rule.installmentsTotal })
+      : finished
       ? t("installmentsDone")
       : rule.installmentsTotal === 1
         ? t("installmentSinglePayment", {
@@ -62,7 +65,7 @@ function InstallmentRow({ rule, onEdit }) {
             ) : (
               <CreditCardIcon className="size-3.5 shrink-0" aria-hidden="true" />
             )}
-            <span className="truncate">{status}</span>
+            <span className={cn("truncate", overdue.length > 0 && rule.active && "text-expense")}>{status}</span>
           </span>
           {!finished && (
             <span className="shrink-0 whitespace-nowrap tabular-nums">

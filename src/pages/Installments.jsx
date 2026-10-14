@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { CreditCardIcon } from "lucide-react";
 import { PageHeader } from "@/components/Movements/MovementBits";
+import InstallmentAlerts from "@/components/Recurring/InstallmentAlerts";
 import InstallmentRow from "@/components/Recurring/InstallmentRow";
 import InstallmentsByMonth from "@/components/Recurring/InstallmentsByMonth";
 import MovementTabs from "@/components/Recurring/MovementTabs";
@@ -70,6 +71,7 @@ function Installments() {
     <div className="grid grid-cols-1 gap-5">
       <PageHeader title={t("installmentsTitle")} subtitle={t("installmentsSubtitle")} actions={addButton} />
       <MovementTabs />
+      <InstallmentAlerts />
 
       {error && !plans ? (
         <ErrorState error={error} onRetry={reload} />

@@ -89,6 +89,9 @@ export const api = {
 
   // Recurrentes
   listRecurring: (options) => request("/recurring", options),
+  // Cuotas por vencer o vencidas sin pagar, y marcar una como pagada.
+  getInstallmentAlerts: (options) => request("/recurring/alerts", options),
+  payInstallment: (id, month) => request(`/recurring/${id}/pay`, { method: "POST", body: { month } }),
   createRecurring: (data) => request("/recurring", { method: "POST", body: data }),
   updateRecurring: (id, data) => request(`/recurring/${id}`, { method: "PUT", body: data }),
   deleteRecurring: (id) => request(`/recurring/${id}`, { method: "DELETE" }),

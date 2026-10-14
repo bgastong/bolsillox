@@ -89,7 +89,14 @@ function UpcomingPayments({ className }) {
                     )}
                   </p>
                   <p className="m-0 truncate text-xs text-[color:var(--text-4)]">
-                    {days <= 0 ? t("dueToday") : t("dueInDays", { count: days })} · {t(`pm_${rule.paymentMethod}`)}
+                    {days < 0 ? (
+                      <span className="text-expense">{t("installmentOverdue", { count: -days })}</span>
+                    ) : days === 0 ? (
+                      t("dueToday")
+                    ) : (
+                      t("dueInDays", { count: days })
+                    )}{" "}
+                    · {t(`pm_${rule.paymentMethod}`)}
                   </p>
                 </div>
                 <span className="text-[13.5px] whitespace-nowrap text-expense tabular-nums">
