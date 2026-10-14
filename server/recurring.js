@@ -1,3 +1,4 @@
+import { HttpError } from "./errors.js";
 import { raw, sql } from "./sql.js";
 
 /*
@@ -8,13 +9,19 @@ asi el proceso es idempotente y un movimiento borrado no se vuelve a crear.
 
 Cuotas: una regla con installmentsTotal es una compra en cuotas. Termina sola
 en la ultima cuota y cada movimiento lleva el numero en el titulo: "TV (3/12)".
+Las cuotas que vencen desde confirmFrom (el dia en que se cargo la compra) no
+se generan solas: quedan pendientes hasta que la persona las marca como
+pagadas (pay). Las anteriores se dan por pagadas.
 */
+
+// Dias antes del vencimiento en que una cuota pendiente empieza a avisar.
+export const INSTALLMENT_ALERT_DAYS = 2;
 
 const COLUMNS = raw(`
   id, type, title, amount, currency, category, payment_method AS "paymentMethod", note,
   day_of_month AS "dayOfMonth", start_date AS "startDate", end_date AS "endDate", active,
   installments_total AS "installmentsTotal", installment_first AS "installmentFirst",
-  created_at AS "createdAt", updated_at AS "updatedAt"
+  confirm_from AS "confirmFrom", created_at AS "createdAt", updated_at AS "updatedAt"
 `);
 
 // Tope de meses hacia atras que se generan de una vez (evita miles de filas
@@ -47,6 +54,17 @@ function monthsBetween(a, b) {
   const [yearA, monthA] = a.split("-").map(Number);
   const [yearB, monthB] = b.split("-").map(Number);
   return (yearB - yearA) * 12 + (monthB - monthA);
+}
+
+// Dias entre dos fechas "YYYY-MM-DD" (b - a).
+export function daysBetween(a, b) {
+  const toUtc = (iso) => Date.UTC(Number(iso.slice(0, 4)), Number(iso.slice(5, 7)) - 1, Number(iso.slice(8, 10)));
+  return Math.round((toUtc(b) - toUtc(a)) / 86_400_000);
+}
+
+// Una cuota que vence en "date" hay que marcarla como pagada (no se genera sola).
+function needsConfirmation(rule, date) {
+  return Boolean(rule.installmentsTotal && rule.confirmFrom && date >= rule.confirmFrom);
 }
 
 // Numero de cuota del movimiento de un mes ("YYYY-MM").
@@ -101,14 +119,31 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
     if (!rule.active) return null;
     let month = rule.startDate.slice(0, 7);
     const currentMonth = today.slice(0, 7);
-    if (month < currentMonth) month = currentMonth;
-    for (let index = 0; index < 24; index++, month = addMonths(month, 1)) {
+    // Una cuota vencida sin pagar sigue siendo la proxima: no se salta al mes actual.
+    if (month < currentMonth && !rule.confirmFrom) month = currentMonth;
+    for (let index = 0; index < 24 + MAX_BACKFILL_MONTHS; index++, month = addMonths(month, 1)) {
       const date = occurrenceDate(month, rule.dayOfMonth);
       if (rule.endDate && date > rule.endDate) return null;
       if (date < rule.startDate || done.has(month)) continue;
       return date;
     }
     return null;
+  }
+
+  // Cuotas sin pagar que ya vencieron o vencen en los proximos dias de aviso.
+  function pendingInstallments(rule, done, today = toISODate(now())) {
+    if (!rule.active || !rule.installmentsTotal || !rule.confirmFrom) return [];
+    const pending = [];
+    let month = rule.startDate.slice(0, 7);
+    for (let index = 0; index < rule.installmentsTotal + 1; index++, month = addMonths(month, 1)) {
+      const date = occurrenceDate(month, rule.dayOfMonth);
+      if (rule.endDate && date > rule.endDate) break;
+      const daysLeft = daysBetween(today, date);
+      if (daysLeft > INSTALLMENT_ALERT_DAYS) break;
+      if (date < rule.startDate || done.has(month) || !needsConfirmation(rule, date)) continue;
+      pending.push({ month, date, daysLeft, number: installmentNumber(rule, month) });
+    }
+    return pending;
   }
 
   async function withExtras(rules) {
@@ -127,6 +162,8 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
         extras.installmentsPaid = paid;
         extras.nextInstallment = next ? installmentNumber(rule, next.slice(0, 7)) : null;
         extras.remainingAmount = (rule.installmentsTotal - paid) * rule.amount;
+        // Las que hay que pagar ya o en los proximos dias (vencidas incluidas).
+        extras.pending = pendingInstallments(rule, done[rule.id]);
       }
       return { ...rule, ...extras };
     });
@@ -168,6 +205,8 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
           const date = occurrenceDate(month, rule.dayOfMonth);
           if (date < rule.startDate || date > today) continue;
           if (rule.endDate && date > rule.endDate) break;
+          // Desde confirmFrom, las cuotas esperan a que se marquen como pagadas.
+          if (needsConfirmation(rule, date)) break;
 
           // Si otra peticion ya genero este mes, no se duplica.
           const inserted = await tx.run(sql`
@@ -199,11 +238,12 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
     const { id } = await db.one(sql`
       INSERT INTO recurring (user_id, type, title, amount, currency, category, payment_method,
                              note, day_of_month, start_date, end_date, active,
-                             installments_total, installment_first)
+                             installments_total, installment_first, confirm_from)
       VALUES (${userId}, ${rule.type}, ${rule.title}, ${rule.amount}, ${rule.currency},
               ${rule.category}, ${rule.paymentMethod}, ${rule.note}, ${rule.dayOfMonth},
               ${rule.startDate}, ${rule.endDate}, ${rule.active},
-              ${rule.installmentsTotal}, ${rule.installmentFirst})
+              ${rule.installmentsTotal}, ${rule.installmentFirst},
+              ${rule.installmentsTotal ? toISODate(now()) : null})
       RETURNING id
     `);
     await generateDue(userId);
@@ -221,12 +261,70 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
           day_of_month = ${rule.dayOfMonth}, start_date = ${rule.startDate},
           end_date = ${rule.endDate}, active = ${rule.active},
           installments_total = ${rule.installmentsTotal},
-          installment_first = ${rule.installmentFirst}, updated_at = now()
+          installment_first = ${rule.installmentFirst},
+          -- Una regla que pasa a ser de cuotas empieza a pedir confirmacion desde hoy.
+          confirm_from = CASE WHEN ${rule.installmentsTotal}::int IS NULL THEN NULL
+                              ELSE COALESCE(confirm_from, ${toISODate(now())}) END,
+          updated_at = now()
       WHERE id = ${id} AND user_id = ${userId}
     `);
     if (!changed) return null;
     await generateDue(userId);
     return get(userId, id);
+  }
+
+  /*
+  Marca como pagada la cuota de un mes ("YYYY-MM"): carga el gasto con la fecha
+  de hoy (el dia en que se pago). Devuelve la regla actualizada, null si no
+  existe, o tira 409 si esa cuota ya estaba pagada o no corresponde al plan.
+  */
+  async function pay(userId, id, month) {
+    const today = toISODate(now());
+    const rule = await db.one(
+      sql`SELECT ${COLUMNS} FROM recurring WHERE id = ${id} AND user_id = ${userId}`,
+    );
+    if (!rule) return null;
+    const date = occurrenceDate(month, rule.dayOfMonth);
+    const number = rule.installmentsTotal ? installmentNumber(rule, month) : 0;
+    if (!rule.installmentsTotal || date < rule.startDate || number < 1 || number > rule.installmentsTotal) {
+      throw new HttpError(409, "installment_not_found");
+    }
+    const paid = await db.transaction(async (tx) => {
+      const inserted = await tx.run(sql`
+        INSERT INTO recurring_occurrences (recurring_id, month) VALUES (${rule.id}, ${month})
+        ON CONFLICT DO NOTHING
+      `);
+      if (!inserted) return false;
+      const title = rule.installmentsTotal > 1 ? `${rule.title} (${number}/${rule.installmentsTotal})` : rule.title;
+      await tx.run(sql`
+        INSERT INTO movements (user_id, type, title, amount, currency, date, category,
+                               payment_method, note, recurring_id)
+        VALUES (${userId}, ${rule.type}, ${title}, ${rule.amount}, ${rule.currency},
+                ${today}, ${rule.category}, ${rule.paymentMethod}, ${rule.note}, ${rule.id})
+      `);
+      return true;
+    });
+    if (!paid) throw new HttpError(409, "installment_already_paid");
+    return get(userId, id);
+  }
+
+  // Cuotas por vencer (hasta INSTALLMENT_ALERT_DAYS) o vencidas sin pagar, de la mas vieja a la mas nueva.
+  async function alerts(userId) {
+    const rules = await list(userId);
+    return rules
+      .flatMap((rule) =>
+        (rule.pending ?? []).map((item) => ({
+          ruleId: rule.id,
+          title: rule.title,
+          type: rule.type,
+          amount: rule.amount,
+          currency: rule.currency,
+          category: rule.category,
+          total: rule.installmentsTotal,
+          ...item,
+        })),
+      )
+      .sort((a, b) => a.date.localeCompare(b.date));
   }
 
   // Los movimientos ya generados se conservan (recurring_id pasa a NULL).
@@ -237,5 +335,5 @@ export function createRecurringService(db, { now = () => new Date() } = {}) {
     return count > 0;
   }
 
-  return { list, get, create, update, remove, generateDue };
+  return { list, get, create, update, remove, generateDue, pay, alerts };
 }

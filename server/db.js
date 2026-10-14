@@ -213,6 +213,13 @@ const MIGRATIONS = [
   );
   CREATE INDEX idx_categories_user ON categories (user_id);
   `,
+  // v8: las cuotas que vencen desde confirm_from no se cargan solas: quedan
+  // pendientes hasta que la persona las marca como pagadas. Las de antes
+  // (las que ya habia cuando se cargo la compra) se siguen dando por pagadas.
+  `
+  ALTER TABLE recurring ADD COLUMN confirm_from TEXT;
+  UPDATE recurring SET confirm_from = to_char(now(), 'YYYY-MM-DD') WHERE installments_total IS NOT NULL;
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.
