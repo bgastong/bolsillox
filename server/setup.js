@@ -52,6 +52,7 @@ export async function createAppFromEnv({ isProduction, serveStatic = isProductio
     publicUrl: process.env.PUBLIC_URL?.replace(/\/$/, "") || null,
     mailer: mailerFromEnv({ isProduction }),
     alertEmail: process.env.ALERT_EMAIL?.trim() || null,
+    cronSecret: process.env.CRON_SECRET?.trim() || null,
   });
 
   return { app, db };

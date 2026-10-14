@@ -7,6 +7,8 @@ const DAY_MS = 24 * HOUR_MS;
 export const PENDING_ACCOUNT_DAYS = 7;
 // Cada cuanto corre la limpieza (entre todas las instancias del servidor).
 const CLEANUP_EVERY_MS = 6 * HOUR_MS;
+// Cada cuanto se revisan los recordatorios de cuotas (respaldo del cron diario de Vercel).
+const REMINDERS_EVERY_MS = HOUR_MS;
 // Cada cuanto una instancia se fija si ya toca (asi no consulta la base en cada pedido).
 const CHECK_EVERY_MS = 10 * 60 * 1000;
 
@@ -15,8 +17,9 @@ Limpieza periodica de la base. No hay un proceso aparte (en Vercel no hay
 servidor siempre prendido): la dispara el trafico normal de la API.
 - Cuentas sin confirmar de mas de 7 dias (con sus codigos, por cascada).
 - Sesiones, codigos por email y limites de intentos vencidos.
+- Recordatorios de cuotas por email (si se pasa reminders; ver reminders.js).
 */
-export function createMaintenance(db, { now = () => new Date() } = {}) {
+export function createMaintenance(db, { now = () => new Date(), reminders = null } = {}) {
   let nextCheck = 0;
 
   // Devuelve true si esta instancia gano el turno: el UPDATE ... WHERE es atomico,
@@ -54,16 +57,25 @@ export function createMaintenance(db, { now = () => new Date() } = {}) {
     const time = now().getTime();
     if (time < nextCheck) return null;
     nextCheck = time + CHECK_EVERY_MS;
+    let deleted = null;
     try {
-      if (!(await claim("cleanup", CLEANUP_EVERY_MS))) return null;
-      const deleted = await cleanup();
-      const total = Object.values(deleted).reduce((sum, count) => sum + count, 0);
-      if (total > 0) console.log("[mantenimiento] limpieza:", JSON.stringify(deleted));
-      return deleted;
+      if (await claim("cleanup", CLEANUP_EVERY_MS)) {
+        deleted = await cleanup();
+        const total = Object.values(deleted).reduce((sum, count) => sum + count, 0);
+        if (total > 0) console.log("[mantenimiento] limpieza:", JSON.stringify(deleted));
+      }
     } catch (error) {
       console.warn("[mantenimiento] no se pudo limpiar:", error.message);
-      return null;
     }
+    try {
+      if (reminders && (await claim("installment_reminders", REMINDERS_EVERY_MS))) {
+        const sent = await reminders.sendDue();
+        if (sent > 0) console.log(`[mantenimiento] recordatorios de cuotas: ${sent} emails`);
+      }
+    } catch (error) {
+      console.warn("[mantenimiento] no se pudieron mandar los recordatorios:", error.message);
+    }
+    return deleted;
   }
 
   return { runIfDue, cleanup };

@@ -166,7 +166,7 @@ export const PRIVACY = [
         list: [
           "Prestarte el Servicio: guardar tus movimientos y mostrarte resúmenes y gráficos.",
           "Mantener tu cuenta segura: confirmar tu email, recuperar la contraseña y prevenir accesos indebidos.",
-          "Enviarte emails necesarios para usar el Servicio (por ejemplo, códigos de verificación). No enviamos publicidad.",
+          "Enviarte emails necesarios para usar el Servicio (por ejemplo, códigos de verificación) y recordatorios de tus cuotas por vencer o vencidas, que podés apagar en Ajustes. No enviamos publicidad.",
           "Detectar y corregir errores, y medir de forma agregada y anónima cuántas visitas recibe el sitio.",
         ],
       },
@@ -183,7 +183,7 @@ export const PRIVACY = [
         list: [
           "Vercel (alojamiento de la web y del servidor).",
           "Neon (base de datos).",
-          "Resend (envío de emails con códigos).",
+          "Resend (envío de emails con códigos y recordatorios de cuotas).",
           "Google, solo si elegís entrar con tu cuenta de Google.",
         ],
       },

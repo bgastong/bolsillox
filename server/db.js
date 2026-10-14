@@ -213,6 +213,24 @@ const MIGRATIONS = [
   );
   CREATE INDEX idx_categories_user ON categories (user_id);
   `,
+  // v8: las cuotas que vencen desde confirm_from no se cargan solas: quedan
+  // pendientes hasta que la persona las marca como pagadas. Las de antes
+  // (las que ya habia cuando se cargo la compra) se siguen dando por pagadas.
+  `
+  ALTER TABLE recurring ADD COLUMN confirm_from TEXT;
+  UPDATE recurring SET confirm_from = to_char(now(), 'YYYY-MM-DD') WHERE installments_total IS NOT NULL;
+  `,
+  // v9: recordatorios de cuotas ya enviados por email (uno por cuota y aviso:
+  // 2 dias antes, 1 dia antes, el mismo dia y vencida sin pagar).
+  `
+  CREATE TABLE installment_reminders (
+    recurring_id INTEGER     NOT NULL REFERENCES recurring (id) ON DELETE CASCADE,
+    month        TEXT        NOT NULL,
+    kind         TEXT        NOT NULL CHECK (kind IN ('d2', 'd1', 'd0', 'overdue')),
+    sent_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (recurring_id, month, kind)
+  );
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.

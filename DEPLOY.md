@@ -37,6 +37,7 @@ Es la contraseña de tu base: no la subas al repo ni la compartas. No hace falta
    | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | si usás el login con Google (paso 5) |
    | `RESEND_API_KEY`, `EMAIL_FROM` | si usás los códigos por email (paso 6) |
    | `ALERT_EMAIL` | tu email, para recibir avisos de errores (paso 7) |
+   | `CRON_SECRET` | una clave larga al azar, para los recordatorios de cuotas (paso 7) |
 
 5. Tocá **Deploy**. Tarda uno o dos minutos. Al terminar te da una dirección de prueba, por ejemplo `https://bolsillox.vercel.app`.
 
@@ -109,7 +110,7 @@ Sin `RESEND_API_KEY` la app sigue funcionando: las cuentas nuevas entran sin có
 
 Las cuentas creadas antes de activar esto no tienen que confirmar nada.
 
-## 7. Avisos de errores y estadísticas
+## 7. Avisos de errores, recordatorios de cuotas y estadísticas
 
 **Avisos de errores por email.** Si algo falla en el servidor (un error 500) o en la página, te llega un email con el detalle técnico. Usa el mismo Resend de los códigos.
 
@@ -121,6 +122,12 @@ Las cuentas creadas antes de activar esto no tienen que confirmar nada.
 
 1. En Vercel, abrí el proyecto → **Analytics** → **Enable**.
 2. Con el próximo deploy empiezan a aparecer los datos en esa misma pestaña.
+
+**Recordatorios de cuotas por email.** Cuando una cuota vence en 2 días, mañana, hoy o se venció sin pagar, la persona recibe un email (lo puede apagar en Ajustes → Avisos). Usa el mismo Resend de los códigos.
+
+1. En Vercel, cargá `CRON_SECRET` con una clave larga al azar (por ejemplo, la que da `openssl rand -hex 32`) y hacé **Redeploy**.
+2. `vercel.json` ya trae un **Cron Job** que todos los días a las 11:00 UTC (8:00 en Argentina) llama a `/api/cron/reminders` con esa clave. Lo ves en **Settings → Cron Jobs**.
+3. Sin `CRON_SECRET` los recordatorios igual salen, pero solo cuando alguien usa la app (la revisión corre como mucho una vez por hora).
 
 **Limpieza automática.** Cada 6 horas la app borra sola las cuentas que no confirmaron el email en 7 días, y las sesiones, códigos y límites de intentos vencidos. No hay que configurar nada.
 
@@ -144,4 +151,5 @@ Los textos están en `src/lib/legalContent.js`. Antes de publicar:
 | Google vuelve al login con un error | Que `PUBLIC_URL` sea tu dominio y que la app de Google esté publicada (o tu email agregado como usuario de prueba). |
 | No aparece el botón de Google | Que estén cargadas las dos variables `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`. |
 | No llegan los avisos de errores | Que `ALERT_EMAIL` y `RESEND_API_KEY` estén cargadas. Revisá spam. |
+| No llegan los recordatorios de cuotas | Que `RESEND_API_KEY` y `CRON_SECRET` estén cargadas, que el Cron Job figure en **Settings → Cron Jobs** y que la persona no los haya apagado en Ajustes. Revisá spam. |
 | No llegan los códigos por email | Que `RESEND_API_KEY` esté cargada y que el dominio de `EMAIL_FROM` esté verificado en Resend. En Vercel, **Logs** muestra el error de Resend; en Resend, **Emails** muestra cada envío. También fijate en spam. |

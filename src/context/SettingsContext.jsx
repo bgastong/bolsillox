@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CURRENCIES, DEFAULT_CURRENCY } from "@shared/catalog.js";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/hooks/useLanguage";
 import { SettingsContext } from "./SettingsContextValue";
 
 const CURRENCY_KEY = "bolsillox.displayCurrency";
@@ -18,6 +19,12 @@ function getInitialCurrency() {
 }
 
 export function SettingsProvider({ children }) {
+  const { language } = useLanguage();
+  // Los recordatorios por email salen en el idioma elegido en la app.
+  useEffect(() => {
+    api.saveNotificationSettings({ language }).catch(() => {});
+  }, [language]);
+
   const [currency, setCurrencyState] = useState(getInitialCurrency);
   const [rates, setRates] = useState(null);
   const [ratesError, setRatesError] = useState(null);
