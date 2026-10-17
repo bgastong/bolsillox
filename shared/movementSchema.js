@@ -150,6 +150,45 @@ export const categorySchema = z.object({
 });
 export const categoryUpdateSchema = categorySchema.omit({ type: true });
 
+// Deuda que le deben a la persona: quien, cuanto, por que y desde/hasta cuando.
+export const RECEIVABLE_PERSON_MAX_LENGTH = 60;
+export const RECEIVABLE_CONCEPT_MAX_LENGTH = 120;
+
+export const receivableSchema = z
+  .object({
+    person: z
+      .string({ error: "errorPersonRequired" })
+      .trim()
+      .min(1, { error: "errorPersonRequired" })
+      .max(RECEIVABLE_PERSON_MAX_LENGTH, { error: "errorPersonTooLong" }),
+    concept: z
+      .string()
+      .trim()
+      .max(RECEIVABLE_CONCEPT_MAX_LENGTH, { error: "errorConceptTooLong" })
+      .optional()
+      .default(""),
+    amount: amountSchema,
+    currency: z.enum(CURRENCIES, { error: "errorCurrencyInvalid" }).default(DEFAULT_CURRENCY),
+    date: isoDateSchema,
+    dueDate: z
+      .union([isoDateSchema, z.literal(""), z.null()])
+      .optional()
+      .transform((value) => value || null),
+  })
+  .superRefine((data, ctx) => {
+    if (data.dueDate && data.dueDate < data.date) {
+      ctx.addIssue({ code: "custom", path: ["dueDate"], message: "errorDueBeforeDate" });
+    }
+  });
+
+// Cobro (total o parcial) de una deuda. Si registerIncome, se carga como ingreso.
+export const receivablePaymentSchema = z.object({
+  amount: amountSchema,
+  date: isoDateSchema,
+  registerIncome: z.boolean().optional().default(true),
+  paymentMethod: z.enum(PAYMENT_METHODS, { error: "errorMethodInvalid" }).optional().default("transfer"),
+});
+
 // Avisos por email: recordatorios de cuotas e idioma en que llegan.
 export const notificationSettingsSchema = z.object({
   installmentEmails: z.boolean().optional(),
