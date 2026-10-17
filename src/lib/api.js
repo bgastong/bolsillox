@@ -108,6 +108,13 @@ export const api = {
   updateCategory: (id, data) => request(`/categories/${id}`, { method: "PUT", body: data }),
   deleteCategory: (id) => request(`/categories/${id}`, { method: "DELETE" }),
 
+  // Deudas que me deben (y sus cobros)
+  listReceivables: (options) => request("/receivables", options),
+  createReceivable: (data) => request("/receivables", { method: "POST", body: data }),
+  updateReceivable: (id, data) => request(`/receivables/${id}`, { method: "PUT", body: data }),
+  deleteReceivable: (id) => request(`/receivables/${id}`, { method: "DELETE" }),
+  collectReceivable: (id, data) => request(`/receivables/${id}/payments`, { method: "POST", body: data }),
+
   // Avisos por email (recordatorios de cuotas) e idioma en que llegan
   getNotificationSettings: (options) => request("/notifications", options),
   saveNotificationSettings: (settings) => request("/notifications", { method: "PUT", body: settings }),
