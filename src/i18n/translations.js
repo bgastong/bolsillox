@@ -356,6 +356,9 @@ export const translations = {
     installmentsSummary_one: "Queda 1 cuota, el {{last}}, por {{amount}}",
     installmentSinglePayment: "Pago único · {{date}}",
     installmentsTitle: "Cuotas",
+    // Deudas
+    debtsTitle: "Deudas",
+    debtsSubtitle: "Lo que debés en cuotas y lo que te deben a vos",
     installmentsSubtitle: "Lo que pagás en cuotas: cuánto te falta y cuándo vence la próxima",
     installmentsSummaryLabel: "Resumen de cuotas",
     installmentsThisMonth: "Este mes pagás",
@@ -927,6 +930,9 @@ export const translations = {
     installmentsSummary_one: "1 installment left, on {{last}}, for {{amount}}",
     installmentSinglePayment: "Single payment · {{date}}",
     installmentsTitle: "Installments",
+    // Debts
+    debtsTitle: "Debts",
+    debtsSubtitle: "What you owe in installments and what others owe you",
     installmentsSubtitle: "What you pay in installments: how much is left and when the next one is due",
     installmentsSummaryLabel: "Installments summary",
     installmentsThisMonth: "Due this month",

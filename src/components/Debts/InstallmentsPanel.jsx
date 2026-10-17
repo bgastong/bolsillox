@@ -1,12 +1,8 @@
 import { useCallback } from "react";
-import { CreditCardIcon } from "lucide-react";
-import { PageHeader } from "@/components/Movements/MovementBits";
 import InstallmentAlerts from "@/components/Recurring/InstallmentAlerts";
 import InstallmentRow from "@/components/Recurring/InstallmentRow";
 import InstallmentsByMonth from "@/components/Recurring/InstallmentsByMonth";
-import MovementTabs from "@/components/Recurring/MovementTabs";
 import { EmptyState, ErrorState } from "@/components/States/States";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { currentMonthKey, formatCurrency } from "@/lib/format";
@@ -28,13 +24,14 @@ function sumIn(items, amountOf, currency, rate) {
 }
 
 /*
-Compras en cuotas: lo que falta pagar, lo que vence este mes y cada compra
-con su progreso. Son reglas recurrentes con cantidad de cuotas (ver
-server/recurring.js); los recurrentes comunes estan en su propia pantalla.
+Deudas > Debo: compras en cuotas. Lo que falta pagar, lo que vence este mes
+y cada compra con su progreso. Son reglas recurrentes con cantidad de cuotas
+(ver server/recurring.js); los recurrentes comunes estan en su propia pantalla.
+addButton: boton para cargar una compra en cuotas (lo arma la pagina).
 */
-function Installments() {
+function InstallmentsPanel({ addButton }) {
   const { t, locale } = useLanguage();
-  const { openCreateInstallments, openEditRecurring, version } = useMovements();
+  const { openEditRecurring, version } = useMovements();
   const { currency, rate } = useSettings();
 
   const loadRules = useCallback(
@@ -60,17 +57,8 @@ function Installments() {
     rate,
   );
 
-  const addButton = (
-    <Button onClick={openCreateInstallments}>
-      <CreditCardIcon data-icon="inline-start" />
-      {t("newInstallments")}
-    </Button>
-  );
-
   return (
-    <div className="grid grid-cols-1 gap-5">
-      <PageHeader title={t("installmentsTitle")} subtitle={t("installmentsSubtitle")} actions={addButton} />
-      <MovementTabs />
+    <>
       <InstallmentAlerts />
 
       {error && !plans ? (
@@ -139,8 +127,8 @@ function Installments() {
           <p className="m-0 px-1 text-xs text-muted-foreground">{t("installmentsHowItWorks")}</p>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
-export default Installments;
+export default InstallmentsPanel;
