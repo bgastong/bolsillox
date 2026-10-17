@@ -1,15 +1,15 @@
 import { NavLink } from "react-router-dom";
-import { CreditCardIcon, HistoryIcon, RepeatIcon } from "lucide-react";
+import { HandCoinsIcon, HistoryIcon, RepeatIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 
-// Pestanas Historial / Recurrentes / Cuotas (vistas de los movimientos).
+// Pestanas Historial / Recurrentes / Deudas (vistas de los movimientos).
 function MovementTabs() {
   const { t } = useLanguage();
   const tabs = [
     { to: "/history", label: t("history"), icon: HistoryIcon },
     { to: "/recurring", label: t("recurringTitle"), icon: RepeatIcon },
-    { to: "/installments", label: t("installmentsTitle"), icon: CreditCardIcon },
+    { to: "/debts", label: t("debtsTitle"), icon: HandCoinsIcon },
   ];
 
   return (

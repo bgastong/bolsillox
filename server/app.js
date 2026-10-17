@@ -9,6 +9,7 @@ import { createRepository } from "./repository.js";
 import { createRecurringService, toISODate } from "./recurring.js";
 import { createBudgetsService } from "./budgets.js";
 import { createCategoriesService } from "./categories.js";
+import { createReceivablesService } from "./receivables.js";
 import { createRatesService } from "./rates.js";
 import { deleteDemoData, hasDemoData, seedUser } from "./db.js";
 import { authRouter } from "./routes/auth.js";
@@ -16,6 +17,7 @@ import { movementsRouter } from "./routes/movements.js";
 import { recurringRouter } from "./routes/recurring.js";
 import { budgetsRouter } from "./routes/budgets.js";
 import { categoriesRouter } from "./routes/categories.js";
+import { receivablesRouter } from "./routes/receivables.js";
 import { buildSummary } from "./summary.js";
 import { parseCurrency, parseMonth } from "./params.js";
 import { errorHandler, HttpError } from "./errors.js";
@@ -73,6 +75,7 @@ export function createApp(
   const recurring = createRecurringService(db, { now });
   const budgets = createBudgetsService(db);
   const categories = createCategoriesService(db);
+  const receivables = createReceivablesService(db);
   const rates = createRatesService(db, { now, fetchImpl });
   const reminders = createReminders(db, { recurring, mailer, appUrl: publicUrl });
   const maintenance = createMaintenance(db, { now, reminders });
@@ -177,6 +180,7 @@ export function createApp(
   app.use("/api/recurring", recurringRouter(recurring, categories));
   app.use("/api/budgets", budgetsRouter(budgets, rates, categories));
   app.use("/api/categories", categoriesRouter(categories));
+  app.use("/api/receivables", receivablesRouter(receivables));
 
   app.get("/api/summary", async (req, res) => {
     const month = parseMonth(req.query.month);
