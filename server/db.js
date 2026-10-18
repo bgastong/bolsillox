@@ -231,6 +231,33 @@ const MIGRATIONS = [
     PRIMARY KEY (recurring_id, month, kind)
   );
   `,
+  // v10: deudas que le deben a la persona y lo que ya cobro de cada una.
+  `
+  CREATE TABLE receivables (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER          NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    person     TEXT             NOT NULL,
+    concept    TEXT             NOT NULL DEFAULT '',
+    amount     DOUBLE PRECISION NOT NULL CHECK (amount > 0),
+    currency   TEXT             NOT NULL DEFAULT 'ARS' CHECK (currency IN ('ARS', 'USD')),
+    date       TEXT             NOT NULL,
+    due_date   TEXT,
+    created_at TIMESTAMPTZ      NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ      NOT NULL DEFAULT now()
+  );
+  CREATE INDEX idx_receivables_user ON receivables (user_id);
+
+  -- Cobros (pueden ser parciales). Si se cargo como ingreso, movement_id apunta al movimiento.
+  CREATE TABLE receivable_payments (
+    id            SERIAL PRIMARY KEY,
+    receivable_id INTEGER          NOT NULL REFERENCES receivables (id) ON DELETE CASCADE,
+    amount        DOUBLE PRECISION NOT NULL CHECK (amount > 0),
+    date          TEXT             NOT NULL,
+    movement_id   INTEGER          REFERENCES movements (id) ON DELETE SET NULL,
+    created_at    TIMESTAMPTZ      NOT NULL DEFAULT now()
+  );
+  CREATE INDEX idx_receivable_payments_receivable ON receivable_payments (receivable_id);
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.

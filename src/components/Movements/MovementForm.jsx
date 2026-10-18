@@ -82,7 +82,7 @@ function validate(values, mode) {
     : { data: null, errors: issuesToFieldErrors(result.error.issues) };
 }
 
-function Field({ id, label, error, hint, children, className }) {
+export function Field({ id, label, error, hint, children, className }) {
   return (
     <div className={cn("grid gap-2", className)}>
       <Label htmlFor={id}>{label}</Label>
@@ -98,7 +98,7 @@ function Field({ id, label, error, hint, children, className }) {
 }
 
 // Control segmentado reutilizable (radiogroup accesible).
-function Segmented({ label, options, value, onChange, className, size = "md" }) {
+export function Segmented({ label, options, value, onChange, className, size = "md" }) {
   return (
     <div
       role="radiogroup"
