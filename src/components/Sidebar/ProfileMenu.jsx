@@ -37,9 +37,10 @@ const SETTINGS_SHORTCUTS = [
 /*
 Perfil abajo del menu lateral: inicial, nombre y la ruedita de ajustes. Toda la
 tarjeta abre un menu para ir directo a cada parte de Ajustes o cerrar sesion.
-onNavigate: cierra el menu lateral al elegir una opcion.
+- compact: solo la inicial en un circulo (barra de arriba en el celular).
+- onNavigate: cierra el menu lateral al elegir una opcion.
 */
-function ProfileMenu({ onNavigate }) {
+function ProfileMenu({ onNavigate, compact = false }) {
   const { t } = useLanguage();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -52,13 +53,33 @@ function ProfileMenu({ onNavigate }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button type="button" className={styles.footerCard} aria-label={t("profileMenuLabel", { name: user.name })}>
-          <UserAvatar name={user.name} className="size-9 text-sm" />
-          <span className={styles.footerName}>{user.name}</span>
-          <SettingsIcon className={styles.footerGear} aria-hidden="true" />
-        </button>
+        {compact ? (
+          <button
+            type="button"
+            className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label={t("profileMenuLabel", { name: user.name })}
+          >
+            <UserAvatar name={user.name} className="size-10 text-sm" />
+          </button>
+        ) : (
+          <button type="button" className={styles.footerCard} aria-label={t("profileMenuLabel", { name: user.name })}>
+            <UserAvatar name={user.name} className="size-9 text-sm" />
+            <span className={styles.footerName}>{user.name}</span>
+            <SettingsIcon className={styles.footerGear} aria-hidden="true" />
+          </button>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="top" align="start" sideOffset={8} className="w-(--radix-dropdown-menu-trigger-width) min-w-56">
+      <DropdownMenuContent
+        side={compact ? "bottom" : "top"}
+        align={compact ? "end" : "start"}
+        sideOffset={8}
+        className={compact ? "min-w-60" : "w-(--radix-dropdown-menu-trigger-width) min-w-56"}
+      >
+        {compact && (
+          <DropdownMenuLabel className="truncate pb-0 text-sm tracking-normal text-foreground normal-case">
+            {user.name}
+          </DropdownMenuLabel>
+        )}
         <DropdownMenuLabel className="text-xs font-normal tracking-normal text-muted-foreground normal-case">
           {t("profileMenuGoTo")}
         </DropdownMenuLabel>
