@@ -482,3 +482,83 @@ Todos respetan prefers-reduced-motion (ver index.css).
     transform: translateY(-8px);
   }
 }
+
+/* Orbita de funcionalidades de la pagina de inicio (FeatureOrbit).
+   Las lineas usan los mismos grises que los bordes; el verde es solo la estela. */
+.orbit-stage::before,
+.orbit-stage::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 16svh;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.orbit-stage::before {
+  top: 0;
+  background: linear-gradient(var(--background), transparent);
+}
+
+.orbit-stage::after {
+  bottom: 0;
+  background: linear-gradient(transparent, var(--background));
+}
+
+/* El canvas aparece con un fundido cuando la escena termina de armarse */
+.orbit-gl {
+  opacity: 0;
+  transition: opacity 0.8s ease-out;
+}
+
+.orbit-gl[data-ready="true"] {
+  opacity: 1;
+}
+
+.orbit-svg .orbit-ring {
+  fill: none;
+  stroke: var(--foreground);
+  stroke-width: 1;
+}
+
+.orbit-svg .orbit-tick,
+.orbit-svg .orbit-main {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.orbit-svg .orbit-trail {
+  fill: none;
+  stroke: var(--income);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  opacity: 0.85;
+}
+
+.orbit-svg .orbit-dot {
+  fill: var(--background);
+  stroke: var(--income);
+  stroke-width: 1.5;
+  transition: opacity 0.3s;
+}
+
+.orbit-card {
+  will-change: transform, opacity;
+}
+
+/* El titular de la funcionalidad activa entra con un recorte de abajo hacia arriba */
+.orbit-headline {
+  animation: orbit-headline-in 0.6s cubic-bezier(0.7, 0, 0.2, 1) both;
+}
+
+@keyframes orbit-headline-in {
+  from {
+    clip-path: inset(100% 0 0 0);
+    transform: translateY(30%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
