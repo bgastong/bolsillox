@@ -17,6 +17,7 @@ import Wordmark from "@/components/Brand/Wordmark";
 import CursorDots from "@/components/Brand/CursorDots";
 import LiveChart from "@/components/Landing/LiveChart";
 import LiveBalance from "@/components/Landing/LiveBalance";
+import FeatureOrbit from "@/components/Landing/FeatureOrbit";
 import { LanguageToggle } from "@/components/Auth/AuthLayout";
 import { ThemeToggle } from "@/components/Theme/ThemeControls";
 import { buttonVariants } from "@/components/ui/button";
@@ -33,14 +34,36 @@ function Counter({ value, duration = 1400 }) {
   return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(Math.round(current));
 }
 
+// meta/value/tone: dato de ejemplo de cada tarjeta en la orbita (chip verde, rojo o neutro).
+// tagline: titular grande que acompaña a la funcionalidad activa.
 const FEATURES = [
-  { icon: LayoutDashboardIcon, title: "landingF1Title", text: "landingF1Text" },
-  { icon: DollarSignIcon, title: "landingF2Title", text: "landingF2Text" },
-  { icon: RepeatIcon, title: "landingF3Title", text: "landingF3Text" },
-  { icon: PiggyBankIcon, title: "landingF4Title", text: "landingF4Text" },
-  { icon: CommandIcon, title: "landingF5Title", text: "landingF5Text" },
-  { icon: SmartphoneIcon, title: "landingF6Title", text: "landingF6Text" },
+  { icon: LayoutDashboardIcon, title: "landingF1Title", text: "landingF1Text", tagline: "landingF1Tagline", meta: "landingF1Meta", value: "landingF1Value", tone: "good" },
+  { icon: DollarSignIcon, title: "landingF2Title", text: "landingF2Text", tagline: "landingF2Tagline", meta: "landingF2Meta", value: "landingF2Value" },
+  { icon: RepeatIcon, title: "landingF3Title", text: "landingF3Text", tagline: "landingF3Tagline", meta: "landingF3Meta", value: "landingF3Value", tone: "good" },
+  { icon: PiggyBankIcon, title: "landingF4Title", text: "landingF4Text", tagline: "landingF4Tagline", meta: "landingF4Meta", value: "landingF4Value", tone: "bad" },
+  { icon: CommandIcon, title: "landingF5Title", text: "landingF5Text", tagline: "landingF5Tagline", meta: "landingF5Meta", value: "landingF5Value" },
+  { icon: SmartphoneIcon, title: "landingF6Title", text: "landingF6Text", tagline: "landingF6Tagline", meta: "landingF6Meta", value: "landingF6Value" },
 ];
+
+// Grilla de funcionalidades: se usa cuando no hay 3D (reducir movimiento o sin WebGL).
+function FeatureGrid() {
+  const { t } = useLanguage();
+  return (
+    <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
+      <ul className="m-0 grid list-none gap-px overflow-hidden rounded-2xl border border-fg/[0.07] bg-fg/[0.07] p-0 sm:grid-cols-2 lg:grid-cols-3">
+        {FEATURES.map(({ icon: Icon, title, text }) => (
+          <li key={title} className="grid content-start gap-3 bg-card p-6 transition-colors hover:bg-accent">
+            <span className="inline-flex size-9 items-center justify-center rounded-[10px] border border-fg/10 bg-fg/[0.04] text-foreground">
+              <Icon className="size-[17px]" strokeWidth={1.75} aria-hidden="true" />
+            </span>
+            <h3 className="m-0 text-[15px] font-medium">{t(title)}</h3>
+            <p className="m-0 text-sm leading-relaxed text-[color:var(--text-3)]">{t(text)}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 // Botones de cuenta: "Crear cuenta" (principal) e "Iniciar sesion".
 // En el celular van uno debajo del otro y a todo el ancho, asi no cambian de
@@ -196,27 +219,17 @@ function Landing() {
           </div>
         </section>
 
-        {/* Funcionalidades */}
+        {/* Funcionalidades: billete 3D con las funcionalidades en orbita (o la grilla sin 3D) */}
         <section aria-labelledby="features-title" className="border-t border-fg/[0.06]">
-          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+          <div className="mx-auto max-w-6xl px-4 pt-20 pb-10 sm:px-6">
             <div className="grid max-w-2xl gap-3">
               <h2 id="features-title" className="m-0 text-[28px] leading-[1.15] font-medium tracking-[-0.04em] sm:text-[34px]">
                 {t("landingFeaturesTitle")}
               </h2>
               <p className="m-0 text-[color:var(--text-3)]">{t("landingFeaturesSubtitle")}</p>
             </div>
-            <ul className="m-0 mt-10 grid list-none gap-px overflow-hidden rounded-2xl border border-fg/[0.07] bg-fg/[0.07] p-0 sm:grid-cols-2 lg:grid-cols-3">
-              {FEATURES.map(({ icon: Icon, title, text }) => (
-                <li key={title} className="grid content-start gap-3 bg-card p-6 transition-colors hover:bg-accent">
-                  <span className="inline-flex size-9 items-center justify-center rounded-[10px] border border-fg/10 bg-fg/[0.04] text-foreground">
-                    <Icon className="size-[17px]" strokeWidth={1.75} aria-hidden="true" />
-                  </span>
-                  <h3 className="m-0 text-[15px] font-medium">{t(title)}</h3>
-                  <p className="m-0 text-sm leading-relaxed text-[color:var(--text-3)]">{t(text)}</p>
-                </li>
-              ))}
-            </ul>
           </div>
+          <FeatureOrbit features={FEATURES} fallback={<FeatureGrid />} />
         </section>
 
         {/* Llamado final */}
