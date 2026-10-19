@@ -107,13 +107,16 @@
   background: var(--sidebar-primary);
 }
 
-/* Usuario con sesion iniciada (lleva a Ajustes) */
+/* Usuario con sesion iniciada: abre el menu del perfil (ver ProfileMenu.jsx) */
 .footerCard {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 4px;
   padding: 10px;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
   border: 1px solid var(--sidebar-border);
   border-radius: 10px;
   background: rgb(var(--fg-rgb) / 0.015);
@@ -132,13 +135,14 @@
   box-shadow: 0 0 0 2px var(--ring);
 }
 
-.footerUser {
-  display: grid;
-  min-width: 0;
-  gap: 1px;
+.footerCard[data-state="open"] {
+  border-color: rgb(var(--fg-rgb) / 0.14);
+  background: rgb(var(--fg-rgb) / 0.05);
 }
 
 .footerName {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   font-size: 0.83rem;
   font-weight: 500;
@@ -146,10 +150,25 @@
   white-space: nowrap;
 }
 
-.footerText {
-  overflow: hidden;
-  color: var(--text-4);
-  font-size: 0.73rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* Ruedita de ajustes: gira un poco al pasar el mouse o al abrir el menu */
+.footerGear {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--text-3);
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.15s ease;
+}
+
+.footerCard:hover .footerGear,
+.footerCard[data-state="open"] .footerGear {
+  color: var(--foreground);
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footerGear {
+    transition: none;
+  }
 }
