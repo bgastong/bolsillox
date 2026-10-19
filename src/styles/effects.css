@@ -54,7 +54,8 @@ Todos respetan prefers-reduced-motion (ver index.css).
   border-color: rgb(var(--fg-rgb) / 0.11);
 }
 
-/* Brillo que sigue al cursor (las coordenadas las pone useSurfaceGlow) */
+/* Brillo que sigue al cursor, solo en la pagina de inicio sin sesion
+   (dentro de .surface-glow; las coordenadas las pone useSurfaceGlow) */
 .surface::after {
   content: "";
   position: absolute;
@@ -66,7 +67,7 @@ Todos respetan prefers-reduced-motion (ver index.css).
   background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgb(var(--fg-rgb) / 0.04), transparent 60%);
 }
 
-.surface:hover::after {
+.surface-glow .surface:hover::after {
   opacity: 1;
 }
 

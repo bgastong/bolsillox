@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { MovementsProvider } from "@/context/MovementsContext";
 import { useLanguage } from "@/hooks/useLanguage";
-import { useSurfaceGlow } from "@/hooks/useSurfaceGlow";
 import CommandPalette from "@/components/CommandPalette/CommandPalette";
 import AppSidebar from "../../components/Sidebar/Sidebar";
 import Navbar from "../../components/Navbar/Navbar";
@@ -13,7 +12,6 @@ import MobileNav from "../../components/MobileNav/MobileNav";
 function DashboardLayout({ children }) {
   const { t } = useLanguage();
   const { pathname } = useLocation();
-  useSurfaceGlow();
 
   return (
     <MovementsProvider>
