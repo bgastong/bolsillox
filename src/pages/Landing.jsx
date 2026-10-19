@@ -24,6 +24,7 @@ import { REPO_URL } from "@/lib/links";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useSurfaceGlow } from "@/hooks/useSurfaceGlow";
 
 // Numero de ejemplo que cuenta desde 0 al abrir la pagina.
 function Counter({ value, duration = 1400 }) {
@@ -134,9 +135,11 @@ previa del producto y los botones para crear cuenta o iniciar sesion.
 */
 function Landing() {
   const { t } = useLanguage();
+  useSurfaceGlow();
 
   return (
-    <div className="relative min-h-svh overflow-x-clip">
+    // surface-glow: el brillo que sigue al mouse solo existe en esta pagina (sin sesion).
+    <div className="surface-glow relative min-h-svh overflow-x-clip">
       <div className="bg-glow" aria-hidden="true" />
       <div className="landing-beam" aria-hidden="true" />
       <CursorDots />

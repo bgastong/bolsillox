@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 
 /*
-Brillo que sigue al cursor en las tarjetas (.surface): un solo listener
+Brillo que sigue al cursor en las tarjetas (.surface) de la pagina de inicio
+(la que se ve sin sesion; ver .surface-glow en effects.css): un solo listener
 para toda la pantalla que actualiza --mx / --my en la tarjeta bajo el mouse.
 Solo con mouse; en pantallas tactiles no hace nada.
 */
