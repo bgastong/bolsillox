@@ -4,7 +4,9 @@ import { SearchIcon } from "lucide-react";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useHideOnScroll } from "../../hooks/useHideOnScroll";
 import { useCommandPalette } from "../../hooks/useCommandPalette";
+import { useAuth } from "../../hooks/useAuth";
 import Wordmark from "../Brand/Wordmark";
+import ProfileMenu from "../Sidebar/ProfileMenu";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import styles from "./Navbar.module.css";
 
@@ -12,6 +14,7 @@ function Navbar() {
   const { t } = useLanguage();
   const { isMobile, state } = useSidebar();
   const palette = useCommandPalette();
+  const { user } = useAuth();
   // El logo se muestra en la barra solo cuando el sidebar no esta visible.
   const showBrand = isMobile || state === "collapsed";
   // En mobile la barra se oculta al bajar y vuelve al subir.
@@ -38,14 +41,18 @@ function Navbar() {
         )}
       </div>
       {isMobile && (
-        <button
-          type="button"
-          className={styles.iconButton}
-          onClick={palette.open}
-          aria-label={t("cmdLabel")}
-        >
-          <SearchIcon aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className={styles.iconButton}
+            onClick={palette.open}
+            aria-label={t("cmdLabel")}
+          >
+            <SearchIcon aria-hidden="true" />
+          </button>
+          {/* En el celular no hay menu lateral: el perfil va arriba */}
+          {user && <ProfileMenu compact />}
+        </div>
       )}
     </header>
   );

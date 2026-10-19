@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   CheckIcon,
   RefreshCwIcon,
@@ -30,9 +31,10 @@ const RATE_SOURCES = ["blue", "mep", "oficial"];
 
 function Section({ id, title, description, children }) {
   return (
-    <section aria-labelledby={id} className="surface grid gap-4 rounded-2xl bg-card p-5 sm:p-6">
+    <section aria-labelledby={id} className="surface grid scroll-mt-24 gap-4 rounded-2xl bg-card p-5 sm:p-6">
       <div className="grid gap-1">
-        <h2 id={id} className="m-0 text-lg font-medium">
+        {/* tabIndex -1: el menu del perfil lleva el foco al titulo de la seccion elegida */}
+        <h2 id={id} tabIndex={-1} className="m-0 text-lg font-medium outline-none">
           {title}
         </h2>
         {description && <p className="m-0 text-sm text-muted-foreground">{description}</p>}
@@ -230,6 +232,21 @@ function RateSettings() {
 
 function Settings() {
   const { t, language, setLanguage } = useLanguage();
+  const { hash, key } = useLocation();
+
+  // /settings#settings-rate (menu del perfil): baja hasta esa seccion y le pasa el foco.
+  // key cambia en cada navegacion, asi tambien funciona si ya estabas en Ajustes.
+  useEffect(() => {
+    if (!hash) return undefined;
+    const timer = setTimeout(() => {
+      const heading = document.getElementById(decodeURIComponent(hash.slice(1)));
+      if (!heading) return;
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      heading.closest("section")?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+      heading.focus({ preventScroll: true });
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [hash, key]);
   const { currency, setCurrency, rate } = useSettings();
   const { theme, setTheme } = useTheme();
 

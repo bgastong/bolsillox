@@ -1,4 +1,4 @@
-import { Link, NavLink } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   HandCoinsIcon,
   HistoryIcon,
@@ -12,7 +12,7 @@ import styles from "./Sidebar.module.css";
 import { useLanguage } from "../../hooks/useLanguage";
 import { useAuth } from "../../hooks/useAuth";
 import { useCommandPalette } from "../../hooks/useCommandPalette";
-import UserAvatar from "../Account/UserAvatar";
+import ProfileMenu from "./ProfileMenu";
 import Wordmark from "../Brand/Wordmark";
 import { ThemeSegmented } from "../Theme/ThemeControls";
 import {
@@ -112,15 +112,7 @@ function AppSidebar() {
 
         <SidebarFooter>
           <ThemeSegmented className="mx-1" />
-          {user && (
-            <Link to="/settings" className={styles.footerCard} aria-label={t("accountLinkLabel", { name: user.name })}>
-              <UserAvatar name={user.name} className="size-9 text-sm" />
-              <span className={styles.footerUser} aria-hidden="true">
-                <span className={styles.footerName}>{user.name}</span>
-                <span className={styles.footerText}>{user.email}</span>
-              </span>
-            </Link>
-          )}
+          {user && <ProfileMenu onNavigate={handleNavigate} />}
         </SidebarFooter>
       </nav>
     </Sidebar>
