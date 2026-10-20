@@ -15,6 +15,7 @@ import {
   SummaryHeroSkeleton,
 } from "@/components/Dashboard/SummaryHero";
 import UpcomingPayments from "@/components/Dashboard/UpcomingPayments";
+import ReceivableAlerts from "@/components/Debts/ReceivableAlerts";
 import InstallmentAlerts from "@/components/Recurring/InstallmentAlerts";
 import BudgetRow from "@/components/Budgets/BudgetRow";
 import DollarRates from "@/components/Dashboard/DollarRates";
@@ -258,6 +259,7 @@ function Dashboard() {
       {isEmptyAccount && <WelcomeCard onCreate={openCreate} onDemoLoaded={notifyChange} />}
       {summary?.hasDemoData && <DemoDataNotice onDeleted={notifyChange} />}
       <InstallmentAlerts />
+      <ReceivableAlerts />
 
       {summary?.unconverted > 0 && (
         <p
