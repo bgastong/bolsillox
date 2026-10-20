@@ -18,6 +18,11 @@ export function receivablesRouter(receivables) {
     res.json(await receivables.list(req.user.id));
   });
 
+  // Lo que hay que cobrar pronto o ya vencio (para el aviso del Inicio).
+  router.get("/alerts", async (req, res) => {
+    res.json(await receivables.alerts(req.user.id));
+  });
+
   router.post("/", async (req, res) => {
     const data = receivableSchema.parse(req.body ?? {});
     res.status(201).json(await receivables.create(req.user.id, data));

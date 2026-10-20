@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
+import { reminderEmail } from "./emails.js";
 import { sessionCookie, startTestServer } from "./testHelpers.js";
 
 // Reloj que el test puede adelantar: arranca el 15 de octubre de 2026.
@@ -91,7 +92,7 @@ describe("recordatorios de cuotas por email", () => {
     assert.equal(outbox.length, before);
 
     const saved = await request("/notifications", { method: "PUT", body: { language: "en" } });
-    assert.deepEqual(await saved.json(), { installmentEmails: true, language: "en" });
+    assert.deepEqual(await saved.json(), { installmentEmails: true, receivableEmails: true, language: "en" });
     setToday(16, 11); // la 3.a cuota (18/12) vence en 2 dias
     await api.request("/auth/login", { method: "POST", body: { email, password: "contraseña-segura" } }).then((res) => {
       cookie = sessionCookie(res);
@@ -120,5 +121,80 @@ describe("recordatorios de cuotas por email", () => {
     await cron();
     assert.equal(outbox.length, before + 1);
     assert.match(outbox.at(-1).subject, /due today/);
+  });
+});
+
+describe("recordatorios de lo que me deben", () => {
+  const login = async () => {
+    const res = await api.request("/auth/login", { method: "POST", body: { email, password: "contraseña-segura" } });
+    cookie = sessionCookie(res);
+  };
+  let lucas;
+
+  test("avisan 2 dias antes con lo que falta cobrar", async () => {
+    setToday(20, 11);
+    await login();
+    await request("/notifications", { method: "PUT", body: { language: "es" } });
+    const res = await request("/receivables", {
+      method: "POST",
+      body: { person: "Lucas", concept: "Asado", amount: 5000, currency: "ARS", date: "2026-12-01", dueDate: "2026-12-22" },
+    });
+    lucas = await res.json();
+    const before = outbox.length;
+    await cron();
+    await cron();
+    assert.equal(outbox.length, before + 1);
+    const message = outbox.at(-1);
+    assert.equal(message.subject, "Lucas te tiene que pagar: vence en 2 días");
+    assert.match(message.text, /Lucas \(Asado\): \$\s?5\.000 · vence en 2 días/);
+  });
+
+  test("con cuotas y cobros el mismo dia va un solo email, cada uno en su seccion", () => {
+    const message = reminderEmail({
+      installments: [{ title: "Notebook", number: 2, total: 3, amount: 100000, currency: "ARS", daysLeft: 0 }],
+      receivables: [{ person: "Ana", concept: "", remaining: 1500, currency: "ARS", daysLeft: -1 }],
+    });
+    assert.equal(message.subject, "Tenés 2 avisos de cuotas y cobros");
+    assert.match(message.text, /Cuotas para pagar[\s\S]*Notebook \(2\/3\)[\s\S]*Te tienen que pagar[\s\S]*Ana: \$\s?1\.500 · venció sin cobrar/);
+    assert.match(message.html, /Tus avisos de hoy/);
+  });
+
+  test("solo los cobros: un aviso por dia y se pueden apagar aparte", async () => {
+    setToday(21, 11);
+    await cron();
+    assert.equal(outbox.at(-1).subject, "Lucas te tiene que pagar: vence mañana");
+
+    const off = await request("/notifications", { method: "PUT", body: { receivableEmails: false } });
+    assert.deepEqual(await off.json(), { installmentEmails: true, receivableEmails: false, language: "es" });
+    const before = outbox.length;
+    setToday(22, 11);
+    await cron();
+    assert.equal(outbox.length, before);
+
+    await request("/notifications", { method: "PUT", body: { receivableEmails: true } });
+    setToday(23, 11);
+    await cron();
+    await cron();
+    assert.equal(outbox.length, before + 1);
+    assert.equal(outbox.at(-1).subject, "Lucas te tiene que pagar: venció sin cobrar");
+  });
+
+  test("si cambia el vencimiento vuelve a avisar; cobrada, ya no", async () => {
+    await request(`/receivables/${lucas.id}`, {
+      method: "PUT",
+      body: { person: "Lucas", concept: "Asado", amount: 5000, currency: "ARS", date: "2026-12-01", dueDate: "2026-12-30" },
+    });
+    setToday(28, 11);
+    await cron();
+    assert.equal(outbox.at(-1).subject, "Lucas te tiene que pagar: vence en 2 días");
+
+    await request(`/receivables/${lucas.id}/payments`, {
+      method: "POST",
+      body: { amount: 5000, date: "2026-12-28", registerIncome: false },
+    });
+    const before = outbox.length;
+    setToday(29, 11);
+    await cron();
+    assert.equal(outbox.length, before);
   });
 });

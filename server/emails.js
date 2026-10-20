@@ -146,21 +146,43 @@ ${links}
 
 const REMINDER_COPY = {
   es: {
-    subjectOne: "Cuota de {{title}}: {{due}}",
-    subjectMany: "Tenés {{count}} cuotas para pagar",
-    title: "Cuotas para pagar",
-    intro: "Cuando las pagues, entrá a bolsillox y tocá «Ya la pagué»: así se cargan en tus gastos.",
-    due: { overdue: "venció sin pagar", 0: "vence hoy", 1: "vence mañana", 2: "vence en 2 días" },
+    installments: {
+      subjectOne: "Cuota de {{title}}: {{due}}",
+      subjectMany: "Tenés {{count}} cuotas para pagar",
+      title: "Cuotas para pagar",
+      intro: "Cuando las pagues, entrá a bolsillox y tocá «Ya la pagué»: así se cargan en tus gastos.",
+      due: { overdue: "venció sin pagar", 0: "vence hoy", 1: "vence mañana", 2: "vence en 2 días" },
+    },
+    receivables: {
+      subjectOne: "{{title}} te tiene que pagar: {{due}}",
+      subjectMany: "Tenés {{count}} cobros pendientes",
+      title: "Te tienen que pagar",
+      intro: "Cuando te paguen, entrá a bolsillox y tocá «Cobrar»: así se carga en tus ingresos.",
+      due: { overdue: "venció sin cobrar", 0: "vence hoy", 1: "vence mañana", 2: "vence en 2 días" },
+    },
+    subjectBoth: "Tenés {{count}} avisos de cuotas y cobros",
+    titleBoth: "Tus avisos de hoy",
     cta: "Abrir bolsillox",
     settings: "Podés apagar estos avisos en Ajustes.",
     tagline: "Tu plata, clara.",
   },
   en: {
-    subjectOne: "{{title}} installment: {{due}}",
-    subjectMany: "You have {{count}} installments to pay",
-    title: "Installments to pay",
-    intro: "When you pay them, open bolsillox and tap “Mark as paid” so they're added to your expenses.",
-    due: { overdue: "overdue, unpaid", 0: "due today", 1: "due tomorrow", 2: "due in 2 days" },
+    installments: {
+      subjectOne: "{{title}} installment: {{due}}",
+      subjectMany: "You have {{count}} installments to pay",
+      title: "Installments to pay",
+      intro: "When you pay them, open bolsillox and tap “Mark as paid” so they're added to your expenses.",
+      due: { overdue: "overdue, unpaid", 0: "due today", 1: "due tomorrow", 2: "due in 2 days" },
+    },
+    receivables: {
+      subjectOne: "{{title}} owes you: {{due}}",
+      subjectMany: "You have {{count}} payments to collect",
+      title: "Money owed to you",
+      intro: "When they pay you, open bolsillox and tap “Collect” so it's added to your income.",
+      due: { overdue: "overdue, not collected", 0: "due today", 1: "due tomorrow", 2: "due in 2 days" },
+    },
+    subjectBoth: "You have {{count}} installment and payment reminders",
+    titleBoth: "Today's reminders",
     cta: "Open bolsillox",
     settings: "You can turn these reminders off in Settings.",
     tagline: "Your money, clear.",
@@ -177,33 +199,81 @@ function formatAmount(amount, currency, language) {
 }
 
 /*
-Recordatorio de cuotas: una lista con las que vencen en 2 dias, mañana, hoy o
-que vencieron sin pagar. items: [{ title, number, total, amount, currency, daysLeft }].
+Recordatorio del dia: cuotas para pagar y lo que te tienen que pagar, cada uno
+en su seccion (si hay de los dos tipos). Cada item vence en 2 dias, mañana, hoy
+o ya vencio.
+- installments: [{ title, number, total, amount, currency, daysLeft }]
+- receivables: [{ person, concept, remaining, currency, daysLeft }]
 */
-export function installmentReminderEmail({ items, language = "es", appUrl = null }) {
+export function reminderEmail({ installments = [], receivables = [], language = "es", appUrl = null }) {
   const copy = REMINDER_COPY[language] ?? REMINDER_COPY.es;
-  const dueText = (item) => (item.daysLeft < 0 ? copy.due.overdue : copy.due[item.daysLeft]);
-  const label = (item) => (item.total > 1 ? `${item.title} (${item.number}/${item.total})` : item.title);
-  const subject =
-    items.length === 1
-      ? fill(copy.subjectOne, { title: label(items[0]), due: dueText(items[0]) })
-      : fill(copy.subjectMany, { count: String(items.length) });
+  const sections = [
+    {
+      copy: copy.installments,
+      items: installments.map((item) => ({
+        label: item.total > 1 ? `${item.title} (${item.number}/${item.total})` : item.title,
+        amount: item.amount,
+        currency: item.currency,
+        daysLeft: item.daysLeft,
+      })),
+    },
+    {
+      copy: copy.receivables,
+      items: receivables.map((item) => ({
+        label: item.concept ? `${item.person} (${item.concept})` : item.person,
+        subjectLabel: item.person,
+        amount: item.remaining,
+        currency: item.currency,
+        daysLeft: item.daysLeft,
+      })),
+    },
+  ].filter((section) => section.items.length);
 
-  const lines = items.map(
-    (item) => `- ${label(item)}: ${formatAmount(item.amount, item.currency, language)} · ${dueText(item)}`,
+  const dueText = (section, item) => (item.daysLeft < 0 ? section.copy.due.overdue : section.copy.due[item.daysLeft]);
+  const total = sections.reduce((sum, section) => sum + section.items.length, 0);
+  let subject;
+  if (sections.length > 1) subject = fill(copy.subjectBoth, { count: String(total) });
+  else {
+    const [section] = sections;
+    const [first] = section.items;
+    subject =
+      section.items.length === 1
+        ? fill(section.copy.subjectOne, { title: first.subjectLabel ?? first.label, due: dueText(section, first) })
+        : fill(section.copy.subjectMany, { count: String(section.items.length) });
+  }
+  const title = sections.length > 1 ? copy.titleBoth : sections[0].copy.title;
+
+  const lines = sections.map((section) =>
+    section.items.map(
+      (item) => `- ${item.label}: ${formatAmount(item.amount, item.currency, language)} · ${dueText(section, item)}`,
+    ),
   );
-  const text = `${copy.title}\n\n${lines.join("\n")}\n\n${copy.intro}\n${appUrl ? `\n${appUrl}\n` : ""}\n${copy.settings}\n\n— bolsillox`;
+  const textSections = sections.map(
+    (section, index) =>
+      `${sections.length > 1 ? `${section.copy.title}\n\n` : ""}${lines[index].join("\n")}\n\n${section.copy.intro}`,
+  );
+  const text = `${title}\n\n${textSections.join("\n\n")}\n${appUrl ? `\n${appUrl}\n` : ""}\n${copy.settings}\n\n— bolsillox`;
 
-  const rows = items
-    .map((item) => {
-      const color = item.daysLeft < 0 ? "#c9393e" : item.daysLeft === 0 ? "#a16207" : C.muted;
-      return `<tr><td style="padding:12px 0;border-top:1px solid ${C.border}">
-<p style="margin:0;font-family:${FONT};font-size:15px;line-height:1.4;color:${C.text}">${escapeHtml(label(item))}</p>
-<p style="margin:2px 0 0;font-family:${FONT};font-size:13px;line-height:1.4;color:${color}">${escapeHtml(dueText(item))}</p>
+  const sectionHtml = sections
+    .map((section, index) => {
+      const rows = section.items
+        .map((item) => {
+          const color = item.daysLeft < 0 ? "#c9393e" : item.daysLeft === 0 ? "#a16207" : C.muted;
+          return `<tr><td style="padding:12px 0;border-top:1px solid ${C.border}">
+<p style="margin:0;font-family:${FONT};font-size:15px;line-height:1.4;color:${C.text}">${escapeHtml(item.label)}</p>
+<p style="margin:2px 0 0;font-family:${FONT};font-size:13px;line-height:1.4;color:${color}">${escapeHtml(dueText(section, item))}</p>
 </td>
 <td align="right" valign="top" style="padding:12px 0 12px 12px;border-top:1px solid ${C.border};font-family:${MONO};font-size:14px;white-space:nowrap;color:${C.text}">${escapeHtml(formatAmount(item.amount, item.currency, language))}</td></tr>`;
+        })
+        .join("");
+      const heading =
+        sections.length > 1
+          ? `<h2 style="margin:${index ? "28px" : "0"} 0 4px;font-family:${FONT};font-size:16px;line-height:1.3;font-weight:600;color:${C.text}">${escapeHtml(section.copy.title)}</h2>`
+          : "";
+      return `${heading}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>
+<p style="margin:16px 0 0;padding-top:16px;border-top:1px solid ${C.border};font-family:${FONT};font-size:14px;line-height:1.55;color:${C.muted}">${escapeHtml(section.copy.intro)}</p>`;
     })
-    .join("");
+    .join("\n");
 
   const button = appUrl
     ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:20px"><tr><td style="background:${C.text};border-radius:10px">
@@ -221,15 +291,14 @@ export function installmentReminderEmail({ items, language = "es", appUrl = null
 <title>${escapeHtml(subject)}</title>
 </head>
 <body style="margin:0;padding:0;background:${C.page};-webkit-text-size-adjust:100%">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.page}">${escapeHtml(lines.join(" · "))}</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.page}">${escapeHtml(lines.flat().join(" · "))}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${C.page}">
 <tr><td align="center" style="padding:40px 16px">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:460px">
 <tr><td style="padding:0 4px 20px">${logo()}</td></tr>
 <tr><td style="background:${C.card};border:1px solid ${C.border};border-radius:16px;padding:32px 28px">
-<h1 style="margin:0 0 16px;font-family:${FONT};font-size:22px;line-height:1.25;font-weight:600;letter-spacing:-0.4px;color:${C.text}">${escapeHtml(copy.title)}</h1>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows}</table>
-<p style="margin:16px 0 0;padding-top:16px;border-top:1px solid ${C.border};font-family:${FONT};font-size:14px;line-height:1.55;color:${C.muted}">${escapeHtml(copy.intro)}</p>
+<h1 style="margin:0 0 16px;font-family:${FONT};font-size:22px;line-height:1.25;font-weight:600;letter-spacing:-0.4px;color:${C.text}">${escapeHtml(title)}</h1>
+${sectionHtml}
 ${button}
 </td></tr>
 <tr><td align="center" style="padding:20px 4px 0">
