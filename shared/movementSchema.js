@@ -192,6 +192,7 @@ export const receivablePaymentSchema = z.object({
 // Avisos por email: recordatorios de cuotas e idioma en que llegan.
 export const notificationSettingsSchema = z.object({
   installmentEmails: z.boolean().optional(),
+  receivableEmails: z.boolean().optional(),
   language: z.enum(["es", "en"]).optional(),
 });
 

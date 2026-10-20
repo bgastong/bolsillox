@@ -17,7 +17,7 @@ Limpieza periodica de la base. No hay un proceso aparte (en Vercel no hay
 servidor siempre prendido): la dispara el trafico normal de la API.
 - Cuentas sin confirmar de mas de 7 dias (con sus codigos, por cascada).
 - Sesiones, codigos por email y limites de intentos vencidos.
-- Recordatorios de cuotas por email (si se pasa reminders; ver reminders.js).
+- Recordatorios de cuotas y cobros por email (si se pasa reminders; ver reminders.js).
 */
 export function createMaintenance(db, { now = () => new Date(), reminders = null } = {}) {
   let nextCheck = 0;

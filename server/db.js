@@ -258,6 +258,17 @@ const MIGRATIONS = [
   );
   CREATE INDEX idx_receivable_payments_receivable ON receivable_payments (receivable_id);
   `,
+  // v11: recordatorios por email de lo que me deben (como los de cuotas). Va el
+  // vencimiento en la clave: si se cambia la fecha, se vuelve a avisar.
+  `
+  CREATE TABLE receivable_reminders (
+    receivable_id INTEGER     NOT NULL REFERENCES receivables (id) ON DELETE CASCADE,
+    due_date      TEXT        NOT NULL,
+    kind          TEXT        NOT NULL CHECK (kind IN ('d2', 'd1', 'd0', 'overdue')),
+    sent_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (receivable_id, due_date, kind)
+  );
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.

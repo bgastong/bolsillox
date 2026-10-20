@@ -77,7 +77,7 @@ export function createApp(
   const categories = createCategoriesService(db);
   const receivables = createReceivablesService(db, { now });
   const rates = createRatesService(db, { now, fetchImpl });
-  const reminders = createReminders(db, { recurring, mailer, appUrl: publicUrl });
+  const reminders = createReminders(db, { recurring, receivables, mailer, appUrl: publicUrl });
   const maintenance = createMaintenance(db, { now, reminders });
   const reporter = createErrorReporter({ mailer, to: alertEmail, now });
   const clientErrorLimiter = createRateLimiter({
@@ -98,7 +98,7 @@ export function createApp(
     res.json({ status: "ok" });
   });
 
-  // Cron diario de Vercel (vercel.json): manda los recordatorios de cuotas.
+  // Cron diario de Vercel (vercel.json): manda los recordatorios de cuotas y cobros.
   // Vercel firma el pedido con "Authorization: Bearer <CRON_SECRET>".
   app.get("/api/cron/reminders", async (req, res) => {
     if (!cronSecret) throw new HttpError(404, "not_found");
