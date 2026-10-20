@@ -75,7 +75,7 @@ export function createApp(
   const recurring = createRecurringService(db, { now });
   const budgets = createBudgetsService(db);
   const categories = createCategoriesService(db);
-  const receivables = createReceivablesService(db);
+  const receivables = createReceivablesService(db, { now });
   const rates = createRatesService(db, { now, fetchImpl });
   const reminders = createReminders(db, { recurring, mailer, appUrl: publicUrl });
   const maintenance = createMaintenance(db, { now, reminders });

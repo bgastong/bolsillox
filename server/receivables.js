@@ -1,5 +1,6 @@
 import { HttpError } from "./errors.js";
 import { roundMoney } from "./money.js";
+import { daysBetween, INSTALLMENT_ALERT_DAYS, toISODate } from "./recurring.js";
 import { raw, sql } from "./sql.js";
 
 /*
@@ -21,7 +22,10 @@ function withStatus(row) {
   return { ...row, paid, remaining, status: remaining <= 0 ? "paid" : "open" };
 }
 
-export function createReceivablesService(db) {
+// Avisa lo que hay que cobrar con la misma anticipacion que las cuotas.
+export const RECEIVABLE_ALERT_DAYS = INSTALLMENT_ALERT_DAYS;
+
+export function createReceivablesService(db, { now = () => new Date() } = {}) {
   // Primero las que faltan cobrar (las que vencen antes arriba); despues las cobradas.
   async function list(userId) {
     const rows = await db.all(sql`
@@ -102,5 +106,28 @@ export function createReceivablesService(db) {
     return get(userId, id);
   }
 
-  return { list, get, create, update, remove, addPayment };
+  /*
+  Deudas con vencimiento que faltan cobrar y vencen en los proximos
+  RECEIVABLE_ALERT_DAYS dias, hoy o ya vencieron. La que vence antes, primero.
+  */
+  async function alerts(userId) {
+    const today = toISODate(now());
+    const items = await list(userId);
+    return items
+      .filter((item) => item.status === "open" && item.dueDate)
+      .map((item) => ({
+        id: item.id,
+        person: item.person,
+        concept: item.concept,
+        amount: item.amount,
+        paid: item.paid,
+        remaining: item.remaining,
+        currency: item.currency,
+        dueDate: item.dueDate,
+        daysLeft: daysBetween(today, item.dueDate),
+      }))
+      .filter((item) => item.daysLeft <= RECEIVABLE_ALERT_DAYS);
+  }
+
+  return { list, get, create, update, remove, addPayment, alerts };
 }
