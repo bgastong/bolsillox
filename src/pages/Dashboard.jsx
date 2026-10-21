@@ -240,7 +240,7 @@ function Dashboard() {
   // La cuenta tiene datos, pero el mes elegido esta vacio.
   const isEmptyMonth = summary && summary.hasMovements && summary.count === 0;
   // El flujo de caja necesita al menos un dia con movimientos en los ultimos meses.
-  const hasHistory = Boolean(summary?.history?.days.length);
+  const hasHistory = Boolean(summary?.history?.movements.length);
   const showSkeleton = loading && !summary;
 
   return (
@@ -305,7 +305,7 @@ function Dashboard() {
             {showSkeleton ? (
               <PanelSkeleton className="h-60 sm:h-64" />
             ) : hasHistory ? (
-              <BalanceHistoryChart history={summary.history} currency={summary.currency} />
+              <BalanceHistoryChart history={summary.history} month={summary.month} currency={summary.currency} />
             ) : (
               <EmptyState message={t("chartEmpty")} />
             )}

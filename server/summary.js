@@ -27,6 +27,9 @@ export function percentChange(current, previous) {
   return Math.round(((current - previous) / Math.abs(previous)) * 1000) / 10;
 }
 
+// Maximo de movimientos en el flujo de caja: con mas, las barras quedan demasiado finas.
+export const HISTORY_MAX_MOVEMENTS = 180;
+
 // money: { target: "ARS" | "USD", rate: pesos por dolar o null }
 // Las consultas van en paralelo (con una base remota, cada una tarda).
 export async function buildSummary(
@@ -57,7 +60,7 @@ export async function buildSummary(
     latestRows,
     netByDay,
     historyStart,
-    historyDays,
+    historyMovements,
     ...series
   ] = await Promise.all([
     repo.totalsBetween(userId, current.from, current.to, money),
@@ -71,7 +74,7 @@ export async function buildSummary(
     repo.list(userId, { sort: "date", order: "desc", limit: 1 }),
     dailyTo >= current.from ? repo.netByDay(userId, current.from, dailyTo, money) : [],
     repo.totalsBetween(userId, null, beforeHistory, money),
-    dailyTo >= historyFrom ? repo.netByDay(userId, historyFrom, dailyTo, money) : [],
+    dailyTo >= historyFrom ? repo.flowBetween(userId, historyFrom, dailyTo, money) : [],
     ...ranges.map((range) => repo.totalsBetween(userId, range.from, range.to, money)),
   ]);
 
@@ -99,15 +102,17 @@ export async function buildSummary(
     daily.push({ date, balance: running });
   }
 
-  // Saldo despues de cada dia con movimientos: sube con los ingresos y baja
-  // con los gastos. start es el saldo antes del primer mes del grafico.
+  // Flujo de caja: el saldo despues de cada movimiento (sube con los ingresos y
+  // baja con los gastos). start es el saldo antes del primero que se muestra.
   let historyBalance = round(historyStart.income - historyStart.expense);
+  const allMovements = historyMovements.map((item) => {
+    historyBalance = round(historyBalance + item.change);
+    return { ...item, balance: historyBalance };
+  });
+  const shown = allMovements.slice(-HISTORY_MAX_MOVEMENTS);
   const history = {
-    start: historyBalance,
-    days: historyDays.map(({ date, net: change }) => {
-      historyBalance = round(historyBalance + change);
-      return { date, change, balance: historyBalance };
-    }),
+    start: shown.length ? round(shown[0].balance - shown[0].change) : historyBalance,
+    movements: shown,
   };
 
   const monthly = ranges.map((range, index) => ({
