@@ -2,8 +2,8 @@
   min-height: 100svh;
   min-width: 0;
   color: var(--color-text);
-  /* Espacio para la navegacion inferior en mobile (+ zona segura) */
-  padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  /* Espacio para la barra de navegacion de abajo en mobile (+ zona segura) */
+  padding-bottom: calc(84px + env(safe-area-inset-bottom));
 }
 
 .dashboard-content {
