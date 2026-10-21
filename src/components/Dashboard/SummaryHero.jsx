@@ -6,7 +6,8 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { useLanguage } from "@/hooks/useLanguage";
 
 // Chip de variacion. Para gastos subir es malo: `inverse` invierte el color.
-export function VariationChip({ value, inverse = false, suffix }) {
+// suffixClassName: por ejemplo, ocultar el "vs. mes" a la vista donde no entra (sigue para el lector de pantalla).
+export function VariationChip({ value, inverse = false, suffix, suffixClassName }) {
   const { locale } = useLanguage();
   if (value === null || value === undefined) return null;
   const Icon = value > 0 ? ArrowUpRightIcon : value < 0 ? ArrowDownRightIcon : MinusIcon;
@@ -15,7 +16,7 @@ export function VariationChip({ value, inverse = false, suffix }) {
     <span className={cn("chip", value === 0 ? undefined : good ? "chip-good" : "chip-bad")}>
       <Icon className="size-3" strokeWidth={2.25} aria-hidden="true" />
       {formatPercent(value, locale)}
-      {suffix && <span className="text-[color:var(--text-3)]">{suffix}</span>}
+      {suffix && <span className={cn("text-[color:var(--text-3)]", suffixClassName)}>{suffix}</span>}
     </span>
   );
 }
@@ -136,7 +137,11 @@ export function BalanceCard({ summary, className }) {
             role="img"
             aria-label={spent <= 100 ? `${t("spentShare", { spent })}, ${t("savedShare", { saved: 100 - spent })}` : t("overspent")}
           >
-            <span className="grow-x h-full rounded-[2px] bg-expense" style={{ width: `${Math.min(spent, 100)}%` }} />
+            {/* Gastar es lo normal: la parte gastada va en gris y solo se pone roja si se gasto de mas */}
+            <span
+              className={cn("grow-x h-full rounded-[2px]", spent > 100 ? "bg-expense" : "bg-[color:var(--text-4)]")}
+              style={{ width: `${Math.min(spent, 100)}%` }}
+            />
             {spent < 100 && (
               <span
                 className="grow-x h-full rounded-[2px] bg-income"
@@ -180,31 +185,50 @@ function Sparkline({ values, color }) {
   );
 }
 
-function FlowRow({ label, amount, tone, series, variation, inverse, currency }) {
-  const { locale } = useLanguage();
+/*
+Ingresos o gastos del mes. Los ingresos van en verde; los gastos en el color del
+texto con el signo en gris (el rojo queda para las alertas). El punto de color
+acompaña al titulo y el chip compara con el mes anterior.
+*/
+const FLOW_TONES = {
+  income: { sign: "+", amount: "text-income", dot: "bg-income", line: "var(--income)" },
+  expense: { sign: "−", amount: "text-foreground", dot: "bg-[color:var(--text-3)]", line: "var(--text-3)" },
+};
+
+function FlowRow({ id, label, amount, kind, series, variation, previousMonth, currency }) {
+  const { t, locale } = useLanguage();
   const animated = useCountUp(amount);
+  const tone = FLOW_TONES[kind];
   return (
-    <div className="flex min-w-0 flex-col gap-2 p-4 sm:px-5 sm:py-[18px]">
-      <span className="text-[12.5px] text-[color:var(--text-3)]">{label}</span>
+    <div role="group" aria-labelledby={id} className="flex min-w-0 flex-col gap-2 p-4 sm:px-5 sm:py-[18px]">
+      <span id={id} className="flex items-center gap-2 text-[12.5px] text-[color:var(--text-3)]">
+        <span aria-hidden="true" className={cn("size-[7px] shrink-0 rounded-full", tone.dot)} />
+        {label}
+      </span>
       <div className="flex items-end justify-between gap-3">
         <span
-          className={cn("text-[19px] tracking-[-0.04em] whitespace-nowrap tabular-nums sm:text-2xl", tone)}
+          className={cn("text-[19px] tracking-[-0.04em] whitespace-nowrap tabular-nums sm:text-2xl", tone.amount)}
           aria-label={formatCurrency(amount, locale, { currency })}
         >
           <span aria-hidden="true">
-            {tone === "text-income" ? "+ " : "− "}
+            <span className={kind === "expense" ? "text-[color:var(--text-3)]" : undefined}>{tone.sign} </span>
             {formatCurrency(Math.round(animated), locale, { currency })}
           </span>
         </span>
         {/* Solo con lugar: en celular y tablet el monto ocupa todo el ancho */}
         <span className="hidden xl:inline">
-          <Sparkline values={series} color={tone === "text-income" ? "var(--income)" : "var(--expense)"} />
+          <Sparkline values={series} color={tone.line} />
         </span>
       </div>
-      {/* Sin variacion (0% o sin mes anterior) no se muestra el chip */}
+      {/* Sin variacion (0% o sin mes anterior) no se muestra el chip. Para gastos, bajar es bueno. */}
       {Boolean(variation) && (
-        <span className="flex flex-wrap items-center gap-2 text-xs text-[color:var(--text-4)]">
-          <VariationChip value={variation} inverse={inverse} />
+        <span className="flex flex-wrap items-center gap-2 text-xs">
+          <VariationChip
+            value={variation}
+            inverse={kind === "expense"}
+            suffix={` ${t("vsMonth", { month: previousMonth })}`}
+            suffixClassName="max-sm:sr-only"
+          />
         </span>
       )}
     </div>
@@ -213,7 +237,8 @@ function FlowRow({ label, amount, tone, series, variation, inverse, currency }) 
 
 // Ingresos y gastos del mes, cada uno con su tendencia de 6 meses.
 export function FlowCard({ summary, className }) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
+  const previousMonth = formatMonth(summary.previous.month, locale).split(" ")[0];
   // Los meses sin movimientos del principio no se dibujan (si no, parece que se arranco de cero).
   const first = summary.monthly.findIndex((item) => item.income || item.expense);
   const monthly = first === -1 ? [] : summary.monthly.slice(first);
@@ -226,21 +251,24 @@ export function FlowCard({ summary, className }) {
       )}
     >
       <FlowRow
+        id="flow-income"
+        kind="income"
         label={t("cardIncome")}
         amount={summary.income}
         currency={summary.currency}
-        tone="text-income"
         series={monthly.map((item) => item.income)}
         variation={summary.variation.income}
+        previousMonth={previousMonth}
       />
       <FlowRow
+        id="flow-expense"
+        kind="expense"
         label={t("cardExpense")}
         amount={summary.expense}
         currency={summary.currency}
-        tone="text-expense"
         series={monthly.map((item) => item.expense)}
         variation={summary.variation.expense}
-        inverse
+        previousMonth={previousMonth}
       />
     </section>
   );
