@@ -1,73 +1,82 @@
 import { useMemo } from "react";
-import { Line } from "react-chartjs-2";
-import { formatCompactCurrency, formatCurrency, formatDate } from "@/lib/format";
+import { Bar } from "react-chartjs-2";
+import { cn } from "@/lib/utils";
+import { formatCurrency, formatDate, formatMonth } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTheme } from "@/hooks/useTheme";
 import { chartColors, tooltipStyle } from "./chartSetup";
 
-// Degradado bajo la linea (se calcula con el tamaño real del grafico).
-function neutralFill(colors) {
-  return (context) => {
-    const { ctx, chartArea } = context.chart;
-    if (!chartArea) return "transparent";
-    const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-    gradient.addColorStop(0, colors.fg(0.12));
-    gradient.addColorStop(1, colors.fg(0));
-    return gradient;
-  };
-}
+// Un mes muy corto (pocos movimientos) no lleva etiqueta: no entraria.
+const MIN_LABEL_SHARE = 0.06;
 
-// "YYYY-MM-DD" del dia anterior (para ubicar el saldo inicial).
-function previousDay(iso) {
-  const [year, month, day] = iso.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day - 1));
-  return date.toISOString().slice(0, 10);
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
 /*
-Flujo de caja: el saldo despues de cada dia con movimientos, en una sola
-linea neutra. Sube con cada ingreso y baja con cada gasto. El primer punto es
-el saldo con que se arranco; el ultimo (hoy) queda marcado.
-history: { start, days: [{ date, change, balance }] } (ver server/summary.js).
+Rango vertical. Las barras arrancan bastante por debajo del saldo mas bajo, asi
+cada ingreso o gasto se nota (si arrancaran de $0, con un saldo alto todas se
+verian iguales). Si el saldo pasa a negativo, el cero queda a la vista.
 */
-function BalanceHistoryChart({ history, currency = "ARS" }) {
+function verticalRange(balances) {
+  const lowest = Math.min(...balances);
+  const highest = Math.max(...balances);
+  const span = highest - lowest || Math.abs(highest) || 1;
+  const min = lowest >= 0 ? Math.max(0, lowest - span * 0.45) : lowest - span * 0.1;
+  return { min, max: highest + span * 0.06 };
+}
+
+// Meses del grafico, cada uno con cuantas barras ocupa: [{ key, count }].
+function monthsOf(movements) {
+  const months = [];
+  for (const item of movements) {
+    const key = item.date.slice(0, 7);
+    if (months.at(-1)?.key === key) months.at(-1).count += 1;
+    else months.push({ key, count: 1 });
+  }
+  return months;
+}
+
+/*
+Flujo de caja: una barra por movimiento, con la altura del saldo que quedo
+despues. Si entra plata la barra siguiente sube; si sale, baja. Los meses van
+abajo en pastillas y el mes elegido se resalta. Para lectores de pantalla hay
+una tabla con lo mismo.
+history: { start, movements: [{ id, date, type, title, change, balance }] } (ver server/summary.js).
+*/
+function BalanceHistoryChart({ history, month, currency = "ARS" }) {
   const { t, locale } = useLanguage();
   const { resolvedTheme } = useTheme();
   // Se recalculan al cambiar de tema.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const colors = useMemo(() => chartColors(), [resolvedTheme]);
 
-  const points = [
-    { date: previousDay(history.days[0].date), change: null, balance: history.start },
-    ...history.days,
-  ];
-  const last = points.length - 1;
-  // Margen de 8% arriba y abajo, sin bajar de $0 si el saldo nunca fue negativo.
-  const balances = points.map((point) => point.balance);
-  const lowest = Math.min(...balances);
-  const highest = Math.max(...balances);
-  const margin = (highest - lowest || Math.abs(highest) || 1) * 0.08;
-  const yMin = lowest >= 0 ? Math.max(0, lowest - margin) : lowest - margin;
-  const shortDate = (iso) => formatDate(iso, locale, { day: "numeric", month: "short" });
+  const { movements } = history;
+  const last = movements.length - 1;
+  const months = monthsOf(movements);
   const money = (value, signed = false) => formatCurrency(value, locale, { currency, signed });
+  const { min, max } = verticalRange(movements.map((item) => item.balance));
+
+  // Meses anteriores mas suaves, el mes elegido mas marcado y la ultima barra (hoy) en primer plano.
+  const barColor = (index) => {
+    if (index === last) return colors.soft;
+    return movements[index].date.startsWith(month) ? colors.fg(0.42) : colors.fg(0.16);
+  };
 
   const chartData = {
-    labels: points.map((point) => shortDate(point.date)),
+    labels: movements.map((item) => item.id),
     datasets: [
       {
         label: t("balanceAvailable"),
-        data: balances,
-        borderColor: colors.soft,
-        borderWidth: 2,
-        backgroundColor: neutralFill(colors),
-        fill: "start",
-        // Rectas entre movimientos: cada subida o bajada es un movimiento real.
-        tension: 0,
-        pointRadius: (context) => (context.dataIndex === last ? 4.5 : 0),
-        pointHoverRadius: 5,
-        pointBackgroundColor: colors.base,
-        pointBorderColor: colors.soft,
-        pointBorderWidth: 2,
+        data: movements.map((item) => item.balance),
+        backgroundColor: movements.map((_, index) => barColor(index)),
+        hoverBackgroundColor: colors.text,
+        borderRadius: { topLeft: 2, topRight: 2 },
+        borderSkipped: "bottom",
+        barPercentage: 0.62,
+        // Barras finas, como lineas, aunque haya pocos movimientos.
+        maxBarThickness: 8,
+        categoryPercentage: 1,
       },
     ],
   };
@@ -75,85 +84,94 @@ function BalanceHistoryChart({ history, currency = "ARS" }) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: { padding: 0 },
     interaction: { mode: "index", intersect: false },
-    animation: { duration: 900, easing: "easeOutQuart" },
+    // Las barras crecen de izquierda a derecha, salvo que se haya pedido menos movimiento.
+    animation: prefersReducedMotion()
+      ? false
+      : {
+          duration: 600,
+          easing: "easeOutQuart",
+          delay: (context) => (context.type === "data" && context.mode === "default" ? context.dataIndex * 4 : 0),
+        },
     plugins: {
       legend: { display: false },
       tooltip: {
         ...tooltipStyle(colors),
         displayColors: false,
         callbacks: {
-          title: (items) => {
-            const point = points[items[0].dataIndex];
-            return point.change === null
-              ? t("historyStart")
-              : formatDate(point.date, locale, { weekday: "short", day: "numeric", month: "long" });
+          title: (items) =>
+            formatDate(movements[items[0].dataIndex].date, locale, { weekday: "short", day: "numeric", month: "long" }),
+          label: (context) => {
+            const item = movements[context.dataIndex];
+            return ` ${item.title}  ${money(item.change, true)}`;
           },
-          label: (ctx) => {
-            const { change } = points[ctx.dataIndex];
-            return change === null ? "" : ` ${t("historyDayChange")}  ${money(change, true)}`;
-          },
-          footer: (items) => `${t("balanceAvailable")}  ${money(points[items[0].dataIndex].balance)}`,
+          footer: (items) => `${t("balanceAvailable")}  ${money(movements[items[0].dataIndex].balance)}`,
         },
       },
     },
     scales: {
-      x: {
-        grid: { display: false },
-        border: { display: false },
-        ticks: {
-          maxRotation: 0,
-          autoSkipPadding: 16,
-          maxTicksLimit: 7,
-          color: colors.muted,
-        },
-      },
-      y: {
-        min: yMin,
-        max: highest + margin,
-        // Si el saldo pasa por debajo de cero, la linea del cero se marca mas.
-        grid: {
-          color: (context) => (context.tick?.value === 0 ? colors.zero : colors.grid),
-          drawTicks: false,
-        },
-        border: { display: false, dash: [2, 5] },
-        ticks: {
-          color: colors.muted,
-          padding: 10,
-          maxTicksLimit: 5,
-          callback: (value) => formatCompactCurrency(value, locale, currency),
-        },
-      },
+      x: { display: false },
+      y: { display: false, min, max },
     },
   };
 
   return (
     <>
-      <div className="relative h-60 sm:h-64 xl:h-auto xl:min-h-64 xl:flex-1" aria-hidden="true">
-        <Line key={resolvedTheme} data={chartData} options={options} />
-      </div>
-      {/* Version accesible del grafico para lectores de pantalla. El sr-only va en
-          un div: una tabla no se achica a 1px y ensanchaba la pagina en el celular. */}
-      <div className="sr-only">
-      <table>
-        <caption>{t("cashflowTitle")}</caption>
-        <thead>
-          <tr>
-            <th scope="col">{t("date")}</th>
-            <th scope="col">{t("historyDayChange")}</th>
-            <th scope="col">{t("balanceAvailable")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {points.map((point) => (
-            <tr key={point.date}>
-              <th scope="row">{point.change === null ? t("historyStart") : formatDate(point.date, locale)}</th>
-              <td>{point.change === null ? "—" : money(point.change, true)}</td>
-              <td>{money(point.balance)}</td>
-            </tr>
+      <div className="flex flex-col gap-3 xl:flex-1" aria-hidden="true">
+        <div className="relative h-52 sm:h-56 xl:h-auto xl:min-h-56 xl:flex-1">
+          <Bar key={resolvedTheme} data={chartData} options={options} />
+        </div>
+        {/* Meses: cada uno ocupa el ancho de sus barras */}
+        <div className="flex">
+          {months.map((item) => (
+            <div key={item.key} className="min-w-0" style={{ flex: `${item.count} 1 0` }}>
+              {item.count / movements.length >= MIN_LABEL_SHARE && (
+                <span
+                  className={cn(
+                    "inline-block rounded-full px-2.5 py-1 font-mono text-[11px] leading-none whitespace-nowrap",
+                    item.key === month
+                      ? "bg-foreground text-background"
+                      : "bg-fg/[0.06] text-[color:var(--text-3)]",
+                  )}
+                >
+                  {formatMonth(item.key, locale, true).split(" ")[0].replace(".", "")}
+                </span>
+              )}
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      </div>
+      {/* Version accesible para lectores de pantalla. El sr-only va en un div: una
+          tabla no se achica a 1px y ensanchaba la pagina en el celular. */}
+      <div className="sr-only">
+        <table>
+          <caption>{t("cashflowTitle")}</caption>
+          <thead>
+            <tr>
+              <th scope="col">{t("date")}</th>
+              <th scope="col">{t("cashflowMovement")}</th>
+              <th scope="col">{t("amount")}</th>
+              <th scope="col">{t("balanceAvailable")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">{t("historyStart")}</th>
+              <td>—</td>
+              <td>—</td>
+              <td>{money(history.start)}</td>
+            </tr>
+            {movements.map((item) => (
+              <tr key={item.id}>
+                <th scope="row">{formatDate(item.date, locale)}</th>
+                <td>{item.title}</td>
+                <td>{money(item.change, true)}</td>
+                <td>{money(item.balance)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </>
   );
