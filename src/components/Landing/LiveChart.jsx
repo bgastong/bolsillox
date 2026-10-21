@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useFirstInteraction } from "@/hooks/useFirstInteraction";
 
 const SAMPLES = 48;
 // Unidades de la curva que entran en el ancho y velocidad (unidades por segundo).
@@ -25,9 +26,11 @@ function linePath(pts) {
 Grafico "en vivo" de la pagina de inicio: ingresos (verde) y gastos (rojo)
 se desplazan continuamente hacia la izquierda. Se actualiza el SVG directo
 (sin re-render de React), se pausa fuera de pantalla o con la pestaña
-oculta y queda quieto si el sistema pide menos movimiento.
+oculta y queda quieto si el sistema pide menos movimiento. Arranca quieto y
+empieza a moverse con la primera interaccion (ver useFirstInteraction).
 */
 function LiveChart() {
+  const moving = useFirstInteraction();
   const svgRef = useRef(null);
   const areaRef = useRef(null);
   const incomeRef = useRef(null);
@@ -63,7 +66,7 @@ function LiveChart() {
     resize.observe(svgRef.current);
 
     draw(0);
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!moving || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return () => resize.disconnect();
     }
 
@@ -107,7 +110,7 @@ function LiveChart() {
       resize.disconnect();
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, []);
+  }, [moving]);
 
   return (
     <svg
