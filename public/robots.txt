@@ -1,0 +1,15 @@
+# bolsillox: se pueden rastrear las paginas publicas.
+# Las pantallas de la app piden cuenta y la API es privada.
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /history
+Disallow: /recurring
+Disallow: /debts
+Disallow: /installments
+Disallow: /budgets
+Disallow: /settings
+Disallow: /verificar
+Disallow: /recuperar
+
+Sitemap: https://bolsillox.com.ar/sitemap.xml
