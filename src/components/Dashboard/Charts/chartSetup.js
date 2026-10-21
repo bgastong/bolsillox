@@ -24,7 +24,7 @@ ChartJS.register(
 ChartJS.defaults.font.family =
   '"Geist Mono Variable", ui-monospace, "Geist Variable", system-ui, sans-serif';
 ChartJS.defaults.font.size = 11;
-ChartJS.defaults.color = "#5d6168";
+ChartJS.defaults.color = "#82878f";
 
 // Colores del grafico segun el tema activo (leidos de las variables CSS).
 // Verde entra, rojo sale: los mismos tonos que los montos.
