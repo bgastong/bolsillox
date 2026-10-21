@@ -11,10 +11,25 @@ function prefersReducedMotion() {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 }
 
-function supportsWebGL() {
+// Placas de video "por software": el 3D se dibuja con el procesador y traba la pagina.
+const SOFTWARE_RENDERER = /swiftshader|llvmpipe|softpipe|software|basic render/i;
+
+/*
+WebGL con placa de video. Sin ella (Chrome sin aceleracion, maquinas virtuales,
+compus viejas y las mediciones de PageSpeed) cada cuadro tarda cientos de ms,
+asi que se muestra la grilla en vez de la escena 3D.
+*/
+function supportsFastWebGL() {
   try {
     const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") || canvas.getContext("webgl"));
+    // Pide WebGL solo si el navegador no lo considera muy lento.
+    const options = { failIfMajorPerformanceCaveat: true };
+    const gl = canvas.getContext("webgl2", options) || canvas.getContext("webgl", options);
+    if (!gl) return false;
+    const info = gl.getExtension("WEBGL_debug_renderer_info");
+    const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return !SOFTWARE_RENDERER.test(renderer);
   } catch {
     return false;
   }
@@ -50,12 +65,13 @@ la orbita y las anteriores avanzan en sentido horario hasta rodear el billete.
 - Celular (Android/iPhone): tarjetas compactas, la descripcion va abajo,
   altura con svh para que la barra del navegador no haga saltar la vista,
   calidad 3D reducida y sin seguir al puntero.
-- Con "reducir movimiento" o sin WebGL se muestra la grilla de siempre.
+- Con "reducir movimiento", sin WebGL o con WebGL por software se muestra la
+  grilla de siempre.
 */
 function FeatureOrbit({ features, fallback }) {
   const { t } = useLanguage();
   const { resolvedTheme } = useTheme();
-  const [enabled] = useState(() => !prefersReducedMotion() && supportsWebGL());
+  const [enabled] = useState(() => !prefersReducedMotion() && supportsFastWebGL());
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [active, setActive] = useState(0);
 
