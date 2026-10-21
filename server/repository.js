@@ -131,5 +131,23 @@ export function createRepository(db) {
     return rows.map((row) => ({ date: row.date, net: roundMoney(row.net) }));
   }
 
-  return { list, get, create, update, remove, removeMany, totalsBetween, expensesByCategory, netByDay };
+  /*
+  Cada movimiento entre dos fechas, del mas viejo al mas nuevo, con su monto en
+  la moneda `target` y el signo segun entre o salga plata: [{ id, date, type, title, change }].
+  Los que no se pueden convertir (sin cotizacion) no se incluyen.
+  */
+  async function flowBetween(userId, from, to, money = {}) {
+    const rows = await db.all(sql`
+      SELECT id, date, type, title,
+        CASE WHEN type = 'income' THEN 1 ELSE -1 END * ${convertedAmountSql(money)} AS change
+      FROM movements
+      WHERE user_id = ${userId} AND date BETWEEN ${from} AND ${to}
+      ORDER BY date, id
+    `);
+    return rows
+      .filter((row) => row.change !== null)
+      .map((row) => ({ ...row, change: roundMoney(row.change) }));
+  }
+
+  return { list, get, create, update, remove, removeMany, totalsBetween, expensesByCategory, netByDay, flowBetween };
 }

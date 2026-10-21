@@ -301,22 +301,28 @@ describe("resumen y conversion de moneda", () => {
     assert.equal((await json("/summary?month=2027-01")).daily.length, 0);
   });
 
-  test("el historial del saldo sube con cada ingreso y baja con cada gasto", async () => {
+  test("el flujo de caja sube con cada ingreso y baja con cada gasto, movimiento por movimiento", async () => {
     const summary = await json(`/summary?month=${MONTH}`);
-    const { start, days } = summary.history;
-    assert.ok(days.length > 0);
-    // Cada dia: saldo anterior + lo que entro menos lo que salio ese dia.
+    const { start, movements } = summary.history;
+    assert.ok(movements.length > 0);
+    // Cada movimiento: saldo anterior + lo que entro (o - lo que salio).
     let running = start;
-    for (const day of days) {
-      running = Math.round((running + day.change) * 100) / 100;
-      assert.equal(day.balance, running);
+    for (const item of movements) {
+      assert.equal(Math.sign(item.change), item.type === "income" ? 1 : -1);
+      running = Math.round((running + item.change) * 100) / 100;
+      assert.equal(item.balance, running);
     }
-    // Termina en el saldo de hoy (15 de octubre) y no trae dias futuros.
-    assert.ok(days.at(-1).date <= `${MONTH}-15`);
-    assert.equal(days.at(-1).balance, summary.daily.at(-1).balance);
-    const rows = await json(`/movements?from=${days[0].date}&to=${days[0].date}`);
-    const expected = sumIn(rows, "income", "ARS", 1200) - sumIn(rows, "expense", "ARS", 1200);
-    assert.ok(Math.abs(days[0].change - expected) < 0.02);
+    // Ordenados por fecha, terminan en el saldo de hoy (15 de octubre) y no traen futuros.
+    const dates = movements.map((item) => item.date);
+    assert.deepEqual(dates, [...dates].sort());
+    assert.ok(dates.at(-1) <= `${MONTH}-15`);
+    assert.equal(movements.at(-1).balance, summary.daily.at(-1).balance);
+    // Un movimiento del grafico es uno real, con su titulo y monto.
+    const [first] = movements;
+    const rows = await json(`/movements?from=${first.date}&to=${first.date}`);
+    const real = rows.find((row) => row.id === first.id);
+    assert.equal(real.title, first.title);
+    assert.equal(Math.abs(first.change), real.currency === "ARS" ? real.amount : real.amount * 1200);
   });
 
   test("cada categoria trae el gasto del mes anterior y su variacion", async () => {

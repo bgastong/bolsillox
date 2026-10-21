@@ -240,7 +240,7 @@ function Dashboard() {
   // La cuenta tiene datos, pero el mes elegido esta vacio.
   const isEmptyMonth = summary && summary.hasMovements && summary.count === 0;
   // El flujo de caja necesita al menos un dia con movimientos en los ultimos meses.
-  const hasHistory = Boolean(summary?.history?.days.length);
+  const hasHistory = Boolean(summary?.history?.movements.length);
   const showSkeleton = loading && !summary;
 
   return (
