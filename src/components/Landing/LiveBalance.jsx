@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCountUp } from "@/hooks/useCountUp";
+import { useFirstInteraction } from "@/hooks/useFirstInteraction";
 import { useLanguage } from "@/hooks/useLanguage";
 
 const START = 1284350;
@@ -15,17 +16,19 @@ function prefersReducedMotion() {
 /*
 Saldo de ejemplo de la pagina de inicio: cuenta desde 0 al abrir y despues
 sigue subiendo de a poco mientras el grafico se mueve, con un "+$ ..." que
-aparece y se desvanece en cada ingreso. Se pausa con la pestaña oculta.
+aparece y se desvanece en cada ingreso. Se pausa con la pestaña oculta y,
+como el grafico, recien empieza a subir con la primera interaccion.
 */
 function LiveBalance() {
   const { locale } = useLanguage();
   const [target, setTarget] = useState(START);
   const [last, setLast] = useState(null);
   const current = useCountUp(target, 1400);
+  const moving = useFirstInteraction();
   const format = (value) => new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(Math.round(value));
 
   useEffect(() => {
-    if (prefersReducedMotion()) return undefined;
+    if (!moving || prefersReducedMotion()) return undefined;
     // Arranca despues de la cuenta inicial.
     let timer;
     const tick = () => {
@@ -38,7 +41,7 @@ function LiveBalance() {
     };
     timer = setTimeout(tick, 1600);
     return () => clearTimeout(timer);
-  }, []);
+  }, [moving]);
 
   return (
     <span className="relative inline-flex items-baseline">

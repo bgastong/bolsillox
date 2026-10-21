@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTheme } from "@/hooks/useTheme";
+import { whenIdle } from "@/lib/idle";
 import { cn } from "@/lib/utils";
 
 const TICKS = 72;
+// Sin interaccion, la escena 3D se pide este tiempo despues de cargar la pagina.
+const IDLE_SCENE_DELAY_MS = 3000;
 // Tramos de scroll: uno por funcionalidad, mas un respiro al final.
 const TAIL = 0.3;
 
@@ -11,10 +14,25 @@ function prefersReducedMotion() {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 }
 
-function supportsWebGL() {
+// Placas de video "por software": el 3D se dibuja con el procesador y traba la pagina.
+const SOFTWARE_RENDERER = /swiftshader|llvmpipe|softpipe|software|basic render/i;
+
+/*
+WebGL con placa de video. Sin ella (Chrome sin aceleracion, maquinas virtuales,
+compus viejas y las mediciones de PageSpeed) cada cuadro tarda cientos de ms,
+asi que se muestra la grilla en vez de la escena 3D.
+*/
+function supportsFastWebGL() {
   try {
     const canvas = document.createElement("canvas");
-    return Boolean(canvas.getContext("webgl2") || canvas.getContext("webgl"));
+    // Pide WebGL solo si el navegador no lo considera muy lento.
+    const options = { failIfMajorPerformanceCaveat: true };
+    const gl = canvas.getContext("webgl2", options) || canvas.getContext("webgl", options);
+    if (!gl) return false;
+    const info = gl.getExtension("WEBGL_debug_renderer_info");
+    const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : "";
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return !SOFTWARE_RENDERER.test(renderer);
   } catch {
     return false;
   }
@@ -44,18 +62,21 @@ Funcionalidades de la pagina de inicio: el billete 3D en el centro y una
 orbita alrededor. Con el scroll, cada funcionalidad baja desde arriba hasta
 la orbita y las anteriores avanzan en sentido horario hasta rodear el billete.
 
-- La escena 3D (three.js) se carga aparte, solo al llegar a esta seccion.
+- La escena 3D (three.js, ~500 KB) se carga aparte y no compite con la carga
+  inicial: recien con la primera interaccion (scroll, toque, tecla) o cuando
+  el navegador queda libre despues de cargar la pagina.
 - El loop corre solo con la seccion a la vista y la pestaña activa; las
   tarjetas se mueven con transform (sin re-render de React por cuadro).
 - Celular (Android/iPhone): tarjetas compactas, la descripcion va abajo,
   altura con svh para que la barra del navegador no haga saltar la vista,
   calidad 3D reducida y sin seguir al puntero.
-- Con "reducir movimiento" o sin WebGL se muestra la grilla de siempre.
+- Con "reducir movimiento", sin WebGL o con WebGL por software se muestra la
+  grilla de siempre.
 */
 function FeatureOrbit({ features, fallback }) {
   const { t } = useLanguage();
   const { resolvedTheme } = useTheme();
-  const [enabled] = useState(() => !prefersReducedMotion() && supportsWebGL());
+  const [enabled] = useState(() => !prefersReducedMotion() && supportsFastWebGL());
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [active, setActive] = useState(0);
 
@@ -111,11 +132,15 @@ function FeatureOrbit({ features, fallback }) {
     let smoothPointer = { x: 0, y: 0 };
     const finePointer = window.matchMedia("(pointer: fine)").matches;
 
-    // La escena (three.js, en un chunk aparte) se descarga y arma recien
-    // cuando la seccion se acerca a la pantalla.
+    // La escena (three.js, en un chunk aparte) se descarga y arma recien cuando
+    // la seccion esta cerca y, ademas, hubo una interaccion o la pagina termino
+    // de cargar y el navegador esta libre.
     let loading = false;
+    let near = false;
+    let wanted = false;
+    let cancelIdle = null;
     const loadScene = () => {
-      if (loading) return;
+      if (loading || disposed) return;
       loading = true;
       import("./orbit/billScene")
         .then(({ createBillScene }) => {
@@ -132,6 +157,25 @@ function FeatureOrbit({ features, fallback }) {
           // Sin escena 3D la orbita y las tarjetas siguen funcionando.
         });
     };
+    const requestScene = () => {
+      wanted = true;
+      if (near) loadScene();
+    };
+    const INPUTS = ["scroll", "wheel", "pointerdown", "touchstart", "keydown"];
+    const onFirstInput = () => {
+      INPUTS.forEach((type) => window.removeEventListener(type, onFirstInput));
+      requestScene();
+    };
+    INPUTS.forEach((type) => window.addEventListener(type, onFirstInput, { passive: true }));
+    // Sin interaccion: 3 s despues de cargar la pagina, cuando el navegador este libre.
+    const afterLoad = () => {
+      const timer = setTimeout(() => {
+        cancelIdle = whenIdle(requestScene, 4000);
+      }, IDLE_SCENE_DELAY_MS);
+      cancelIdle = () => clearTimeout(timer);
+    };
+    if (document.readyState === "complete") afterLoad();
+    else window.addEventListener("load", afterLoad, { once: true });
 
     const readScroll = () => {
       const rect = section.getBoundingClientRect();
@@ -208,7 +252,8 @@ function FeatureOrbit({ features, fallback }) {
       ([entry]) => {
         visible = entry.isIntersecting;
         if (visible) {
-          loadScene();
+          near = true;
+          if (wanted) loadScene();
           start();
         } else stop();
       },
@@ -231,6 +276,9 @@ function FeatureOrbit({ features, fallback }) {
     return () => {
       disposed = true;
       stop();
+      cancelIdle?.();
+      INPUTS.forEach((type) => window.removeEventListener(type, onFirstInput));
+      window.removeEventListener("load", afterLoad);
       io.disconnect();
       window.removeEventListener("scroll", readScroll);
       window.removeEventListener("resize", onResize);
