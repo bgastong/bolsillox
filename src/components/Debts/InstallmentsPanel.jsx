@@ -85,7 +85,7 @@ function InstallmentsPanel({ addButton }) {
             </div>
             <div className="grid gap-1">
               <p className="m-0 text-xs text-muted-foreground">{t("installmentsThisMonth")}</p>
-              <p className="m-0 text-xl font-medium tracking-[-0.03em] text-expense tabular-nums">
+              <p className="m-0 text-xl font-medium tracking-[-0.03em] tabular-nums">
                 {formatCurrency(thisMonth.amount, locale, { currency })}
               </p>
             </div>

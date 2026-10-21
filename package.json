@@ -10,7 +10,7 @@
     "dev:server": "node --watch server/index.js",
     "build": "vite build",
     "start": "node server/index.js --production",
-    "test": "node --disable-warning=ExperimentalWarning --test \"server/**/*.test.js\"",
+    "test": "node --disable-warning=ExperimentalWarning --test \"server/**/*.test.js\" \"src/**/*.test.js\"",
     "import:sqlite": "node --disable-warning=ExperimentalWarning server/scripts/import-sqlite.js",
     "lint": "eslint .",
     "preview": "vite preview"

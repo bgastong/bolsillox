@@ -1,10 +1,11 @@
 import { ChevronRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatCurrency, formatDate, todayISO } from "@/lib/format";
+import { formatDate, todayISO } from "@/lib/format";
 import { movementLabel } from "@/lib/movementLabel";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCategories } from "@/hooks/useCategories";
-import { AmountText, CategoryIcon, RecurringMark } from "../../Movements/MovementBits";
+import Money from "../../Money/Money";
+import { CategoryIcon, RecurringMark } from "../../Movements/MovementBits";
 
 function yesterdayISO() {
   const date = new Date();
@@ -46,9 +47,12 @@ function DayHeader({ date, items }) {
     <div className="flex items-center justify-between px-2 pt-3 pb-1 text-xs text-[color:var(--text-4)]">
       <span>{label}</span>
       {net !== null && (
-        <span className={cn("tabular-nums", net > 0 ? "text-income" : net < 0 ? "text-expense" : undefined)}>
-          {formatCurrency(net, locale, { signed: true, currency: [...currencies][0] })}
-        </span>
+        <Money
+          amount={net}
+          type={net > 0 ? "income" : net < 0 ? "expense" : "neutral"}
+          currency={[...currencies][0]}
+          className={cn("font-normal", net <= 0 && "text-[color:var(--text-3)]")}
+        />
       )}
     </div>
   );
@@ -89,7 +93,7 @@ function ExpenseList({ movements, onEdit }) {
                       {t(`pm_${movement.paymentMethod}`)}
                     </span>
                   )}
-                  <AmountText
+                  <Money
                     type={movement.type}
                     amount={movement.amount}
                     currency={movement.currency}
