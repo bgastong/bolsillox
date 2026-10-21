@@ -2,6 +2,42 @@
 
 const currencyFormatters = new Map();
 
+/*
+Modo privado: con los montos ocultos, cada numero de plata se muestra como
+"$ ••••" (se conservan el signo y la moneda). Lo prende LanguageProvider,
+que ademas hace que se vuelva a dibujar todo lo que muestra montos.
+*/
+export const HIDDEN_DIGITS = "••••";
+let amountsHidden = false;
+
+export function setAmountsHidden(value) {
+  amountsHidden = Boolean(value);
+}
+
+export function areAmountsHidden() {
+  return amountsHidden;
+}
+
+const NUMBER_PARTS = new Set(["integer", "group", "decimal", "fraction", "compact"]);
+
+// Une las partes de un formato: dolares como "US$" y, en modo privado, los numeros tapados.
+function joinParts(parts, currency) {
+  let masked = false;
+  return parts
+    .map((part) => {
+      if (part.type === "currency" && currency === "USD") return "US$";
+      if (amountsHidden && NUMBER_PARTS.has(part.type)) {
+        if (masked) return "";
+        masked = true;
+        return HIDDEN_DIGITS;
+      }
+      return part.value;
+    })
+    .join("")
+    // "$1,2 M" tapado queda "$•••• ": sin el espacio que separaba la "M".
+    .trimEnd();
+}
+
 // currency: "ARS" | "USD" (los dolares se muestran como US$).
 export function formatCurrency(
   amount,
@@ -23,26 +59,21 @@ export function formatCurrency(
     );
   }
   const formatter = currencyFormatters.get(key);
-  if (currency !== "USD") return formatter.format(amount ?? 0);
+  if (currency !== "USD" && !amountsHidden) return formatter.format(amount ?? 0);
   // Dolares siempre como "US$", para no confundirlos con pesos en ningun idioma.
-  return formatter
-    .formatToParts(amount ?? 0)
-    .map((part) => (part.type === "currency" ? "US$" : part.value))
-    .join("");
+  return joinParts(formatter.formatToParts(amount ?? 0), currency);
 }
 
 // Formato compacto para ejes de graficos ($ 1,2 M / US$ 1,2 K)
 export function formatCompactCurrency(amount, locale = "es-AR", currency = "ARS") {
-  return new Intl.NumberFormat(locale, {
+  const parts = new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     currencyDisplay: "narrowSymbol",
     notation: "compact",
     maximumFractionDigits: 1,
-  })
-    .formatToParts(amount ?? 0)
-    .map((part) => (part.type === "currency" && currency === "USD" ? "US$" : part.value))
-    .join("");
+  }).formatToParts(amount ?? 0);
+  return joinParts(parts, currency);
 }
 
 // Las fechas se guardan como "YYYY-MM-DD"; se parsean en hora local

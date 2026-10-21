@@ -6,6 +6,7 @@ import { useHideOnScroll } from "../../hooks/useHideOnScroll";
 import { useCommandPalette } from "../../hooks/useCommandPalette";
 import { useAuth } from "../../hooks/useAuth";
 import Wordmark from "../Brand/Wordmark";
+import PrivacyToggle from "../Privacy/PrivacyToggle";
 import ProfileMenu from "../Sidebar/ProfileMenu";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import styles from "./Navbar.module.css";
@@ -40,20 +41,24 @@ function Navbar() {
           </Link>
         )}
       </div>
-      {isMobile && (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={styles.iconButton}
-            onClick={palette.open}
-            aria-label={t("cmdLabel")}
-          >
-            <SearchIcon aria-hidden="true" />
-          </button>
-          {/* En el celular no hay menu lateral: el perfil va arriba */}
-          {user && <ProfileMenu compact />}
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        {/* Modo privado: oculta todos los montos (tecla P) */}
+        <PrivacyToggle className={styles.iconButton} />
+        {isMobile && (
+          <>
+            <button
+              type="button"
+              className={styles.iconButton}
+              onClick={palette.open}
+              aria-label={t("cmdLabel")}
+            >
+              <SearchIcon aria-hidden="true" />
+            </button>
+            {/* En el celular no hay menu lateral: el perfil va arriba */}
+            {user && <ProfileMenu compact />}
+          </>
+        )}
+      </div>
     </header>
   );
 }

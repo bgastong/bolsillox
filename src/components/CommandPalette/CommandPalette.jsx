@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import {
   CreditCardIcon,
+  EyeIcon,
+  EyeOffIcon,
   HandCoinsIcon,
   HistoryIcon,
   LayoutDashboardIcon,
@@ -22,6 +24,7 @@ import { useMovements } from "@/hooks/useMovements";
 import { useTheme } from "@/hooks/useTheme";
 import { CommandPaletteContext } from "@/context/CommandPaletteValue";
 import Money from "../Money/Money";
+import { PRIVACY_SHORTCUT, usePrivacyToggle } from "@/hooks/usePrivacyToggle";
 import { CategoryIcon } from "../Movements/MovementBits";
 
 const PAGES = [
@@ -69,7 +72,8 @@ Se maneja solo con el teclado: flechas para moverse, Enter para elegir
 y Esc para cerrar. Envuelve la app y expone `open()` via useCommandPalette.
 */
 function CommandPalette({ children }) {
-  const { t, locale } = useLanguage();
+  const { t, locale, hideAmounts } = useLanguage();
+  const togglePrivacy = usePrivacyToggle();
   const navigate = useNavigate();
   const { openCreate, openCreateRecurring, openCreateInstallments, openEdit } = useMovements();
   const { resolvedTheme, setTheme } = useTheme();
@@ -98,24 +102,27 @@ function CommandPalette({ children }) {
         });
         return;
       }
-      // "N": nuevo movimiento, salvo que se este escribiendo o haya un dialogo abierto.
+      // Atajos de una tecla, salvo que se este escribiendo o haya un dialogo abierto:
+      // "N" nuevo movimiento y "P" modo privado.
       const target = event.target;
       const typing =
         target instanceof HTMLElement &&
         (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
-      if (
-        event.key.toLowerCase() === "n" &&
-        !event.metaKey && !event.ctrlKey && !event.altKey &&
-        !typing &&
-        !document.querySelector("[role='dialog']")
-      ) {
+      if (event.metaKey || event.ctrlKey || event.altKey || typing || document.querySelector("[role='dialog']")) {
+        return;
+      }
+      const key = event.key.toLowerCase();
+      if (key === "n") {
         event.preventDefault();
         openCreate();
+      } else if (key === PRIVACY_SHORTCUT.toLowerCase()) {
+        event.preventDefault();
+        togglePrivacy();
       }
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [openCreate]);
+  }, [openCreate, togglePrivacy]);
 
   const groups = useMemo(() => {
     const q = normalize(query);
@@ -128,6 +135,13 @@ function CommandPalette({ children }) {
         label: t("newInstallments"),
         icon: CreditCardIcon,
         run: openCreateInstallments,
+      },
+      {
+        id: "privacy",
+        label: t(hideAmounts ? "showAmounts" : "hideAmounts"),
+        icon: hideAmounts ? EyeIcon : EyeOffIcon,
+        run: togglePrivacy,
+        hint: PRIVACY_SHORTCUT,
       },
       resolvedTheme === "dark"
         ? { id: "theme", label: t("themeToLight"), icon: SunIcon, run: () => setTheme("light") }
@@ -161,6 +175,8 @@ function CommandPalette({ children }) {
     openEdit,
     resolvedTheme,
     setTheme,
+    hideAmounts,
+    togglePrivacy,
   ]);
 
   const flat = groups.flatMap((group) => group.items);

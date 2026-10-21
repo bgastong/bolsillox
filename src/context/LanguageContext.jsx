@@ -4,9 +4,20 @@ import {
   localeByLanguage,
   translations,
 } from "../i18n/translations";
+import { setAmountsHidden } from "../lib/format";
 import { LanguageContext } from "./LanguageContextValue";
 
 const STORAGE_KEY = "bolsillox.language";
+// Modo privado (montos ocultos): se recuerda en este dispositivo.
+const HIDE_AMOUNTS_KEY = "bolsillox.hideAmounts";
+
+function getInitialHideAmounts() {
+  try {
+    return localStorage.getItem(HIDE_AMOUNTS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 function getInitialLanguage() {
   try {
@@ -19,12 +30,30 @@ function getInitialLanguage() {
 }
 
 /*
-provider: provee datos de otro componente
-children: todos los datos dentro del provider
-t(key, vars): traduce una clave y reemplaza {{variables}}
+Como se muestran textos y numeros: idioma, formato y modo privado.
+- t(key, vars): traduce una clave y reemplaza {{variables}}.
+- hideAmounts / setHideAmounts: modo privado. Va aca porque todo lo que
+  muestra plata ya usa este contexto (por el locale), asi al cambiarlo se
+  vuelve a dibujar con los montos tapados o a la vista.
 */
 export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState(getInitialLanguage);
+  const [hideAmounts, setHideAmountsState] = useState(() => {
+    const initial = getInitialHideAmounts();
+    setAmountsHidden(initial);
+    return initial;
+  });
+
+  // El formateador se actualiza antes de volver a dibujar.
+  const setHideAmounts = useCallback((next) => {
+    setAmountsHidden(next);
+    setHideAmountsState(next);
+    try {
+      localStorage.setItem(HIDE_AMOUNTS_KEY, next ? "1" : "0");
+    } catch {
+      // ignorado
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -55,8 +84,8 @@ export function LanguageProvider({ children }) {
   );
 
   const value = useMemo(
-    () => ({ language, locale: localeByLanguage[language], setLanguage, t }),
-    [language, setLanguage, t],
+    () => ({ language, locale: localeByLanguage[language], setLanguage, t, hideAmounts, setHideAmounts }),
+    [language, setLanguage, t, hideAmounts, setHideAmounts],
   );
 
   return (
