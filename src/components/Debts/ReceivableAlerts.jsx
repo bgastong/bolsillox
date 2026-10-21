@@ -1,20 +1,15 @@
 import { useCallback, useState } from "react";
 import { CheckIcon, HandCoinsIcon } from "lucide-react";
+import { DueStatus } from "@/components/Due/Due";
+import Money from "@/components/Money/Money";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useApiData } from "@/hooks/useApiData";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMovements } from "@/hooks/useMovements";
 import CollectDialog from "./CollectDialog";
-
-// Texto y tono del vencimiento: vencida (rojo), hoy (aviso) o en 1-2 dias (gris).
-function dueLabel(daysLeft, t) {
-  if (daysLeft < 0) return { text: t("receivableOverdueDays", { count: -daysLeft }), tone: "text-expense" };
-  if (daysLeft === 0) return { text: t("receivableDueToday"), tone: "text-warn" };
-  return { text: t("receivableDueIn", { count: daysLeft }), tone: "text-muted-foreground" };
-}
 
 /*
 Lo que te tienen que pagar en los proximos 2 dias, hoy o que ya vencio, con el
@@ -69,8 +64,6 @@ function ReceivableAlerts({ className }) {
 
         <ul className="m-0 grid list-none grid-cols-1 gap-1 p-0">
           {alerts.map((item) => {
-            const due = dueLabel(item.daysLeft, t);
-            const amount = formatCurrency(item.remaining, locale, { signed: true, currency: item.currency });
             return (
               <li key={item.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg py-1.5 sm:flex-nowrap">
                 <span
@@ -84,11 +77,12 @@ function ReceivableAlerts({ className }) {
                     {item.person}
                     {item.concept && <span className="text-muted-foreground"> · {item.concept}</span>}
                   </p>
-                  <p className={cn("m-0 truncate text-xs", due.tone)}>
-                    {due.text} · {formatDate(item.dueDate, locale, { day: "numeric", month: "short" })}
+                  <p className="m-0 truncate text-xs text-muted-foreground">
+                    <DueStatus daysLeft={item.daysLeft} kind="collect" /> ·{" "}
+                    {formatDate(item.dueDate, locale, { day: "numeric", month: "short" })}
                   </p>
                 </div>
-                <span className="text-[13.5px] whitespace-nowrap text-income tabular-nums">{amount}</span>
+                <Money amount={item.remaining} type="income" currency={item.currency} className="text-[13.5px] font-normal" />
                 <Button
                   variant="outline"
                   size="sm"

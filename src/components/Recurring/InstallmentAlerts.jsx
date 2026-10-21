@@ -1,21 +1,16 @@
 import { useCallback, useState } from "react";
 import { BellIcon, CheckIcon } from "lucide-react";
+import { DueStatus } from "@/components/Due/Due";
+import Money from "@/components/Money/Money";
 import { CategoryIcon } from "@/components/Movements/MovementBits";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useApiData } from "@/hooks/useApiData";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMovements } from "@/hooks/useMovements";
 import { useToast } from "@/hooks/useToast";
-
-// Texto y tono del vencimiento: vencida (rojo), hoy (aviso) o en 1-2 dias (gris).
-function dueLabel(daysLeft, t) {
-  if (daysLeft < 0) return { text: t("installmentOverdue", { count: -daysLeft }), tone: "text-expense" };
-  if (daysLeft === 0) return { text: t("installmentDueToday"), tone: "text-warn" };
-  return { text: t("installmentDueIn", { count: daysLeft }), tone: "text-muted-foreground" };
-}
 
 /*
 Cuotas que vencen en los proximos 2 dias o que vencieron sin pagar, con el
@@ -82,8 +77,6 @@ function InstallmentAlerts({ className }) {
       <ul className="m-0 grid list-none grid-cols-1 gap-1 p-0">
         {alerts.map((item) => {
           const key = `${item.ruleId}-${item.month}`;
-          const due = dueLabel(item.daysLeft, t);
-          const amount = formatCurrency(-item.amount, locale, { signed: true, currency: item.currency });
           return (
             <li key={key} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg py-1.5 sm:flex-nowrap">
               <CategoryIcon category={item.category} className="size-9 rounded-lg" />
@@ -97,11 +90,11 @@ function InstallmentAlerts({ className }) {
                     </span>
                   )}
                 </p>
-                <p className={cn("m-0 truncate text-xs", due.tone)}>
-                  {due.text} · {formatDate(item.date, locale, { day: "numeric", month: "short" })}
+                <p className="m-0 truncate text-xs text-muted-foreground">
+                  <DueStatus daysLeft={item.daysLeft} /> · {formatDate(item.date, locale, { day: "numeric", month: "short" })}
                 </p>
               </div>
-              <span className="text-[13.5px] whitespace-nowrap text-expense tabular-nums">{amount}</span>
+              <Money amount={item.amount} type="expense" currency={item.currency} className="text-[13.5px] font-normal" />
               <Button
                 variant="outline"
                 size="sm"
