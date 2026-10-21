@@ -1,0 +1,16 @@
+# bolsillox
+
+> bolsillox es una app web gratuita y de código abierto para registrar ingresos y gastos personales en pesos y en dólares, con presupuestos, gastos fijos, compras en cuotas, deudas y avisos de vencimiento. Está pensada para Argentina y está en español e inglés.
+
+Las pantallas de la app requieren una cuenta y la API es privada: no hay endpoints públicos para agentes.
+
+## Páginas
+
+- [Inicio](https://bolsillox.com.ar/): qué es bolsillox y qué se puede hacer.
+- [Crear cuenta](https://bolsillox.com.ar/register): registro gratuito.
+- [Términos y condiciones](https://bolsillox.com.ar/terminos): reglas de uso del servicio.
+- [Política de privacidad](https://bolsillox.com.ar/privacidad): qué datos se guardan y para qué.
+
+## Código
+
+- [Repositorio en GitHub](https://github.com/bgastong/bolsillox): código fuente (licencia MIT).

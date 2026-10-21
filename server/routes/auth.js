@@ -74,6 +74,12 @@ export function authRouter(
     res.json({ google: Boolean(google), email: mailer.enabled });
   });
 
+  // Chequeo de sesion al abrir la app: siempre 200, con el usuario o null.
+  // Asi un visitante sin cuenta no ve un error 401 en la consola del navegador.
+  router.get("/session", (req, res) => {
+    res.json({ user: req.user ?? null });
+  });
+
   router.get("/me", (req, res) => {
     if (!req.user) throw new HttpError(401, "unauthorized");
     res.json(req.user);
