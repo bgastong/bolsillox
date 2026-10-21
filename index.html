@@ -47,6 +47,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="bolsillox" />
+    <!-- Las tipografias (solo la parte latina) se piden ya, sin esperar a la hoja
+         de estilos: el texto aparece antes y sin saltos. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="./node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="./node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
