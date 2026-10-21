@@ -55,7 +55,7 @@ function toQuery(params = {}) {
 export const api = {
   // Cuenta
   getAuthConfig: (options) => request("/auth/config", options),
-  me: (options) => request("/auth/me", options),
+  session: (options) => request("/auth/session", options),
   register: (data) => request("/auth/register", { method: "POST", body: data }),
   login: (data) => request("/auth/login", { method: "POST", body: data }),
   logout: () => request("/auth/logout", { method: "POST" }),

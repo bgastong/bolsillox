@@ -16,8 +16,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    api.me({ signal: controller.signal }).then(
-      (user) => setState({ status: "authenticated", user }),
+    api.session({ signal: controller.signal }).then(
+      ({ user }) => setState(user ? { status: "authenticated", user } : { status: "guest", user: null }),
       (error) => {
         if (error.name !== "AbortError") setState({ status: "guest", user: null });
       },

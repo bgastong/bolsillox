@@ -71,6 +71,19 @@ describe("registro e inicio de sesion", () => {
     assert.equal((await me.json()).email, "ana@mail.com");
   });
 
+  test("el chequeo de sesion responde 200 con o sin cuenta", async () => {
+    const guest = await api.request("/auth/session");
+    assert.equal(guest.status, 200);
+    assert.deepEqual(await guest.json(), { user: null });
+
+    const res = await register({ name: "Sesion", email: "sesion@mail.com", password: "contraseña-segura" });
+    const logged = await api.request("/auth/session", { cookie: sessionCookie(res) });
+    assert.equal(logged.status, 200);
+    const { user } = await logged.json();
+    assert.equal(user.email, "sesion@mail.com");
+    assert.equal("password_hash" in user || "passwordHash" in user, false);
+  });
+
   test("validaciones del registro", async () => {
     const res = await register({ name: "", email: "no-es-email", password: "123" });
     assert.equal(res.status, 400);
