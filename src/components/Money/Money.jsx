@@ -16,16 +16,18 @@ El lector de pantalla no lee "menos 24.500" sino "Gasto de $ 24.500"
 (o el texto de label, si se pasa).
 */
 export function Money({ amount, type = "neutral", currency = "ARS", alert = false, label, className }) {
-  const { t, locale } = useLanguage();
+  const { t, locale, hideAmounts } = useLanguage();
   const value = formatCurrency(Math.abs(amount ?? 0), locale, { currency });
   const sign = SIGNS[type] ?? "";
-  const spoken =
-    label ??
+  // En modo privado el lector de pantalla tampoco dice el numero.
+  const spoken = hideAmounts
+    ? t("amountHidden")
+    : (label ??
     (type === "income"
       ? t("moneyIncome", { amount: value })
       : type === "expense"
         ? t("moneyExpense", { amount: value })
-        : value);
+        : value));
 
   return (
     <span
