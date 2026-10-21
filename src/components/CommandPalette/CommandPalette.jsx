@@ -21,7 +21,8 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useMovements } from "@/hooks/useMovements";
 import { useTheme } from "@/hooks/useTheme";
 import { CommandPaletteContext } from "@/context/CommandPaletteValue";
-import { AmountText, CategoryIcon } from "../Movements/MovementBits";
+import Money from "../Money/Money";
+import { CategoryIcon } from "../Movements/MovementBits";
 
 const PAGES = [
   { to: "/", labelKey: "home", icon: LayoutDashboardIcon },
@@ -254,7 +255,7 @@ function CommandPalette({ children }) {
                                 {formatDate(item.movement.date, locale, { day: "numeric", month: "short" })}
                               </span>
                             </span>
-                            <AmountText
+                            <Money
                               type={item.movement.type}
                               amount={item.movement.amount}
                               currency={item.movement.currency}

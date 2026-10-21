@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { ChevronRightIcon, PauseIcon, PlusIcon, RepeatIcon } from "lucide-react";
-import { AmountText, CategoryIcon, PageHeader } from "@/components/Movements/MovementBits";
+import Money from "@/components/Money/Money";
+import { CategoryIcon, PageHeader } from "@/components/Movements/MovementBits";
 import MovementTabs from "@/components/Recurring/MovementTabs";
 import { EmptyState, ErrorState } from "@/components/States/States";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ function RecurringRow({ rule, onEdit }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
           <p className="m-0 truncate text-[15px] font-medium">{rule.title}</p>
-          <AmountText
+          <Money
             type={rule.type}
             amount={rule.amount}
             currency={rule.currency}
@@ -131,7 +132,7 @@ function Recurring() {
             </div>
             <div className="grid gap-1">
               <p className="m-0 text-xs text-muted-foreground">{t("recurringFixedExpense")}</p>
-              <p className="m-0 text-xl font-medium tracking-[-0.03em] text-expense tabular-nums">
+              <p className="m-0 text-xl font-medium tracking-[-0.03em] tabular-nums">
                 {formatCurrency(monthly.expense, locale, { currency })}
               </p>
             </div>

@@ -1,25 +1,7 @@
 import { RepeatIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatCurrency } from "@/lib/format";
 import { useCategories } from "@/hooks/useCategories";
 import { useLanguage } from "@/hooks/useLanguage";
-
-// Monto con signo: + ingreso (verde) / - gasto (neutro), en su moneda.
-export function AmountText({ type, amount, currency = "ARS", className }) {
-  const { locale } = useLanguage();
-  const value = type === "expense" ? -amount : amount;
-  return (
-    <span
-      className={cn(
-        "font-medium tabular-nums whitespace-nowrap",
-        type === "income" ? "text-income" : "text-expense",
-        className,
-      )}
-    >
-      {formatCurrency(value, locale, { signed: true, currency })}
-    </span>
-  );
-}
 
 // Icono de la categoria en una ficha neutra: en este estilo el color se
 // reserva para el dinero (verde entra, rojo sale).

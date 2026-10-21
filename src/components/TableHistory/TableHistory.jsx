@@ -8,7 +8,8 @@ import { useSettings } from "@/hooks/useSettings";
 import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../../hooks/useLanguage";
-import { AmountText, CategoryBadge, CategoryIcon, RecurringMark } from "../Movements/MovementBits";
+import Money from "../Money/Money";
+import { CategoryBadge, CategoryIcon, RecurringMark } from "../Movements/MovementBits";
 import {
   Table,
   TableBody,
@@ -157,7 +158,7 @@ function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggl
                   {t(`pm_${movement.paymentMethod}`)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <AmountText type={movement.type} amount={movement.amount} currency={movement.currency} />
+                  <Money type={movement.type} amount={movement.amount} currency={movement.currency} />
                 </TableCell>
                 <TableCell className="pr-5">
                   <div className="opacity-60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
@@ -213,7 +214,7 @@ function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggl
                       <span className="truncate">{movement.title}</span>
                       {movement.recurringId && <RecurringMark />}
                     </p>
-                    <AmountText type={movement.type} amount={movement.amount} currency={movement.currency} className="text-[15px]" />
+                    <Money type={movement.type} amount={movement.amount} currency={movement.currency} className="text-[15px]" />
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <CategoryBadge category={movement.category} className="min-w-0" />
