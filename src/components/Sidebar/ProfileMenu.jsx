@@ -3,6 +3,7 @@ import {
   BellIcon,
   CoinsIcon,
   DollarSignIcon,
+  DownloadIcon,
   LanguagesIcon,
   LogOutIcon,
   PaletteIcon,
@@ -20,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
+import { useInstallAction, useInstallApp } from "@/hooks/useInstallApp";
 import { useLanguage } from "@/hooks/useLanguage";
 import styles from "./Sidebar.module.css";
 
@@ -44,6 +46,8 @@ function ProfileMenu({ onNavigate, compact = false }) {
   const { t } = useLanguage();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const installStatus = useInstallApp();
+  const install = useInstallAction();
 
   function go(id) {
     onNavigate?.();
@@ -90,6 +94,13 @@ function ProfileMenu({ onNavigate, compact = false }) {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
+        {/* Instalar: con el boton del navegador o, en iPhone, los pasos en Ajustes */}
+        {(installStatus === "available" || installStatus === "ios") && (
+          <DropdownMenuItem onSelect={() => (installStatus === "available" ? install() : go("settings-app"))}>
+            <DownloadIcon aria-hidden="true" />
+            {t("installMenu")}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem variant="destructive" onSelect={() => logout()}>
           <LogOutIcon aria-hidden="true" />
           {t("logout")}
