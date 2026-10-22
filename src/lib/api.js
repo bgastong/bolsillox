@@ -56,6 +56,9 @@ export const api = {
   // Cuenta
   getAuthConfig: (options) => request("/auth/config", options),
   session: (options) => request("/auth/session", options),
+  // Colores a eleccion
+  getAppearance: (options) => request("/appearance", options),
+  saveAppearance: (data) => request("/appearance", { method: "PUT", body: data }),
   register: (data) => request("/auth/register", { method: "POST", body: data }),
   login: (data) => request("/auth/login", { method: "POST", body: data }),
   logout: () => request("/auth/logout", { method: "POST" }),
