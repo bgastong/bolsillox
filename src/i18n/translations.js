@@ -57,6 +57,7 @@ export const translations = {
     cardBalanceHint: "Hasta hoy",
     cardBalanceClosed: "Al cierre del mes",
     scheduledLabel: "Programado",
+    dayTotal: "Total del día",
     // Ajustes > Colores
     colorsTitle: "Colores",
     colorsDescription: "Elegí los colores de ingresos y gastos, y dónde querés ver el color de los gastos.",
@@ -788,6 +789,7 @@ export const translations = {
     cardBalanceHint: "Up to today",
     cardBalanceClosed: "At month end",
     scheduledLabel: "Scheduled",
+    dayTotal: "Day total",
     // Settings > Colors
     colorsTitle: "Colors",
     colorsDescription: "Choose the colors for income and expenses, and where you want to see the expense color.",

@@ -1,6 +1,5 @@
 import { ChevronRightIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatDate, todayISO } from "@/lib/format";
+import { formatCurrency, formatDate, todayISO } from "@/lib/format";
 import { movementLabel } from "@/lib/movementLabel";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCategories } from "@/hooks/useCategories";
@@ -26,9 +25,10 @@ function groupByDay(movements) {
 }
 
 // Encabezado del dia: "Hoy · lun 5 oct" (o "Programado · jue 30 oct" si todavia
-// no llego: esos movimientos no estan en el saldo) y el neto del dia. El neto solo se
-// muestra si hay mas de un movimiento (con uno repetiria el monto de la fila)
-// y si son todos de la misma moneda.
+// no llego: esos movimientos no estan en el saldo) y el total del dia. El total va
+// en una pastilla gris con su etiqueta, sin colores, para que no parezca un
+// movimiento mas. Solo se muestra si hay mas de un movimiento (con uno repetiria
+// el monto de la fila) y si son todos de la misma moneda.
 function DayHeader({ date, items }) {
   const { t, locale } = useLanguage();
   const pretty = formatDate(date, locale, { weekday: "short", day: "numeric", month: "short" });
@@ -56,12 +56,13 @@ function DayHeader({ date, items }) {
         {label}
       </span>
       {net !== null && (
-        <Money
-          amount={net}
-          type={net > 0 ? "income" : net < 0 ? "expense" : "neutral"}
-          currency={[...currencies][0]}
-          className={cn("font-normal", net <= 0 && "text-[color:var(--text-3)]")}
-        />
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-fg/[0.09] bg-fg/[0.04] px-2.5 py-0.5 text-[11.5px] text-[color:var(--text-3)]">
+          {t("dayTotal")}
+          <span className="font-mono tabular-nums">
+            {net > 0 ? "+" : net < 0 ? "−" : ""}
+            {formatCurrency(Math.abs(net), locale, { currency: [...currencies][0] })}
+          </span>
+        </span>
       )}
     </div>
   );
