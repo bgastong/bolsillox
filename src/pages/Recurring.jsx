@@ -44,6 +44,7 @@ function RecurringRow({ rule, onEdit }) {
         <div className="flex items-baseline justify-between gap-2">
           <p className="m-0 truncate text-[15px] font-medium">{rule.title}</p>
           <Money
+            listItem
             type={rule.type}
             amount={rule.amount}
             currency={rule.currency}

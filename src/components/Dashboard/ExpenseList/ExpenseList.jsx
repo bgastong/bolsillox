@@ -103,6 +103,7 @@ function ExpenseList({ movements, onEdit }) {
                     </span>
                   )}
                   <Money
+                    listItem
                     type={movement.type}
                     amount={movement.amount}
                     currency={movement.currency}
