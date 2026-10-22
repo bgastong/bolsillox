@@ -47,6 +47,10 @@
   --expense: #f2555a;
   --income-soft: rgba(62, 207, 142, 0.1);
   --expense-soft: rgba(242, 85, 90, 0.1);
+  /* Alertas (vencido, presupuesto excedido, no alcanza): siempre se ven,
+     aunque la paleta elegida no pinte los gastos (ver data-palette abajo). */
+  --danger: #f2555a;
+  --danger-soft: rgba(242, 85, 90, 0.1);
   --radius: 0.75rem;
   --sidebar: #0a0b0c;
   --sidebar-background: #0a0b0c;
@@ -100,10 +104,12 @@
   --text-4: #676b73;
   --chart-income: #0e9f6e;
   --chart-expense: #d93036;
-  --income: #0b8a5f;
+  --income: #0a7d56;
   --expense: #d0303a;
   --income-soft: rgba(14, 159, 110, 0.1);
   --expense-soft: rgba(217, 48, 54, 0.09);
+  --danger: #d0303a;
+  --danger-soft: rgba(217, 48, 54, 0.09);
   --sidebar: #f6f6f5;
   --sidebar-background: #f6f6f5;
   --sidebar-foreground: #0b0c0e;
@@ -120,6 +126,58 @@
   --warn-border: rgba(217, 119, 6, 0.3);
   --surface-base: #ffffff;
   --elevated: rgba(255, 255, 255, 0.97);
+}
+
+/* Paletas a eleccion (Ajustes > Colores). La Clasica son los valores de arriba.
+   Cada una tiene su version para el tema claro; todas llegan a 4,5:1 de
+   contraste sobre el fondo y las tarjetas. */
+:root[data-palette="suave"] {
+  --income: #7fd8b0;
+  --expense: #e3a08e;
+  --chart-income: #7fd8b0;
+  --chart-expense: #e3a08e;
+  --income-soft: rgba(127, 216, 176, 0.1);
+  --expense-soft: rgba(227, 160, 142, 0.1);
+}
+:root[data-palette="suave"][data-theme="light"] {
+  --income: #167a56;
+  --expense: #b04e36;
+  --chart-income: #167a56;
+  --chart-expense: #b04e36;
+  --income-soft: rgba(22, 122, 86, 0.1);
+  --expense-soft: rgba(176, 78, 54, 0.09);
+}
+/* Sobria: los gastos sin color (gris); las alertas siguen en rojo. */
+:root[data-palette="sobria"] {
+  --expense: #9a9fa8;
+  --chart-expense: #9a9fa8;
+  --expense-soft: rgba(154, 159, 168, 0.12);
+}
+:root[data-palette="sobria"][data-theme="light"] {
+  --expense: #5f636b;
+  --chart-expense: #5f636b;
+  --expense-soft: rgba(95, 99, 107, 0.1);
+}
+/* Alto contraste: azul y naranja se distinguen aunque no se vea bien el rojo y el verde. */
+:root[data-palette="contraste"] {
+  --income: #5aa9ff;
+  --expense: #ff9f43;
+  --chart-income: #5aa9ff;
+  --chart-expense: #ff9f43;
+  --income-soft: rgba(90, 169, 255, 0.1);
+  --expense-soft: rgba(255, 159, 67, 0.1);
+  --danger: #ff9f43;
+  --danger-soft: rgba(255, 159, 67, 0.1);
+}
+:root[data-palette="contraste"][data-theme="light"] {
+  --income: #1b64c9;
+  --expense: #b35300;
+  --chart-income: #1b64c9;
+  --chart-expense: #b35300;
+  --income-soft: rgba(27, 100, 201, 0.1);
+  --expense-soft: rgba(179, 83, 0, 0.09);
+  --danger: #b35300;
+  --danger-soft: rgba(179, 83, 0, 0.09);
 }
 
 @theme inline {
@@ -152,6 +210,7 @@
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
   --color-income: var(--income);
   --color-expense: var(--expense);
+  --color-danger: var(--danger);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

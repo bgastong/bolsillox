@@ -125,8 +125,8 @@ Todos respetan prefers-reduced-motion (ver index.css).
 }
 
 .chip-bad {
-  background: var(--expense-soft);
-  color: var(--expense);
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 /* Teclas (atajos) */
@@ -160,7 +160,7 @@ Todos respetan prefers-reduced-motion (ver index.css).
 
 /* Presupuesto excedido: barra rayada en rojo */
 .bar-over {
-  background: repeating-linear-gradient(-45deg, var(--expense) 0 4px, #c9393e 4px 8px);
+  background: repeating-linear-gradient(-45deg, var(--danger) 0 4px, color-mix(in srgb, var(--danger) 80%, black) 4px 8px);
 }
 
 /* Punto "en vivo" que late. El latido es un anillo que se agranda y se

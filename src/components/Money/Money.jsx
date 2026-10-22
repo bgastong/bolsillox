@@ -33,7 +33,7 @@ export function Money({ amount, type = "neutral", currency = "ARS", alert = fals
     <span
       className={cn(
         "font-medium whitespace-nowrap tabular-nums",
-        alert ? "text-expense" : type === "income" ? "text-income" : "text-foreground",
+        alert ? "text-danger" : type === "income" ? "text-income" : "text-foreground",
         className,
       )}
     >

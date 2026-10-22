@@ -3,6 +3,7 @@ import { Bar } from "react-chartjs-2";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate, formatMonth } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useAppearance } from "@/hooks/useAppearance";
 import { useTheme } from "@/hooks/useTheme";
 import { chartColors, tooltipStyle } from "./chartSetup";
 
@@ -47,9 +48,11 @@ history: { start, movements: [{ id, date, type, title, change, balance }] } (ver
 function BalanceHistoryChart({ history, month, currency = "ARS" }) {
   const { t, locale } = useLanguage();
   const { resolvedTheme } = useTheme();
-  // Se recalculan al cambiar de tema.
+  const { appearance } = useAppearance();
+  const { palette } = appearance;
+  // Se recalculan al cambiar de tema o de paleta.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const colors = useMemo(() => chartColors(), [resolvedTheme]);
+  const colors = useMemo(() => chartColors(), [resolvedTheme, palette]);
 
   const { movements } = history;
   const last = movements.length - 1;
@@ -120,7 +123,7 @@ function BalanceHistoryChart({ history, month, currency = "ARS" }) {
     <>
       <div className="flex flex-col gap-3 xl:flex-1" aria-hidden="true">
         <div className="relative h-52 sm:h-56 xl:h-auto xl:min-h-56 xl:flex-1">
-          <Bar key={resolvedTheme} data={chartData} options={options} />
+          <Bar key={`${resolvedTheme}-${palette}`} data={chartData} options={options} />
         </div>
         {/* Meses: cada uno ocupa el ancho de sus barras */}
         <div className="flex">

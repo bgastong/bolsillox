@@ -41,6 +41,11 @@
         root.dataset.theme = theme;
         root.classList.toggle("dark", theme === "dark");
         root.style.colorScheme = theme;
+        // Paleta de colores elegida (Ajustes > Colores). Ver src/lib/appearance.js
+        try {
+          var appearance = JSON.parse(localStorage.getItem("bolsillox.appearance") || "null");
+          if (appearance && /^(suave|sobria|contraste)$/.test(appearance.palette)) root.dataset.palette = appearance.palette;
+        } catch (e) {}
       })();
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />

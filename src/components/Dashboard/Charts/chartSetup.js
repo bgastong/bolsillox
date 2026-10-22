@@ -35,6 +35,7 @@ export function chartColors() {
   return {
     income: read("--income"),
     expense: read("--expense"),
+    danger: read("--danger"),
     text: read("--foreground"),
     muted: read("--text-4"),
     soft: read("--text-2"),

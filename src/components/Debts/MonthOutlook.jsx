@@ -101,7 +101,7 @@ function MonthOutlook({ rules, installments, currency, rate }) {
           />
         </Row>
       </dl>
-      {left < 0 && <p className="m-0 text-xs text-expense">{t("outlookShort")}</p>}
+      {left < 0 && <p className="m-0 text-xs text-danger">{t("outlookShort")}</p>}
       {!convertible && <p className="m-0 text-xs text-warn">{t("rateMissingShort")}</p>}
     </section>
   );

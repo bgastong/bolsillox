@@ -74,7 +74,7 @@ function BudgetRow({ item, onClick, compact = false }) {
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
           <BudgetStatus item={item} />
           <span className="text-xs tabular-nums">
-            <span className={item.status === "over" ? "text-expense" : undefined}>{formatCurrency(item.spent, locale)}</span>
+            <span className={item.status === "over" ? "text-danger" : undefined}>{formatCurrency(item.spent, locale)}</span>
             <span className="text-muted-foreground"> / {formatCurrency(item.amount, locale)}</span>
           </span>
         </div>

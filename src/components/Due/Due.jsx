@@ -4,13 +4,13 @@ import { parseISODate } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
 
 // Colores por urgencia (ver lib/due.js): sin color, ámbar o rojo.
-const TEXT_TONE = { later: undefined, soon: "text-warn", overdue: "text-expense" };
+const TEXT_TONE = { later: undefined, soon: "text-warn", overdue: "text-danger" };
 const TILE_TONE = {
   later: "border-fg/[0.07] bg-fg/[0.02]",
   soon: "border-[color:var(--warn-border)] bg-[color:var(--warn-bg)]",
-  overdue: "border-[color:var(--expense)]/40 bg-[color:var(--expense-soft)]",
+  overdue: "border-[color:var(--danger)]/40 bg-[color:var(--danger-soft)]",
 };
-const MONTH_TONE = { later: "text-[color:var(--text-3)]", soon: "text-warn", overdue: "text-expense" };
+const MONTH_TONE = { later: "text-[color:var(--text-3)]", soon: "text-warn", overdue: "text-danger" };
 
 /*
 Fecha como mini calendario: mes arriba y día abajo. Es decorativa (el texto de

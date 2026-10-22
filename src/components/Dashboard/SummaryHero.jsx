@@ -33,7 +33,7 @@ function BigAmount({ amount, currency }) {
     <p
       className={cn(
         "m-0 mt-2 text-[40px] leading-none tracking-[-0.055em] whitespace-nowrap tabular-nums sm:text-[54px]",
-        amount < 0 && "text-expense",
+        amount < 0 && "text-danger",
       )}
       aria-label={formatCurrency(amount, locale, { currency })}
     >
@@ -67,7 +67,7 @@ function BalanceTrend({ start, daily, currency }) {
   const line = points.map(([x, y], index) => `${index ? "L" : "M"}${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
   // Rojo si en el mes se perdio plata (termina mas bajo que como arranco) o si el saldo es negativo.
   const loss = values.at(-1) < values[0] || values.at(-1) < 0;
-  const color = loss ? "var(--expense)" : "var(--income)";
+  const color = loss ? "var(--danger)" : "var(--income)";
   const format = (value) => formatCurrency(value, locale, { currency });
 
   return (
@@ -155,7 +155,7 @@ export function BalanceCard({ summary, className }) {
           >
             {/* Gastar es lo normal: la parte gastada va en gris y solo se pone roja si se gasto de mas */}
             <span
-              className={cn("grow-x h-full rounded-[2px]", spent > 100 ? "bg-expense" : "bg-[color:var(--text-4)]")}
+              className={cn("grow-x h-full rounded-[2px]", spent > 100 ? "bg-danger" : "bg-[color:var(--text-4)]")}
               style={{ width: `${Math.min(spent, 100)}%` }}
             />
             {spent < 100 && (
@@ -171,7 +171,7 @@ export function BalanceCard({ summary, className }) {
                 {t("spentShare", { spent })} · <span className="text-income">{t("savedShare", { saved: 100 - spent })}</span>
               </>
             ) : (
-              <span className="text-expense">{t("overspent")}</span>
+              <span className="text-danger">{t("overspent")}</span>
             )}
           </p>
         </div>
