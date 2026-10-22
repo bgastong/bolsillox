@@ -1,7 +1,8 @@
 import { ArrowDownRightIcon, ArrowUpRightIcon, MinusIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency, formatDate, formatMonth, formatPercent } from "@/lib/format";
+import Money from "@/components/Money/Money";
+import { formatCurrency, formatDate, formatMonth, formatPercent, todayISO } from "@/lib/format";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -124,7 +125,22 @@ export function BalanceCard({ summary, className }) {
         </div>
         <div className="flex flex-col items-start gap-1.5 sm:items-end">
           <VariationChip value={summary.variation.balance} suffix={` ${t("vsMonth", { month: previousMonth })}`} />
-          <span className="text-xs text-[color:var(--text-4)]">{t("cardBalanceHint")}</span>
+          {/* Hasta cuando cuenta el saldo: hoy, o el cierre si el mes ya paso */}
+          <span className="text-xs text-[color:var(--text-4)]">
+            {summary.balanceDate && summary.balanceDate < todayISO() ? t("cardBalanceClosed") : t("cardBalanceHint")}
+          </span>
+          {/* Movimientos con fecha futura: todavia no estan en el saldo */}
+          {summary.scheduled && (
+            <span className="text-xs text-[color:var(--text-3)]">
+              {t("balanceProjected")}{" "}
+              <Money
+                amount={summary.scheduled.projected}
+                type={summary.scheduled.projected < 0 ? "expense" : "neutral"}
+                currency={summary.currency}
+                className="font-normal"
+              />
+            </span>
+          )}
         </div>
       </div>
 

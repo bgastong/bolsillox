@@ -21,6 +21,12 @@ export function monthRange(key, offset = 0) {
   };
 }
 
+// "YYYY-MM-DD" del dia siguiente.
+function nextDay(iso) {
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day + 1)).toISOString().slice(0, 10);
+}
+
 // Variacion porcentual; null si no hay base para comparar.
 export function percentChange(current, previous) {
   if (!previous) return null;
@@ -41,8 +47,12 @@ export async function buildSummary(
   const money = { target, rate };
   const current = monthRange(monthKey);
   const previous = monthRange(monthKey, -1);
-  // La evolucion del saldo llega hasta hoy (o hasta fin de mes si el mes ya paso).
+  // El saldo y su evolucion llegan hasta hoy (o hasta fin de mes si el mes ya paso):
+  // un movimiento con fecha futura se suma recien cuando llega su dia.
   const dailyTo = today && today < current.to ? today : current.to;
+  const previousTo = today && today < previous.to ? today : previous.to;
+  // Lo programado: movimientos despues de hoy y hasta fin del mes elegido.
+  const scheduledFrom = dailyTo < current.to ? nextDay(dailyTo) : null;
   const ranges = [];
   for (let offset = months - 1; offset >= 0; offset--) ranges.push(monthRange(monthKey, -offset));
   // Historial del saldo (flujo de caja): desde el primer mes del grafico hasta hoy.
@@ -54,6 +64,7 @@ export async function buildSummary(
     previousTotals,
     allTime,
     previousAllTime,
+    scheduledTotals,
     currentByCategory,
     previousByCategory,
     recentRows,
@@ -65,8 +76,9 @@ export async function buildSummary(
   ] = await Promise.all([
     repo.totalsBetween(userId, current.from, current.to, money),
     repo.totalsBetween(userId, previous.from, previous.to, money),
-    repo.totalsBetween(userId, null, current.to, money),
-    repo.totalsBetween(userId, null, previous.to, money),
+    repo.totalsBetween(userId, null, dailyTo, money),
+    repo.totalsBetween(userId, null, previousTo, money),
+    scheduledFrom ? repo.totalsBetween(userId, scheduledFrom, current.to, money) : null,
     repo.expensesByCategory(userId, current.from, current.to, money),
     repo.expensesByCategory(userId, previous.from, previous.to, money),
     repo.list(userId, { to: current.to, sort: "date", order: "desc", limit: recent }),
@@ -128,6 +140,19 @@ export async function buildSummary(
     // Movimientos en otra moneda que no se pudieron convertir (sin cotizacion).
     unconverted: allTime.unconverted,
     balance,
+    // Fecha hasta la que cuenta el saldo (hoy, o el fin del mes si ya paso).
+    balanceDate: dailyTo,
+    // Movimientos con fecha futura en el mes: todavia no estan en el saldo.
+    // projected = como quedaria el saldo a fin de mes con ellos.
+    scheduled:
+      scheduledTotals && scheduledTotals.count > 0
+        ? {
+            income: scheduledTotals.income,
+            expense: scheduledTotals.expense,
+            count: scheduledTotals.count,
+            projected: round(balance + scheduledTotals.income - scheduledTotals.expense),
+          }
+        : null,
     income: currentTotals.income,
     expense: currentTotals.expense,
     net,
