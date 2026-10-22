@@ -8,6 +8,7 @@ import AppSidebar from "../../components/Sidebar/Sidebar";
 import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import MobileNav from "../../components/MobileNav/MobileNav";
+import OpenFromShortcut from "../../components/Pwa/OpenFromShortcut";
 
 function DashboardLayout({ children }) {
   const { t } = useLanguage();
@@ -38,6 +39,7 @@ function DashboardLayout({ children }) {
           </SidebarInset>
 
           <MobileNav />
+          <OpenFromShortcut />
         </SidebarProvider>
       </CommandPalette>
     </MovementsProvider>
