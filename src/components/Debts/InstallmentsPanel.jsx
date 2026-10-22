@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import MonthOutlook from "@/components/Debts/MonthOutlook";
 import InstallmentAlerts from "@/components/Recurring/InstallmentAlerts";
 import InstallmentRow from "@/components/Recurring/InstallmentRow";
 import InstallmentsByMonth from "@/components/Recurring/InstallmentsByMonth";
@@ -96,6 +97,8 @@ function InstallmentsPanel({ addButton }) {
               <p className="col-span-2 m-0 text-xs text-warn">{t("rateMissingShort")}</p>
             )}
           </section>
+
+          <MonthOutlook rules={allRules} installments={thisMonth} currency={currency} rate={rate} />
 
           <InstallmentsByMonth plans={ongoing} currency={currency} rate={rate} />
 
