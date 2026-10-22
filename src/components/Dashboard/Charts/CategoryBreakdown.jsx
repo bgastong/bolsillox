@@ -15,7 +15,7 @@ function CategoryVariation({ value }) {
     <span
       className={cn(
         "w-14 text-right text-[11.5px] tabular-nums whitespace-nowrap",
-        value > 0 ? "text-expense" : value < 0 ? "text-income" : "text-[color:var(--text-4)]",
+        value > 0 ? "text-danger" : value < 0 ? "text-income" : "text-[color:var(--text-4)]",
       )}
     >
       {arrow} {formatPercent(Math.abs(value), locale).replace("+", "")}

@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import compression from "compression";
 import express from "express";
 import { notificationSettingsSchema, rateSettingsSchema } from "../shared/movementSchema.js";
+import { appearanceSchema } from "../shared/appearance.js";
+import { createAppearance } from "./appearance.js";
 import { createAuthService, cookieOptions, parseCookies, SESSION_COOKIE } from "./auth.js";
 import { createRepository } from "./repository.js";
 import { createRecurringService, toISODate } from "./recurring.js";
@@ -78,6 +80,7 @@ export function createApp(
   const receivables = createReceivablesService(db, { now });
   const rates = createRatesService(db, { now, fetchImpl });
   const reminders = createReminders(db, { recurring, receivables, mailer, appUrl: publicUrl });
+  const appearance = createAppearance(db);
   const maintenance = createMaintenance(db, { now, reminders });
   const reporter = createErrorReporter({ mailer, to: alertEmail, now });
   const clientErrorLimiter = createRateLimiter({
@@ -198,6 +201,15 @@ export function createApp(
 
   app.put("/api/notifications", async (req, res) => {
     res.json(await reminders.saveSettings(req.user.id, notificationSettingsSchema.parse(req.body ?? {})));
+  });
+
+  // Colores a eleccion (paleta y donde se ve el color de los gastos).
+  app.get("/api/appearance", async (req, res) => {
+    res.json(await appearance.get(req.user.id));
+  });
+
+  app.put("/api/appearance", async (req, res) => {
+    res.json(await appearance.save(req.user.id, appearanceSchema.parse(req.body ?? {})));
   });
 
   app.get("/api/rates", async (req, res) => {

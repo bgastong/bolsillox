@@ -11,6 +11,7 @@ import AccountSection from "@/components/Account/AccountSection";
 import CategoriesSection from "@/components/Categories/CategoriesSection";
 import NotificationsSection from "@/components/Settings/NotificationsSection";
 import InstallSection from "@/components/Settings/InstallSection";
+import ColorsSection from "@/components/Settings/ColorsSection";
 import { PageHeader } from "@/components/Movements/MovementBits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -299,6 +300,8 @@ function Settings() {
           ))}
         </div>
       </Section>
+
+      <ColorsSection Section={Section} OptionCard={OptionCard} />
 
       <Section id="settings-language" title={t("language")}>
         <div role="radiogroup" aria-label={t("language")} className="grid gap-2 sm:grid-cols-2">

@@ -272,6 +272,7 @@ function CommandPalette({ children }) {
                               </span>
                             </span>
                             <Money
+                              listItem
                               type={item.movement.type}
                               amount={item.movement.amount}
                               currency={item.movement.currency}

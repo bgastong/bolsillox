@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import Money from "@/components/Money/Money";
 import { formatCurrency, formatDate, formatMonth, formatPercent, todayISO } from "@/lib/format";
+import { useAppearance } from "@/hooks/useAppearance";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -33,7 +34,7 @@ function BigAmount({ amount, currency }) {
     <p
       className={cn(
         "m-0 mt-2 text-[40px] leading-none tracking-[-0.055em] whitespace-nowrap tabular-nums sm:text-[54px]",
-        amount < 0 && "text-expense",
+        amount < 0 && "text-danger",
       )}
       aria-label={formatCurrency(amount, locale, { currency })}
     >
@@ -67,7 +68,7 @@ function BalanceTrend({ start, daily, currency }) {
   const line = points.map(([x, y], index) => `${index ? "L" : "M"}${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
   // Rojo si en el mes se perdio plata (termina mas bajo que como arranco) o si el saldo es negativo.
   const loss = values.at(-1) < values[0] || values.at(-1) < 0;
-  const color = loss ? "var(--expense)" : "var(--income)";
+  const color = loss ? "var(--danger)" : "var(--income)";
   const format = (value) => formatCurrency(value, locale, { currency });
 
   return (
@@ -108,6 +109,7 @@ function BalanceTrend({ start, daily, currency }) {
 // Saldo: el numero protagonista, su variacion y cuanto se gasto de lo que entro.
 export function BalanceCard({ summary, className }) {
   const { t, locale } = useLanguage();
+  const { appearance } = useAppearance();
   const spent = summary.income ? Math.round((summary.expense / summary.income) * 100) : null;
   const previousMonth = formatMonth(summary.previous.month, locale).split(" ")[0];
 
@@ -153,9 +155,13 @@ export function BalanceCard({ summary, className }) {
             role="img"
             aria-label={spent <= 100 ? `${t("spentShare", { spent })}, ${t("savedShare", { saved: 100 - spent })}` : t("overspent")}
           >
-            {/* Gastar es lo normal: la parte gastada va en gris y solo se pone roja si se gasto de mas */}
+            {/* La parte gastada: en el color de gastos suave si se eligio (Ajustes > Colores),
+                si no en gris. Si se gasto mas de lo que entro, color de alerta. */}
             <span
-              className={cn("grow-x h-full rounded-[2px]", spent > 100 ? "bg-expense" : "bg-[color:var(--text-4)]")}
+              className={cn(
+                "grow-x h-full rounded-[2px]",
+                spent > 100 ? "bg-danger" : appearance.expenseColor.balanceBar ? "bg-expense/55" : "bg-[color:var(--text-4)]",
+              )}
               style={{ width: `${Math.min(spent, 100)}%` }}
             />
             {spent < 100 && (
@@ -171,7 +177,7 @@ export function BalanceCard({ summary, className }) {
                 {t("spentShare", { spent })} · <span className="text-income">{t("savedShare", { saved: 100 - spent })}</span>
               </>
             ) : (
-              <span className="text-expense">{t("overspent")}</span>
+              <span className="text-danger">{t("overspent")}</span>
             )}
           </p>
         </div>
@@ -209,12 +215,16 @@ acompaña al titulo y el chip compara con el mes anterior.
 const FLOW_TONES = {
   income: { sign: "+", amount: "text-income", dot: "bg-income", line: "var(--income)" },
   expense: { sign: "−", amount: "text-foreground", dot: "bg-[color:var(--text-3)]", line: "var(--text-3)" },
+  // Gastos del mes con el color de gastos (si se eligio en Ajustes > Colores).
+  expenseTinted: { sign: "−", amount: "text-expense", dot: "bg-expense", line: "var(--expense)" },
 };
 
 function FlowRow({ id, label, amount, kind, series, variation, previousMonth, currency }) {
   const { t, locale } = useLanguage();
   const animated = useCountUp(amount);
-  const tone = FLOW_TONES[kind];
+  const { appearance } = useAppearance();
+  const tinted = kind === "expense" && appearance.expenseColor.monthTotal;
+  const tone = FLOW_TONES[tinted ? "expenseTinted" : kind];
   return (
     <div role="group" aria-labelledby={id} className="flex min-w-0 flex-col gap-2 p-4 sm:px-5 sm:py-[18px]">
       <span id={id} className="flex items-center gap-2 text-[12.5px] text-[color:var(--text-3)]">
@@ -227,7 +237,7 @@ function FlowRow({ id, label, amount, kind, series, variation, previousMonth, cu
           aria-label={formatCurrency(amount, locale, { currency })}
         >
           <span aria-hidden="true">
-            <span className={kind === "expense" ? "text-[color:var(--text-3)]" : undefined}>{tone.sign} </span>
+            <span className={kind === "expense" && !tinted ? "text-[color:var(--text-3)]" : undefined}>{tone.sign} </span>
             {formatCurrency(Math.round(animated), locale, { currency })}
           </span>
         </span>

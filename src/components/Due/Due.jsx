@@ -1,16 +1,18 @@
 import { cn } from "@/lib/utils";
 import { dueTone } from "@/lib/due";
 import { parseISODate } from "@/lib/format";
+import { useAppearance } from "@/hooks/useAppearance";
 import { useLanguage } from "@/hooks/useLanguage";
 
 // Colores por urgencia (ver lib/due.js): sin color, ámbar o rojo.
-const TEXT_TONE = { later: undefined, soon: "text-warn", overdue: "text-expense" };
+const TEXT_TONE = { later: undefined, soon: "text-warn", overdue: "text-danger" };
 const TILE_TONE = {
   later: "border-fg/[0.07] bg-fg/[0.02]",
   soon: "border-[color:var(--warn-border)] bg-[color:var(--warn-bg)]",
-  overdue: "border-[color:var(--expense)]/40 bg-[color:var(--expense-soft)]",
+  overdue: "border-[color:var(--danger)]/40 bg-[color:var(--danger-soft)]",
 };
-const MONTH_TONE = { later: "text-[color:var(--text-3)]", soon: "text-warn", overdue: "text-expense" };
+// El mes de un vencimiento lejano va en el color de gastos si se eligio (Ajustes > Colores).
+const MONTH_TONE = { later: "text-[color:var(--text-3)]", soon: "text-warn", overdue: "text-danger" };
 
 /*
 Fecha como mini calendario: mes arriba y día abajo. Es decorativa (el texto de
@@ -18,9 +20,11 @@ DueStatus dice lo mismo), así que el lector de pantalla la saltea.
 */
 export function DueDateTile({ date, daysLeft, className }) {
   const { locale } = useLanguage();
+  const { appearance } = useAppearance();
   const value = parseISODate(date);
   const month = new Intl.DateTimeFormat(locale, { month: "short" }).format(value).replace(".", "");
   const tone = dueTone(daysLeft);
+  const monthTone = tone === "later" && appearance.expenseColor.due ? "text-expense" : MONTH_TONE[tone];
   return (
     <span
       aria-hidden="true"
@@ -30,7 +34,7 @@ export function DueDateTile({ date, daysLeft, className }) {
         className,
       )}
     >
-      <span className={cn("font-mono text-[9px] font-medium tracking-[0.06em] uppercase", MONTH_TONE[tone])}>{month}</span>
+      <span className={cn("font-mono text-[9px] font-medium tracking-[0.06em] uppercase", monthTone)}>{month}</span>
       <span className="mt-[3px] font-mono text-[15px] font-medium">{String(value.getDate()).padStart(2, "0")}</span>
     </span>
   );

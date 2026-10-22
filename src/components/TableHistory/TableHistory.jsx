@@ -158,7 +158,7 @@ function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggl
                   {t(`pm_${movement.paymentMethod}`)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Money type={movement.type} amount={movement.amount} currency={movement.currency} />
+                  <Money listItem type={movement.type} amount={movement.amount} currency={movement.currency} />
                 </TableCell>
                 <TableCell className="pr-5">
                   <div className="opacity-60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
@@ -214,7 +214,7 @@ function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggl
                       <span className="truncate">{movement.title}</span>
                       {movement.recurringId && <RecurringMark />}
                     </p>
-                    <Money type={movement.type} amount={movement.amount} currency={movement.currency} className="text-[15px]" />
+                    <Money listItem type={movement.type} amount={movement.amount} currency={movement.currency} className="text-[15px]" />
                   </div>
                   <div className="mt-1 flex items-center justify-between gap-2">
                     <CategoryBadge category={movement.category} className="min-w-0" />

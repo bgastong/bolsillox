@@ -42,7 +42,7 @@ function InstallmentRow({ rule, onEdit }) {
       <div className="grid min-w-0 flex-1 grid-cols-1 gap-1.5">
         <div className="flex items-baseline justify-between gap-2">
           <p className="m-0 truncate text-[15px] font-medium">{rule.title}</p>
-          <Money type={rule.type} amount={rule.amount} currency={rule.currency} className="text-[15px]" />
+          <Money listItem type={rule.type} amount={rule.amount} currency={rule.currency} className="text-[15px]" />
         </div>
         <div
           className="h-1.5 overflow-hidden rounded-full bg-fg/[0.08]"
@@ -66,7 +66,7 @@ function InstallmentRow({ rule, onEdit }) {
             ) : (
               <CreditCardIcon className="size-3.5 shrink-0" aria-hidden="true" />
             )}
-            <span className={cn("truncate", overdue.length > 0 && rule.active && "text-expense")}>{status}</span>
+            <span className={cn("truncate", overdue.length > 0 && rule.active && "text-danger")}>{status}</span>
           </span>
           {!finished && (
             <span className="shrink-0 whitespace-nowrap tabular-nums">

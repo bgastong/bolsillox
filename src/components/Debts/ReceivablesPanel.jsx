@@ -17,7 +17,7 @@ function receivableStatus(item, t, locale) {
   if (item.status === "paid") return { text: t("receivablePaid"), tone: "text-income" };
   const short = (iso) => formatDate(iso, locale, { day: "numeric", month: "short" });
   if (item.dueDate && item.dueDate < todayISO()) {
-    return { text: t("receivableOverdue", { date: short(item.dueDate) }), tone: "text-expense" };
+    return { text: t("receivableOverdue", { date: short(item.dueDate) }), tone: "text-danger" };
   }
   if (item.dueDate) return { text: t("receivableDue", { date: short(item.dueDate) }), tone: "text-muted-foreground" };
   return { text: t("receivableSince", { date: short(item.date) }), tone: "text-muted-foreground" };
@@ -146,7 +146,7 @@ function ReceivablesPanel({ target, setTarget }) {
           </div>
           <div className="col-span-2 grid gap-1 sm:col-span-1">
             <p className="m-0 text-xs text-muted-foreground">{t("receivablesOpenCount", { count: open.length })}</p>
-            <p className={cn("m-0 text-sm", overdue ? "text-expense" : "text-muted-foreground")}>
+            <p className={cn("m-0 text-sm", overdue ? "text-danger" : "text-muted-foreground")}>
               {overdue ? t("receivablesOverdueCount", { count: overdue }) : t("receivablesNoneOverdue")}
             </p>
           </div>

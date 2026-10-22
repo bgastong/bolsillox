@@ -8,6 +8,7 @@ import {
   LogOutIcon,
   PaletteIcon,
   SettingsIcon,
+  SwatchBookIcon,
   TagIcon,
   UserIcon,
 } from "lucide-react";
@@ -33,6 +34,7 @@ const SETTINGS_SHORTCUTS = [
   { id: "settings-categories", labelKey: "categoriesTitle", icon: TagIcon },
   { id: "settings-notifications", labelKey: "notificationsTitle", icon: BellIcon },
   { id: "settings-theme", labelKey: "themeTitle", icon: PaletteIcon },
+  { id: "settings-colors", labelKey: "colorsTitle", icon: SwatchBookIcon },
   { id: "settings-language", labelKey: "language", icon: LanguagesIcon },
 ];
 

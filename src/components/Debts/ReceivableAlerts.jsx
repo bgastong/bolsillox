@@ -40,7 +40,7 @@ function ReceivableAlerts({ className }) {
         aria-labelledby="receivable-alerts-title"
         className={cn(
           "surface grid gap-3 rounded-[14px] p-4 sm:p-5",
-          overdue > 0 && "border-[color:var(--expense)]/40",
+          overdue > 0 && "border-[color:var(--danger)]/40",
           className,
         )}
       >
@@ -49,7 +49,7 @@ function ReceivableAlerts({ className }) {
             aria-hidden="true"
             className={cn(
               "flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-fg/[0.07] bg-fg/[0.04]",
-              overdue > 0 ? "text-expense" : "text-income",
+              overdue > 0 ? "text-danger" : "text-income",
             )}
           >
             <HandCoinsIcon className="size-4" strokeWidth={1.75} />
