@@ -25,12 +25,14 @@ function groupByDay(movements) {
   return groups;
 }
 
-// Encabezado del dia: "Hoy · lun 5 oct" y el neto del dia. El neto solo se
+// Encabezado del dia: "Hoy · lun 5 oct" (o "Programado · jue 30 oct" si todavia
+// no llego: esos movimientos no estan en el saldo) y el neto del dia. El neto solo se
 // muestra si hay mas de un movimiento (con uno repetiria el monto de la fila)
 // y si son todos de la misma moneda.
 function DayHeader({ date, items }) {
   const { t, locale } = useLanguage();
   const pretty = formatDate(date, locale, { weekday: "short", day: "numeric", month: "short" });
+  const scheduled = date > todayISO();
   const label =
     date === todayISO()
       ? `${t("todayLabel")} · ${pretty}`
@@ -45,7 +47,14 @@ function DayHeader({ date, items }) {
 
   return (
     <div className="flex items-center justify-between px-2 pt-3 pb-1 text-xs text-[color:var(--text-4)]">
-      <span>{label}</span>
+      <span className="flex items-center gap-1.5">
+        {scheduled && (
+          <span className="rounded-md border border-fg/10 px-1.5 py-0.5 text-[11px] leading-none text-[color:var(--text-3)]">
+            {t("scheduledLabel")}
+          </span>
+        )}
+        {label}
+      </span>
       {net !== null && (
         <Money
           amount={net}
