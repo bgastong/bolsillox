@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import DashboardLayout from "./layouts/DashboardLayout/DashboardLayout";
 import { SettingsProvider } from "./context/SettingsContext";
 import { CategoriesProvider } from "./context/CategoriesContext";
+import ServiceWorker from "./components/Pwa/ServiceWorker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { whenIdle } from "@/lib/idle";
 
@@ -51,6 +52,7 @@ export default function AppShell() {
 
   return (
     <SettingsProvider>
+      <ServiceWorker />
       <CategoriesProvider>
         <DashboardLayout>
           <Suspense fallback={<PageFallback />}>

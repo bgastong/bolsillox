@@ -5,6 +5,10 @@ export const translations = {
     menu: "Menú",
     mainNavigation: "Navegación principal",
     mobileNavNew: "Nuevo",
+    // Sin conexion
+    offlineTitle: "Sin conexión",
+    offlineText: "bolsillox necesita internet para traer tus datos. Cuando vuelva la señal, se abre sola.",
+    offlineRetry: "Reintentar",
     // Modo privado
     hideAmounts: "Ocultar montos",
     showAmounts: "Mostrar montos",
@@ -682,6 +686,10 @@ export const translations = {
     menu: "Menu",
     mainNavigation: "Main navigation",
     mobileNavNew: "New",
+    // Offline
+    offlineTitle: "You're offline",
+    offlineText: "bolsillox needs the internet to load your data. It will open on its own when you're back online.",
+    offlineRetry: "Try again",
     // Privacy mode
     hideAmounts: "Hide amounts",
     showAmounts: "Show amounts",

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Splash from "./components/Brand/Splash";
 import { BrandMark } from "./components/Brand/BrandIcons";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { whenIdle } from "@/lib/idle";
@@ -45,11 +46,36 @@ function FullScreenLoader() {
   );
 }
 
+/*
+Sin conexion al abrir la app (por ejemplo, la app instalada sin señal). No se
+sabe si hay sesion, asi que no se manda al login: se avisa y se reintenta solo
+cuando vuelve la red.
+*/
+function OfflineScreen() {
+  const { t } = useLanguage();
+  const { retrySession } = useAuth();
+  return (
+    <main className="flex min-h-svh flex-col items-center justify-center gap-4 px-6 text-center">
+      <BrandMark className="size-12" />
+      <div className="grid max-w-xs gap-1.5">
+        <h1 className="m-0 text-lg font-medium">{t("offlineTitle")}</h1>
+        <p className="m-0 text-sm text-muted-foreground" role="status">
+          {t("offlineText")}
+        </p>
+      </div>
+      <Button variant="outline" onClick={retrySession} className="h-11 sm:h-9">
+        {t("offlineRetry")}
+      </Button>
+    </main>
+  );
+}
+
 // Pantallas de la app: solo con sesion iniciada.
 function RequireAuth({ children }) {
   const { status, loggedOut } = useAuth();
   const location = useLocation();
   if (status === "loading") return <FullScreenLoader />;
+  if (status === "offline") return <OfflineScreen />;
   if (status === "guest") {
     // Sin sesion, la raiz muestra la pagina de inicio (con botones para entrar).
     if (location.pathname === "/") {
@@ -75,6 +101,7 @@ function GuestOnly({ children }) {
     return whenIdle(loadAppShell, 4000);
   }, []);
   if (status === "loading") return <FullScreenLoader />;
+  if (status === "offline") return <OfflineScreen />;
   if (status === "authenticated") {
     const from = location.state?.from;
     return <Navigate to={from ? `${from.pathname}${from.search}` : "/"} replace />;
