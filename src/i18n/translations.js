@@ -5,6 +5,26 @@ export const translations = {
     menu: "Menú",
     mainNavigation: "Navegación principal",
     mobileNavNew: "Nuevo",
+    // Sin conexion
+    offlineTitle: "Sin conexión",
+    offlineText: "bolsillox necesita internet para traer tus datos. Cuando vuelva la señal, se abre sola.",
+    offlineRetry: "Reintentar",
+    // Version nueva de la app
+    updateAvailable: "Hay una versión nueva",
+    updateNow: "Actualizar",
+    updateLater: "Después",
+    // Instalar la app
+    installTitle: "Instalar la app",
+    installDescription: "Abrí bolsillox desde la pantalla de inicio como cualquier app: abre al instante y también sin señal.",
+    installButton: "Instalar bolsillox",
+    installMenu: "Instalar app",
+    installDone: "Listo: bolsillox quedó instalada",
+    installInstalled: "Ya está instalada en este dispositivo.",
+    installIosSteps: "Cómo instalarla en iPhone o iPad",
+    installIosStep1: "En Safari, tocá Compartir",
+    installIosStep2: "Elegí «Agregar a inicio»",
+    installIosStep3: "Tocá «Agregar». Listo: aparece con su ícono en la pantalla de inicio.",
+    installManual: "Tu navegador no tiene un botón para instalarla: buscá «Instalar app» o «Agregar a la pantalla de inicio» en su menú. En Chrome y Edge se instala con un toque.",
     // Modo privado
     hideAmounts: "Ocultar montos",
     showAmounts: "Mostrar montos",
@@ -682,6 +702,26 @@ export const translations = {
     menu: "Menu",
     mainNavigation: "Main navigation",
     mobileNavNew: "New",
+    // Offline
+    offlineTitle: "You're offline",
+    offlineText: "bolsillox needs the internet to load your data. It will open on its own when you're back online.",
+    offlineRetry: "Try again",
+    // New app version
+    updateAvailable: "New version available",
+    updateNow: "Update",
+    updateLater: "Later",
+    // Install the app
+    installTitle: "Install the app",
+    installDescription: "Open bolsillox from your home screen like any other app: it opens instantly, even offline.",
+    installButton: "Install bolsillox",
+    installMenu: "Install app",
+    installDone: "Done: bolsillox is installed",
+    installInstalled: "It's already installed on this device.",
+    installIosSteps: "How to install it on iPhone or iPad",
+    installIosStep1: "In Safari, tap Share",
+    installIosStep2: "Choose “Add to Home Screen”",
+    installIosStep3: "Tap “Add”. Done: it shows up with its icon on your home screen.",
+    installManual: "Your browser has no install button: look for “Install app” or “Add to Home screen” in its menu. Chrome and Edge install it in one tap.",
     // Privacy mode
     hideAmounts: "Hide amounts",
     showAmounts: "Show amounts",

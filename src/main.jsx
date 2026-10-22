@@ -5,9 +5,12 @@ import App from "./App.jsx";
 import AppProviders from "./context/AppProviders.jsx";
 import ErrorBoundary from "./components/ErrorBoundary/ErrorBoundary.jsx";
 import { installErrorReporting } from "./lib/errorReporting";
+import { listenForInstallPrompt } from "./lib/installPrompt";
 import "./index.css";
 
 installErrorReporting();
+// Lo antes posible: el navegador avisa que se puede instalar apenas carga.
+listenForInstallPrompt();
 
 // Visitas con Vercel Web Analytics: sin cookies y sin datos personales.
 // Solo en el build de produccion (en desarrollo no se cuenta nada).

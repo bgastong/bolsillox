@@ -4,8 +4,9 @@ import { AuthContext } from "./AuthContextValue";
 
 /*
 Sesion del usuario. La cookie es httpOnly, asi que el front no la ve:
-pregunta a /api/auth/me quien es.
-status: "loading" | "authenticated" | "guest"
+pregunta a /api/auth/session quien es.
+status: "loading" | "authenticated" | "guest" | "offline"
+("offline": sin conexion no se sabe si hay sesion; al volver la red se pregunta de nuevo).
 loggedOut: true si la persona cerro sesion (o borro la cuenta) a proposito;
 asi al volver a entrar va al inicio y no a la ultima pantalla.
 */
@@ -14,17 +15,37 @@ export function AuthProvider({ children }) {
   // google: login con Google disponible; email: se pueden enviar codigos.
   const [config, setConfig] = useState({ google: false, email: false });
 
+  const checkSession = useCallback(
+    (signal) =>
+      api.session({ signal }).then(
+        ({ user }) => setState(user ? { status: "authenticated", user } : { status: "guest", user: null }),
+        (error) => {
+          if (error.name === "AbortError") return;
+          // Sin red no se manda al login: se muestra "Sin conexion".
+          setState({ status: error.code === "network_error" ? "offline" : "guest", user: null });
+        },
+      ),
+    [],
+  );
+
   useEffect(() => {
     const controller = new AbortController();
-    api.session({ signal: controller.signal }).then(
-      ({ user }) => setState(user ? { status: "authenticated", user } : { status: "guest", user: null }),
-      (error) => {
-        if (error.name !== "AbortError") setState({ status: "guest", user: null });
-      },
-    );
+    checkSession(controller.signal);
     api.getAuthConfig({ signal: controller.signal }).then(setConfig, () => {});
     return () => controller.abort();
-  }, []);
+  }, [checkSession]);
+
+  // Volver a preguntar (boton "Reintentar" o cuando vuelve la conexion).
+  const retrySession = useCallback(() => {
+    setState({ status: "loading", user: null });
+    checkSession();
+  }, [checkSession]);
+
+  useEffect(() => {
+    if (state.status !== "offline") return undefined;
+    window.addEventListener("online", retrySession);
+    return () => window.removeEventListener("online", retrySession);
+  }, [state.status, retrySession]);
 
   // Cualquier 401 de la API (sesion vencida) vuelve al login.
   useEffect(() => {
@@ -94,8 +115,9 @@ export function AuthProvider({ children }) {
       updateUser,
       logout,
       deleteAccount,
+      retrySession,
     }),
-    [state, config, login, register, verifyEmail, resetPassword, updateUser, logout, deleteAccount],
+    [state, config, login, register, verifyEmail, resetPassword, updateUser, logout, deleteAccount, retrySession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
