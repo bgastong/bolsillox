@@ -80,7 +80,16 @@ function BalanceHistoryChart({ history, month, currency = "ARS" }) {
     return tintExpenses ? colors.expense : colors.soft;
   };
   // Los meses anteriores al elegido, mas suaves.
-  const dim = (item, color) => (item.date.startsWith(month) ? color : withAlpha(color, 0.5));
+  const dim = (item, color) => (item.date.startsWith(month) ? color : withAlpha(color, 0.7));
+  // Area bajo cada tramo: verde suave si sube, del color de gastos suave si baja.
+  const areaUnder = (chart, color) => {
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return "transparent";
+    const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+    gradient.addColorStop(0, withAlpha(color, 0.22));
+    gradient.addColorStop(1, withAlpha(color, 0));
+    return gradient;
+  };
 
   const chartData = {
     labels: points.map((_, index) => index),
@@ -92,16 +101,10 @@ function BalanceHistoryChart({ history, month, currency = "ARS" }) {
         // Cada tramo toma el color del movimiento al que llega (sube o baja).
         segment: {
           borderColor: (context) => dim(points[context.p1DataIndex], colorOf(points[context.p1DataIndex])),
+          backgroundColor: (context) => areaUnder(context.chart, colorOf(points[context.p1DataIndex])),
         },
         fill: "start",
-        backgroundColor: (context) => {
-          const { ctx, chartArea } = context.chart;
-          if (!chartArea) return "transparent";
-          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-          gradient.addColorStop(0, colors.fg(0.1));
-          gradient.addColorStop(1, colors.fg(0));
-          return gradient;
-        },
+        backgroundColor: colors.fg(0.06),
         tension: 0.25,
         cubicInterpolationMode: "monotone",
         pointRadius: (context) => (context.dataIndex === last ? 4.5 : showPoints ? 3 : 0),
