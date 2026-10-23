@@ -21,7 +21,8 @@ import { budgetsRouter } from "./routes/budgets.js";
 import { categoriesRouter } from "./routes/categories.js";
 import { receivablesRouter } from "./routes/receivables.js";
 import { buildSummary } from "./summary.js";
-import { parseCurrency, parseMonth } from "./params.js";
+import { parseCurrency, parseDate, parseMonth, parseRange } from "./params.js";
+import { buildCashflow } from "./cashflow.js";
 import { errorHandler, HttpError } from "./errors.js";
 import { disabledMailer } from "./mailer.js";
 import { createErrorReporter } from "./alerts.js";
@@ -192,6 +193,17 @@ export function createApp(
     const summary = await buildSummary(repo, req.user.id, month, { target, rate, today: toISODate(now()) });
     // Con datos de ejemplo, el inicio ofrece borrarlos.
     res.json({ ...summary, hasDemoData: await hasDemoData(db, req.user.id) });
+  });
+
+  // Flujo de caja: el saldo movimiento a movimiento en un rango que termina en `to`
+  // (hoy, o el fin del mes elegido en el Inicio).
+  app.get("/api/cashflow", async (req, res) => {
+    const today = toISODate(now());
+    const range = parseRange(req.query.range);
+    const to = parseDate(req.query.to, today);
+    const target = parseCurrency(req.query.currency);
+    const rate = await rates.getActiveRate(req.user.id);
+    res.json(await buildCashflow(repo, req.user.id, { range, to: to > today ? today : to, target, rate }));
   });
 
   // Avisos por email de cuotas por vencer (se pueden apagar) e idioma de los emails.
