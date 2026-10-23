@@ -20,7 +20,7 @@ import InstallmentAlerts from "@/components/Recurring/InstallmentAlerts";
 import BudgetRow from "@/components/Budgets/BudgetRow";
 import DollarRates from "@/components/Dashboard/DollarRates";
 import CategoryBreakdown from "@/components/Dashboard/Charts/CategoryBreakdown";
-import BalanceHistoryChart from "@/components/Dashboard/Charts/BalanceHistoryChart";
+import CashflowPanel from "@/components/Dashboard/CashflowPanel";
 import ExpenseList from "@/components/Dashboard/ExpenseList/ExpenseList";
 import Panel from "@/components/Dashboard/Panel";
 import MonthPicker from "@/components/MonthPicker/MonthPicker";
@@ -239,8 +239,6 @@ function Dashboard() {
   const isEmptyAccount = summary && !summary.hasMovements;
   // La cuenta tiene datos, pero el mes elegido esta vacio.
   const isEmptyMonth = summary && summary.hasMovements && summary.count === 0;
-  // El flujo de caja necesita al menos un dia con movimientos en los ultimos meses.
-  const hasHistory = Boolean(summary?.history?.movements.length);
   const showSkeleton = loading && !summary;
 
   return (
@@ -296,20 +294,17 @@ function Dashboard() {
             </>
           )}
 
-          <Panel
-            className="order-last xl:order-none xl:col-span-8"
-            title={t("cashflowTitle")}
-            titleId="cashflow-title"
-            hint={t("cashflowHint")}
-          >
-            {showSkeleton ? (
+          {showSkeleton ? (
+            <Panel className="order-last xl:order-none xl:col-span-8" title={t("cashflowTitle")} titleId="cashflow-title">
               <PanelSkeleton className="h-60 sm:h-64" />
-            ) : hasHistory ? (
-              <BalanceHistoryChart history={summary.history} month={summary.month} currency={summary.currency} />
-            ) : (
-              <EmptyState message={t("chartEmpty")} />
-            )}
-          </Panel>
+            </Panel>
+          ) : (
+            <CashflowPanel
+              to={summary.balanceDate}
+              currency={summary.currency}
+              className="order-last xl:order-none xl:col-span-8"
+            />
+          )}
 
           <Panel
             className="xl:col-span-4 xl:self-start"
