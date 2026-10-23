@@ -303,26 +303,42 @@ describe("resumen y conversion de moneda", () => {
 
   test("el flujo de caja sube con cada ingreso y baja con cada gasto, movimiento por movimiento", async () => {
     const summary = await json(`/summary?month=${MONTH}`);
-    const { start, movements } = summary.history;
-    assert.ok(movements.length > 0);
+    const flow = await json("/cashflow?range=6m");
+    const { start, points } = flow;
+    assert.equal(flow.bucket, "movement");
+    assert.ok(points.length > 0);
     // Cada movimiento: saldo anterior + lo que entro (o - lo que salio).
     let running = start;
-    for (const item of movements) {
+    for (const item of points) {
       assert.equal(Math.sign(item.change), item.type === "income" ? 1 : -1);
       running = Math.round((running + item.change) * 100) / 100;
       assert.equal(item.balance, running);
     }
-    // Ordenados por fecha, terminan en el saldo de hoy (15 de octubre) y no traen futuros.
-    const dates = movements.map((item) => item.date);
+    // Ordenados por fecha, dentro del rango y terminan en el saldo de hoy (15 de octubre).
+    const dates = points.map((item) => item.date);
     assert.deepEqual(dates, [...dates].sort());
+    assert.ok(dates[0] >= flow.from);
     assert.ok(dates.at(-1) <= `${MONTH}-15`);
-    assert.equal(movements.at(-1).balance, summary.daily.at(-1).balance);
+    assert.equal(points.at(-1).balance, summary.balance);
     // Un movimiento del grafico es uno real, con su titulo y monto.
-    const [first] = movements;
+    const [first] = points;
     const rows = await json(`/movements?from=${first.date}&to=${first.date}`);
     const real = rows.find((row) => row.id === first.id);
     assert.equal(real.title, first.title);
     assert.equal(Math.abs(first.change), real.currency === "ARS" ? real.amount : real.amount * 1200);
+  });
+
+  test("el flujo de caja se puede pedir por rango y hasta una fecha", async () => {
+    const week = await json("/cashflow?range=7d");
+    assert.deepEqual([week.from, week.to], [`${MONTH}-09`, `${MONTH}-15`]);
+    assert.ok(week.points.every((item) => item.date >= week.from && item.date <= week.to));
+    const all = await json("/cashflow?range=all");
+    assert.equal(all.start, 0);
+    assert.ok(all.points.length >= (await json("/cashflow?range=1y")).points.length);
+    // Un mes pasado termina en su ultimo dia; una fecha futura se corta en hoy.
+    assert.equal((await json("/cashflow?range=1m&to=2026-09-30")).to, "2026-09-30");
+    assert.equal((await json("/cashflow?range=1m&to=2027-01-31")).to, `${MONTH}-15`);
+    assert.equal((await request("/cashflow?range=2w")).status, 400);
   });
 
   test("cada categoria trae el gasto del mes anterior y su variacion", async () => {

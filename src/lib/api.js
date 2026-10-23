@@ -89,6 +89,8 @@ export const api = {
   // Resumen del dashboard (currency: moneda en la que se ven los totales)
   getSummary: (month, currency, options) =>
     request(`/summary${toQuery({ month, currency })}`, options),
+  // Flujo de caja: range 7d|1m|3m|6m|1y|all, hasta la fecha to
+  getCashflow: ({ range, to, currency }, options) => request(`/cashflow${toQuery({ range, to, currency })}`, options),
 
   // Recurrentes
   listRecurring: (options) => request("/recurring", options),
