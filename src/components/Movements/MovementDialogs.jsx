@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { api } from "@/lib/api";
+import { formatCurrency } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCategories } from "@/hooks/useCategories";
 import { useToast } from "@/hooks/useToast";
@@ -56,7 +57,7 @@ export function MovementDialogs({
   onChange,
   onRequestDelete,
 }) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const { nameOf } = useCategories();
   const { toast } = useToast();
   const [deleting, setDeleting] = useState(false);
@@ -86,9 +87,13 @@ export function MovementDialogs({
     }
   }
 
-  async function handleSubmit(data, { repeat }) {
+  async function handleSubmit(data, { repeat, shared }) {
     try {
-      if (kind === "recurring") {
+      if (shared) {
+        // Gasto compartido: el gasto y lo que te debe cada uno (en Deudas > Me deben).
+        const result = await api.createSharedExpense(data);
+        toast(t("sharedExpenseCreated", { amount: formatCurrency(result.owed, locale, { currency: data.currency }), count: result.people }));
+      } else if (kind === "recurring") {
         if (isEdit) await api.updateRecurring(form.item.id, data);
         else await api.createRecurring(data);
         toast(t(data.kind === "installments" ? "installmentsSaved" : isEdit ? texts.updated : texts.created));

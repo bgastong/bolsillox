@@ -85,6 +85,8 @@ export const api = {
   updateMovement: (id, data) =>
     request(`/movements/${id}`, { method: "PUT", body: data }),
   deleteMovement: (id) => request(`/movements/${id}`, { method: "DELETE" }),
+  // Gasto compartido: el gasto y una deuda en "Me deben" por cada persona.
+  createSharedExpense: (data) => request("/movements/shared", { method: "POST", body: data }),
 
   // Resumen del dashboard (currency: moneda en la que se ven los totales)
   getSummary: (month, currency, options) =>
