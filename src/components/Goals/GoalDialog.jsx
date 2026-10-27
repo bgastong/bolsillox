@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { api } from "@/lib/api";
 import { CUSTOM_CATEGORY_ICONS } from "@/lib/categories";
 import { formatCurrency, todayISO } from "@/lib/format";
@@ -149,13 +150,9 @@ function GoalForm({ goal, onDone, onCancel }) {
             options={CURRENCIES.map((code) => ({ value: code, label: code }))}
           />
         </div>
-        <Input
+        <AmountInput
           id="goal-target"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.01"
-          placeholder="0"
+                    placeholder="0"
           value={values.target}
           onChange={(event) => update("target", event.target.value)}
           aria-invalid={errors.target ? true : undefined}

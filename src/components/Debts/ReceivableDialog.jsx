@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { api } from "@/lib/api";
 import { todayISO } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -128,13 +129,9 @@ function ReceivableForm({ item, onDone, onCancel }) {
             options={CURRENCIES.map((code) => ({ value: code, label: code }))}
           />
         </div>
-        <Input
+        <AmountInput
           id="receivable-amount"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.01"
-          placeholder="0"
+                    placeholder="0"
           value={values.amount}
           onChange={(event) => update("amount", event.target.value)}
           aria-invalid={errors.amount ? true : undefined}

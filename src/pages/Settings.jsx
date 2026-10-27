@@ -14,7 +14,7 @@ import InstallSection from "@/components/Settings/InstallSection";
 import ColorsSection from "@/components/Settings/ColorsSection";
 import { PageHeader } from "@/components/Movements/MovementBits";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -189,13 +189,9 @@ function RateSettings() {
             >
               $
             </span>
-            <Input
+            <AmountInput
               id="manual-rate"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
-              placeholder="1200"
+                            placeholder="1200"
               value={manual}
               onChange={(event) => {
                 setManual(event.target.value);
