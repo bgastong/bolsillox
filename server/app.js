@@ -180,7 +180,7 @@ export function createApp(
     next();
   });
 
-  app.use("/api/movements", movementsRouter(repo, categories));
+  app.use("/api/movements", movementsRouter(repo, categories, receivables));
   app.use("/api/recurring", recurringRouter(recurring, categories));
   app.use("/api/budgets", budgetsRouter(budgets, rates, categories));
   app.use("/api/categories", categoriesRouter(categories));

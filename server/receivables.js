@@ -11,6 +11,7 @@ carga tambien como ingreso en los movimientos.
 
 const COLUMNS = raw(`
   r.id, r.person, r.concept, r.amount, r.currency, r.date, r.due_date AS "dueDate",
+  r.movement_id AS "movementId",
   r.created_at AS "createdAt", r.updated_at AS "updatedAt",
   COALESCE((SELECT SUM(p.amount) FROM receivable_payments p WHERE p.receivable_id = r.id), 0) AS paid
 `);
@@ -71,6 +72,31 @@ export function createReceivablesService(db, { now = () => new Date() } = {}) {
     return get(userId, id);
   }
 
+  /*
+  Gasto compartido: carga el gasto completo (lo pago la persona) y una deuda en
+  "Me deben" por la parte de cada uno, unidas al gasto. Cuando le paguen, el
+  cobro se carga como ingreso y el gasto neto queda en su parte.
+  */
+  async function createShared(userId, { split, ...movement }) {
+    return db.transaction(async (tx) => {
+      const { id: movementId } = await tx.one(sql`
+        INSERT INTO movements (user_id, type, title, amount, currency, date, category, payment_method, note)
+        VALUES (${userId}, 'expense', ${movement.title}, ${movement.amount}, ${movement.currency}, ${movement.date},
+                ${movement.category}, ${movement.paymentMethod}, ${movement.note ?? ""})
+        RETURNING id
+      `);
+      for (const share of split.people) {
+        await tx.run(sql`
+          INSERT INTO receivables (user_id, person, concept, amount, currency, date, movement_id)
+          VALUES (${userId}, ${share.person}, ${movement.title}, ${share.amount}, ${movement.currency},
+                  ${movement.date}, ${movementId})
+        `);
+      }
+      const owed = roundMoney(split.people.reduce((sum, share) => sum + share.amount, 0));
+      return { movementId, owed, myShare: roundMoney(movement.amount - owed), people: split.people.length };
+    });
+  }
+
   // Los ingresos que ya se cargaron por los cobros quedan en los movimientos.
   async function remove(userId, id) {
     return (await db.run(sql`DELETE FROM receivables WHERE user_id = ${userId} AND id = ${id}`)) > 0;
@@ -129,5 +155,5 @@ export function createReceivablesService(db, { now = () => new Date() } = {}) {
       .filter((item) => item.daysLeft <= RECEIVABLE_ALERT_DAYS);
   }
 
-  return { list, get, create, update, remove, addPayment, alerts };
+  return { list, get, create, createShared, update, remove, addPayment, alerts };
 }

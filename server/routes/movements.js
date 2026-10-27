@@ -9,7 +9,7 @@ import {
   SORT_FIELDS,
   SORT_ORDERS,
 } from "../../shared/catalog.js";
-import { isValidISODate, movementSchema } from "../../shared/movementSchema.js";
+import { isValidISODate, movementSchema, sharedExpenseSchema } from "../../shared/movementSchema.js";
 import { HttpError } from "../errors.js";
 
 const optionalDate = z
@@ -59,7 +59,7 @@ function parseId(raw) {
   return result.data;
 }
 
-export function movementsRouter(repo, categories) {
+export function movementsRouter(repo, categories, receivables) {
   const router = Router();
 
   router.get("/", async (req, res) => {
@@ -71,6 +71,14 @@ export function movementsRouter(repo, categories) {
   router.post("/bulk-delete", async (req, res) => {
     const { ids } = bulkDeleteSchema.parse(req.body ?? {});
     res.json({ deleted: await repo.removeMany(req.user.id, [...new Set(ids)]) });
+  });
+
+  // Gasto compartido: el gasto y lo que debe cada uno (en "Me deben").
+  router.post("/shared", async (req, res) => {
+    const data = sharedExpenseSchema.parse(req.body ?? {});
+    await categories.assertUsable(req.user.id, data.type, data.category);
+    const result = await receivables.createShared(req.user.id, data);
+    res.status(201).json({ ...result, movement: await repo.get(req.user.id, result.movementId) });
   });
 
   router.get("/:id", async (req, res) => {

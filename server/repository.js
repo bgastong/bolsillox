@@ -41,8 +41,11 @@ export function createRepository(db) {
     const order = raw(filters.order === "asc" ? "ASC" : "DESC");
     const limit = filters.limit ? sql`LIMIT ${filters.limit}` : sql``;
 
+    // sharedWith: con cuantas personas se dividio (gasto compartido, ver receivables.js).
     return db.all(sql`
-      SELECT ${COLUMNS} FROM movements
+      SELECT ${COLUMNS},
+        (SELECT COUNT(*) FROM receivables r WHERE r.movement_id = movements.id) AS "sharedWith"
+      FROM movements
       WHERE ${join(where, " AND ")}
       ORDER BY ${sortColumn} ${order}, id ${order}
       ${limit}

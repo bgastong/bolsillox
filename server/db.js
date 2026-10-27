@@ -269,6 +269,12 @@ const MIGRATIONS = [
     PRIMARY KEY (receivable_id, due_date, kind)
   );
   `,
+  // v12: gastos compartidos. Lo que cada persona debe de un gasto que pago la
+  // persona queda en receivables, unido al gasto por movement_id.
+  `
+  ALTER TABLE receivables ADD COLUMN movement_id INTEGER REFERENCES movements (id) ON DELETE SET NULL;
+  CREATE INDEX idx_receivables_movement ON receivables (movement_id);
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.
