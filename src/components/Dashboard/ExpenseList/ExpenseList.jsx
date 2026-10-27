@@ -4,7 +4,7 @@ import { movementLabel } from "@/lib/movementLabel";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCategories } from "@/hooks/useCategories";
 import Money from "../../Money/Money";
-import { CategoryIcon, RecurringMark } from "../../Movements/MovementBits";
+import { CategoryIcon, RecurringMark, SharedMark } from "../../Movements/MovementBits";
 
 function yesterdayISO() {
   const date = new Date();
@@ -93,6 +93,7 @@ function ExpenseList({ movements, onEdit }) {
                     <p className="m-0 flex min-w-0 items-center gap-1.5 text-[15px] sm:text-sm">
                       <span className="truncate">{movement.title}</span>
                       {movement.recurringId && <RecurringMark />}
+                      {movement.sharedWith > 0 && <SharedMark count={movement.sharedWith} />}
                     </p>
                     <p className="m-0 truncate text-xs text-[color:var(--text-4)]">
                       {nameOf(movement.category)}

@@ -220,6 +220,43 @@ export const goalEntrySchema = z.object({
   registerMovement: z.boolean().optional().default(true),
   paymentMethod: z.enum(PAYMENT_METHODS, { error: "errorMethodInvalid" }).optional().default("transfer"),
 });
+/*
+Gasto compartido: un gasto que pago la persona y que se divide con otros.
+split.people: con quien y cuanto pone cada uno (lo que no ponen ellos es la
+parte de la persona). Cada parte queda como una deuda en "Me deben".
+*/
+export const SHARED_PEOPLE_MAX = 20;
+export const sharedExpenseSchema = z
+  .object({
+    ...movementFields,
+    date: isoDateSchema,
+    split: z.object({
+      people: z
+        .array(
+          z.object({
+            person: z
+              .string({ error: "errorPersonRequired" })
+              .trim()
+              .min(1, { error: "errorPersonRequired" })
+              .max(RECEIVABLE_PERSON_MAX_LENGTH, { error: "errorPersonTooLong" }),
+            amount: amountSchema,
+          }),
+          { error: "errorSplitPeople" },
+        )
+        .min(1, { error: "errorSplitPeople" })
+        .max(SHARED_PEOPLE_MAX, { error: "errorSplitTooManyPeople" }),
+    }),
+  })
+  .superRefine((data, ctx) => {
+    checkCategoryMatchesType(data, ctx);
+    if (data.type !== "expense") {
+      ctx.addIssue({ code: "custom", path: ["type"], message: "errorSplitOnlyExpenses" });
+    }
+    const shares = data.split.people.reduce((sum, item) => sum + item.amount, 0);
+    if (shares > data.amount + 0.001) {
+      ctx.addIssue({ code: "custom", path: ["split"], message: "errorSplitTooLarge" });
+    }
+  });
 
 // Avisos por email: recordatorios de cuotas e idioma en que llegan.
 export const notificationSettingsSchema = z.object({

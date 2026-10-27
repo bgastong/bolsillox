@@ -9,7 +9,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "../../hooks/useLanguage";
 import Money from "../Money/Money";
-import { CategoryBadge, CategoryIcon, RecurringMark } from "../Movements/MovementBits";
+import { CategoryBadge, CategoryIcon, RecurringMark, SharedMark } from "../Movements/MovementBits";
 import {
   Table,
   TableBody,
@@ -141,6 +141,7 @@ function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggl
                       <p className="m-0 flex min-w-0 items-center gap-1.5 font-medium">
                         <span className="truncate">{movement.title}</span>
                         {movement.recurringId && <RecurringMark />}
+                        {movement.sharedWith > 0 && <SharedMark count={movement.sharedWith} />}
                       </p>
                       {movement.note && (
                         <p className="m-0 truncate text-xs text-muted-foreground">{movement.note}</p>
@@ -213,6 +214,7 @@ function TableHistory({ movements, onEdit, onDelete, selected, onToggle, onToggl
                     <p className="m-0 flex min-w-0 items-center gap-1.5 text-[15px] font-medium">
                       <span className="truncate">{movement.title}</span>
                       {movement.recurringId && <RecurringMark />}
+                      {movement.sharedWith > 0 && <SharedMark count={movement.sharedWith} />}
                     </p>
                     <Money listItem type={movement.type} amount={movement.amount} currency={movement.currency} className="text-[15px]" />
                   </div>

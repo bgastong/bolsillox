@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { CheckIcon, ChevronRightIcon, HandCoinsIcon } from "lucide-react";
+import { SharedMark } from "@/components/Movements/MovementBits";
 import { EmptyState, ErrorState } from "@/components/States/States";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -47,9 +48,12 @@ function ReceivableRow({ item, onEdit, onCollect }) {
         </span>
         <span className="grid min-w-0 flex-1 grid-cols-1 gap-1.5">
           <span className="flex items-baseline justify-between gap-2">
-            <span className="min-w-0 truncate text-[15px] font-medium">
-              {item.person}
-              {item.concept && <span className="font-normal text-muted-foreground"> · {item.concept}</span>}
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="min-w-0 truncate text-[15px] font-medium">
+                {item.person}
+                {item.concept && <span className="font-normal text-muted-foreground"> · {item.concept}</span>}
+              </span>
+              {item.movementId && <SharedMark />}
             </span>
             <span className="shrink-0 text-[15px] whitespace-nowrap text-income tabular-nums">{money(item.remaining || item.amount)}</span>
           </span>

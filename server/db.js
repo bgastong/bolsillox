@@ -296,6 +296,12 @@ const MIGRATIONS = [
   );
   CREATE INDEX idx_savings_goal_entries_goal ON savings_goal_entries (goal_id);
   `,
+  // v13: gastos compartidos. Lo que cada persona debe de un gasto que pago la
+  // persona queda en receivables, unido al gasto por movement_id.
+  `
+  ALTER TABLE receivables ADD COLUMN IF NOT EXISTS movement_id INTEGER REFERENCES movements (id) ON DELETE SET NULL;
+  CREATE INDEX IF NOT EXISTS idx_receivables_movement ON receivables (movement_id);
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.

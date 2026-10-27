@@ -5,6 +5,7 @@ import {
   PlusIcon,
   RepeatIcon,
   Trash2Icon,
+  UsersIcon,
 } from "lucide-react";
 import {
   CURRENCIES,
@@ -16,6 +17,7 @@ import {
   issuesToFieldErrors,
   movementSchema,
   recurringSchema,
+  sharedExpenseSchema,
 } from "@shared/movementSchema.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +29,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate, todayISO } from "@/lib/format";
 import { paymentMethodOptions } from "@/lib/paymentMethods";
+import { splitErrors, splitPeople } from "@/lib/split";
 import CategoryDialog from "@/components/Categories/CategoryDialog";
+import SplitEditor from "./SplitEditor";
 import { useCategories } from "@/hooks/useCategories";
 import { useLanguage } from "@/hooks/useLanguage";
 
@@ -71,15 +75,35 @@ function toFormValues(item, mode, initialKind) {
       active: item?.active ?? true,
     };
   }
-  return { ...base, date: item?.date ?? todayISO(), repeat: false };
+  return {
+    ...base,
+    date: item?.date ?? todayISO(),
+    repeat: false,
+    // Gasto compartido (solo al crear un gasto): con quien se divide.
+    shared: false,
+    split: { mode: "equal", people: [{ person: "", amount: "" }] },
+  };
 }
 
 function validate(values, mode) {
+  if (mode !== "recurring" && values.shared && values.type === "expense") {
+    const { split, ...rest } = values;
+    const result = sharedExpenseSchema.safeParse({
+      ...rest,
+      split: { people: splitPeople(split.people, split.mode, Number(values.amount)) },
+    });
+    if (result.success) return { data: result.data, errors: {}, splitErrors: {} };
+    return {
+      data: null,
+      errors: issuesToFieldErrors(result.error.issues.filter((issue) => issue.path[0] !== "split")),
+      splitErrors: splitErrors(result.error.issues),
+    };
+  }
   const schema = mode === "recurring" ? recurringSchema : movementSchema;
   const result = schema.safeParse(values);
   return result.success
-    ? { data: result.data, errors: {} }
-    : { data: null, errors: issuesToFieldErrors(result.error.issues) };
+    ? { data: result.data, errors: {}, splitErrors: {} }
+    : { data: null, errors: issuesToFieldErrors(result.error.issues), splitErrors: {} };
 }
 
 export function Field({ id, label, error, hint, children, className }) {
@@ -135,7 +159,8 @@ export function Segmented({ label, options, value, onChange, className, size = "
 /*
 Formulario de alta/edicion. Valida en el front con el mismo schema (zod)
 que usa el back, y muestra tambien los errores que devuelva el servidor.
-onSubmit(data, { repeat }) — repeat indica "crear como recurrente".
+onSubmit(data, { repeat, shared }) — repeat indica "crear como recurrente" y
+shared, "gasto compartido" (data trae split con la parte de cada persona).
 */
 function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel, onDelete }) {
   const { t, locale } = useLanguage();
@@ -144,12 +169,15 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
   const [newCategory, setNewCategory] = useState(null);
   const [values, setValues] = useState(() => toFormValues(item, mode, initialKind));
   const [errors, setErrors] = useState({});
+  const [sharedErrors, setSharedErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const isRecurring = mode === "recurring";
   const isInstallments = isRecurring && values.kind === "installments";
   const isNew = !item;
+  // Se puede dividir un gasto nuevo (no una regla ni uno ya cargado).
+  const canShare = !isRecurring && isNew && values.type === "expense";
 
   // Resumen de las cuotas mientras se completan: ultima fecha y cuanto falta pagar.
   const first = Number(values.installmentFirst);
@@ -180,30 +208,41 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
     if (field === "type" && !keysOf(value).includes(next.category)) {
       next.category = "";
     }
+    // Repetir y compartir no van juntos: prender uno apaga el otro.
+    if (field === "repeat" && value) next.shared = false;
+    if (field === "shared" && value) next.repeat = false;
     setValues(next);
     // Despues del primer intento de guardar, se revalida en vivo.
-    if (submitted) setErrors(validate(next, mode).errors);
+    if (submitted) {
+      const result = validate(next, mode);
+      setErrors(result.errors);
+      setSharedErrors(result.splitErrors);
+    }
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setSubmitted(true);
-    const { data, errors: fieldErrors } = validate(values, mode);
+    const { data, errors: fieldErrors, splitErrors: shareErrors } = validate(values, mode);
     setErrors(fieldErrors);
+    setSharedErrors(shareErrors);
     if (!data) {
       const firstField = Object.keys(fieldErrors)[0];
-      document.getElementById(`movement-${firstField}`)?.focus();
+      const firstShare = Object.keys(shareErrors)[0];
+      const target = firstField ? `movement-${firstField}` : firstShare && firstShare !== "form" ? `split-${firstShare}` : null;
+      if (target) document.getElementById(target)?.focus();
       return;
     }
 
     setSaving(true);
     try {
-      await onSubmit(data, { repeat: !isRecurring && values.repeat });
+      await onSubmit(data, { repeat: !isRecurring && values.repeat, shared: canShare && values.shared });
     } catch (error) {
       if (error?.fields && Object.keys(error.fields).length) {
         // La regla recurrente usa startDate; en el form de movimiento es "date".
         const fields = { ...error.fields };
         if (!isRecurring && fields.startDate) fields.date = fields.startDate;
+        if (fields.split) setSharedErrors({ form: fields.split });
         setErrors(fields);
       }
     } finally {
@@ -513,6 +552,40 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
               disabled={saving}
             />
           </label>
+        )}
+
+        {/* Gasto compartido: lo pagaste vos y lo dividis con otros */}
+        {canShare && (
+          <div className="grid gap-2">
+            <label
+              htmlFor="movement-shared"
+              className="flex cursor-pointer items-center gap-3 rounded-xl border bg-fg/[0.02] p-3.5"
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <UsersIcon className="size-[18px]" aria-hidden="true" />
+              </span>
+              <span className="grid min-w-0 flex-1 gap-0.5">
+                <span className="text-sm font-medium">{t("sharedExpense")}</span>
+                <span className="text-xs text-muted-foreground">{t("sharedExpenseHint")}</span>
+              </span>
+              <Switch
+                id="movement-shared"
+                checked={values.shared}
+                onCheckedChange={(checked) => update("shared", checked)}
+                disabled={saving}
+              />
+            </label>
+            {values.shared && (
+              <SplitEditor
+                amount={values.amount}
+                currency={values.currency}
+                value={values.split}
+                onChange={(split) => update("split", split)}
+                errors={sharedErrors}
+                disabled={saving}
+              />
+            )}
+          </div>
         )}
 
         {/* Acciones fijas abajo: siempre visibles aunque el teclado este abierto */}
