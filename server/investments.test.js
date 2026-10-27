@@ -71,13 +71,12 @@ describe("datos de mercado", () => {
 });
 
 describe("dolar por gobierno", () => {
-  test("cuanto subio en cada mandato con datos", () => {
+  test("cuanto subio en cada mandato con datos (los de menos de 60 dias de datos no van)", () => {
     const series = BLUE.map((item) => ({ date: item.fecha, close: item.venta }));
     const terms = governmentTerms(series, "2026-10-15");
     assert.deepEqual(
       terms.map((term) => [term.key, term.from, term.to, term.changePercent, term.partial]),
       [
-        ["cfk2", 14, 14, 0, true],
         ["macri", 14, 70, 400, false],
         ["afernandez", 70, 1000, 1328.57, false],
         ["milei", 1000, 1200, 20, false],

@@ -73,7 +73,9 @@ dia con datos de cada mandato (los que no tienen datos no aparecen).
 export function governmentTerms(series, today) {
   if (!series.length) return [];
   const first = series[0].date;
-  return GOVERNMENTS.filter((term) => (term.end ?? today) > first)
+  // Los mandatos con menos de 60 dias de datos no dicen nada (quedan afuera).
+  const days = (from, to) => (Date.parse(to) - Date.parse(from)) / 86_400_000;
+  return GOVERNMENTS.filter((term) => days(first > term.start ? first : term.start, term.end ?? today) >= 60)
     .map((term) => {
       const start = term.start < first ? first : term.start;
       const from = priceOn(series, start) ?? series[0].close;
