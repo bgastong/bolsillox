@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { api } from "@/lib/api";
@@ -67,13 +67,9 @@ function CollectForm({ item, onDone, onCancel }) {
         error={errors.amount ? t(errors.amount) : null}
         hint={t("collectAmountHint", { amount: formatCurrency(item.remaining, locale, { currency: item.currency }) })}
       >
-        <Input
+        <AmountInput
           id="collect-amount"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.01"
-          value={values.amount}
+                    value={values.amount}
           onChange={(event) => update("amount", event.target.value)}
           aria-invalid={errors.amount ? true : undefined}
           aria-describedby={errors.amount ? "collect-amount-error" : undefined}

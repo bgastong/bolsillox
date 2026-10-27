@@ -3,6 +3,7 @@ import { PlusIcon, XIcon } from "lucide-react";
 import { RECEIVABLE_PERSON_MAX_LENGTH, SHARED_PEOPLE_MAX } from "@shared/movementSchema.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { formatCurrency } from "@/lib/format";
 import { splitEqually } from "@/lib/split";
 import { cn } from "@/lib/utils";
@@ -87,13 +88,9 @@ function SplitEditor({ amount, currency, value, onChange, errors = {}, disabled 
                   className="min-w-0 flex-1"
                 />
                 {mode === "custom" ? (
-                  <Input
+                  <AmountInput
                     id={amountId}
-                    type="number"
-                    inputMode="decimal"
-                    min="0"
-                    step="0.01"
-                    placeholder="0"
+                                        placeholder="0"
                     value={item.amount}
                     aria-label={t("splitAmountLabel", { person: item.person || t("splitPersonLabel", { number: index + 1 }) })}
                     aria-invalid={errors[`amount-${index}`] ? true : undefined}

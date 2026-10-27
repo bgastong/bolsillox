@@ -6,7 +6,7 @@ import Money from "@/components/Money/Money";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Select } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { api } from "@/lib/api";
@@ -89,13 +89,9 @@ function EntryForm({ goal, initialType, onSaved, onCancel }) {
               : t("goalRemainingHint", { amount: money(goal.remaining) })
         }
       >
-        <Input
+        <AmountInput
           id="goal-entry-amount"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.01"
-          placeholder="0"
+                    placeholder="0"
           value={values.amount}
           onChange={(event) => update("amount", event.target.value)}
           aria-invalid={errors.amount ? true : undefined}

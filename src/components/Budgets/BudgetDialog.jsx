@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -68,13 +68,9 @@ function BudgetForm({ category, current, onDone, onCancel }) {
           >
             $
           </span>
-          <Input
+          <AmountInput
             id="budget-amount"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="1"
-            placeholder="0"
+                        placeholder="0"
             value={amount}
             onChange={(event) => {
               setAmount(event.target.value);

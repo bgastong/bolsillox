@@ -21,6 +21,7 @@ import {
 } from "@shared/movementSchema.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AmountInput } from "@/components/ui/amount-input";
 import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Select } from "@/components/ui/select";
@@ -338,13 +339,9 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
             >
               {values.currency === "USD" ? "US$" : "$"}
             </span>
-            <Input
+            <AmountInput
               {...fieldProps("amount")}
-              type="number"
-              inputMode="decimal"
-              enterKeyHint="next"
-              min="0"
-              step="0.01"
+                            enterKeyHint="next"
               placeholder="0"
               aria-label={`${t("amount")} (${values.currency})`}
               className={cn(
