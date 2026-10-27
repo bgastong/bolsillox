@@ -22,6 +22,7 @@ const pages = {
   recurring: () => import("./pages/Recurring"),
   debts: () => import("./pages/Debts"),
   budgets: () => import("./pages/Budgets"),
+  goals: () => import("./pages/Goals"),
   settings: () => import("./pages/Settings"),
 };
 const Dashboard = lazy(pages.dashboard);
@@ -29,6 +30,7 @@ const History = lazy(pages.history);
 const Recurring = lazy(pages.recurring);
 const Debts = lazy(pages.debts);
 const Budgets = lazy(pages.budgets);
+const Goals = lazy(pages.goals);
 const Settings = lazy(pages.settings);
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -66,6 +68,7 @@ export default function AppShell() {
                 {/* Cuotas ahora vive en Deudas > Debo */}
                 <Route path="/installments" element={<Navigate to="/debts" replace />} />
               <Route path="/budgets" element={<Budgets />} />
+              <Route path="/goals" element={<Goals />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

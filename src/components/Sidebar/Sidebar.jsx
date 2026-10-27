@@ -7,6 +7,7 @@ import {
   RepeatIcon,
   SearchIcon,
   SettingsIcon,
+  TargetIcon,
 } from "lucide-react";
 import styles from "./Sidebar.module.css";
 import { useLanguage } from "../../hooks/useLanguage";
@@ -34,6 +35,7 @@ const NAV_ITEMS = [
   { to: "/recurring", labelKey: "recurringTitle", icon: RepeatIcon },
   { to: "/debts", labelKey: "debtsTitle", icon: HandCoinsIcon },
   { to: "/budgets", labelKey: "budgetsTitle", icon: PiggyBankIcon },
+  { to: "/goals", labelKey: "goalsTitle", icon: TargetIcon },
   { to: "/settings", labelKey: "settingsTitle", icon: SettingsIcon },
 ];
 
