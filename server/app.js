@@ -13,6 +13,8 @@ import { createBudgetsService } from "./budgets.js";
 import { createCategoriesService } from "./categories.js";
 import { createReceivablesService } from "./receivables.js";
 import { createGoalsService } from "./goals.js";
+import { createInvestmentsService } from "./investments.js";
+import { createMarketService } from "./market.js";
 import { createRatesService } from "./rates.js";
 import { deleteDemoData, hasDemoData, seedUser } from "./db.js";
 import { authRouter } from "./routes/auth.js";
@@ -22,6 +24,7 @@ import { budgetsRouter } from "./routes/budgets.js";
 import { categoriesRouter } from "./routes/categories.js";
 import { receivablesRouter } from "./routes/receivables.js";
 import { goalsRouter } from "./routes/goals.js";
+import { investmentsRouter, marketRouter } from "./routes/investments.js";
 import { buildSummary } from "./summary.js";
 import { parseCurrency, parseDate, parseMonth, parseRange } from "./params.js";
 import { buildCashflow } from "./cashflow.js";
@@ -82,6 +85,8 @@ export function createApp(
   const categories = createCategoriesService(db);
   const receivables = createReceivablesService(db, { now });
   const goals = createGoalsService(db, { now });
+  const market = createMarketService(db, { now, fetchImpl });
+  const investments = createInvestmentsService(db, { market, now });
   const rates = createRatesService(db, { now, fetchImpl });
   const reminders = createReminders(db, { recurring, receivables, mailer, appUrl: publicUrl });
   const appearance = createAppearance(db);
@@ -189,6 +194,8 @@ export function createApp(
   app.use("/api/categories", categoriesRouter(categories));
   app.use("/api/receivables", receivablesRouter(receivables));
   app.use("/api/goals", goalsRouter(goals));
+  app.use("/api/investments", investmentsRouter(investments));
+  app.use("/api/market", marketRouter(market, investments, { now }));
 
   app.get("/api/summary", async (req, res) => {
     const month = parseMonth(req.query.month);

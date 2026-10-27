@@ -23,6 +23,7 @@ const pages = {
   debts: () => import("./pages/Debts"),
   budgets: () => import("./pages/Budgets"),
   goals: () => import("./pages/Goals"),
+  investments: () => import("./pages/Investments"),
   settings: () => import("./pages/Settings"),
 };
 const Dashboard = lazy(pages.dashboard);
@@ -31,6 +32,7 @@ const Recurring = lazy(pages.recurring);
 const Debts = lazy(pages.debts);
 const Budgets = lazy(pages.budgets);
 const Goals = lazy(pages.goals);
+const Investments = lazy(pages.investments);
 const Settings = lazy(pages.settings);
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -69,6 +71,7 @@ export default function AppShell() {
                 <Route path="/installments" element={<Navigate to="/debts" replace />} />
               <Route path="/budgets" element={<Budgets />} />
               <Route path="/goals" element={<Goals />} />
+              <Route path="/investments" element={<Investments />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

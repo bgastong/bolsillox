@@ -302,6 +302,47 @@ const MIGRATIONS = [
   ALTER TABLE receivables ADD COLUMN IF NOT EXISTS movement_id INTEGER REFERENCES movements (id) ON DELETE SET NULL;
   CREATE INDEX IF NOT EXISTS idx_receivables_movement ON receivables (movement_id);
   `,
+  // v14: inversiones indexadas (por ejemplo, al S&P 500) y precios de mercado.
+  `
+  -- Cierre diario de cada indice (y del dolar MEP, symbol 'MEP'). Compartido por todos.
+  CREATE TABLE market_prices (
+    symbol TEXT             NOT NULL,
+    date   TEXT             NOT NULL,
+    close  DOUBLE PRECISION NOT NULL,
+    PRIMARY KEY (symbol, date)
+  );
+
+  -- Ultimo precio conocido de cada simbolo y cuando se consulto.
+  CREATE TABLE market_quotes (
+    symbol         TEXT PRIMARY KEY,
+    price          DOUBLE PRECISION NOT NULL,
+    previous_close DOUBLE PRECISION,
+    market_time    TEXT,
+    fetched_at     TEXT NOT NULL
+  );
+
+  CREATE TABLE investments (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER     NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    name       TEXT        NOT NULL,
+    index_key  TEXT        NOT NULL,
+    currency   TEXT        NOT NULL DEFAULT 'ARS' CHECK (currency IN ('ARS', 'USD')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  );
+  CREATE INDEX idx_investments_user ON investments (user_id);
+
+  -- amount positivo = aporte, negativo = rescate (en la moneda de la inversion).
+  CREATE TABLE investment_entries (
+    id            SERIAL PRIMARY KEY,
+    investment_id INTEGER          NOT NULL REFERENCES investments (id) ON DELETE CASCADE,
+    amount        DOUBLE PRECISION NOT NULL CHECK (amount <> 0),
+    date          TEXT             NOT NULL,
+    movement_id   INTEGER          REFERENCES movements (id) ON DELETE SET NULL,
+    created_at    TIMESTAMPTZ      NOT NULL DEFAULT now()
+  );
+  CREATE INDEX idx_investment_entries_investment ON investment_entries (investment_id);
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.
