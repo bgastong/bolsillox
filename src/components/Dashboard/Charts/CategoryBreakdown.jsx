@@ -58,7 +58,8 @@ function CategoryBreakdown({ data, currency = "ARS" }) {
                     <span className="size-1.5 shrink-0 rounded-full" style={{ background: color }} aria-hidden="true" />
                     <span className="truncate">{name}</span>
                     <span className="text-[11.5px] text-[color:var(--text-4)] tabular-nums">
-                      {Math.round(share(item.total))}%
+                      {/* Con gasto pero menos del 1%: "<1%" en vez de "0%" */}
+                      {share(item.total) > 0 && share(item.total) < 1 ? "<1" : Math.round(share(item.total))}%
                     </span>
                   </span>
                   <span className="text-[12.5px] text-[color:var(--text-2)] tabular-nums">

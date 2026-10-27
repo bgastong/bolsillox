@@ -2,6 +2,7 @@ import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import { ArcElement, Chart as ChartJS } from "chart.js";
 import { Pie } from "react-chartjs-2";
 import { formatCurrency } from "@/lib/format";
+import { sliceSizes } from "@/lib/pie";
 import { useAppearance } from "@/hooks/useAppearance";
 import { useCategories } from "@/hooks/useCategories";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -24,17 +25,18 @@ Etiquetas afuera de la torta, como en amCharts: una linea que sale del borde
 de la porcion, quiebra hacia el costado y termina en el nombre y el porcentaje.
 Las de cada lado se separan para que no se encimen.
 */
-function outsideLabelsPlugin({ names, colors }) {
+function outsideLabelsPlugin({ names, colors, values }) {
   return {
     id: "outsideLabels",
     afterDatasetsDraw(chart) {
       const meta = chart.getDatasetMeta(0);
-      const total = meta.total || chart.data.datasets[0].data.reduce((sum, value) => sum + value, 0);
+      // Los porcentajes salen de los montos reales, no del tamaño dibujado.
+      const total = values.reduce((sum, value) => sum + value, 0);
       if (!total) return;
       const { ctx, chartArea } = chart;
       const items = [];
       meta.data.forEach((arc, index) => {
-        const value = chart.data.datasets[0].data[index];
+        const value = values[index];
         if (value / total < MIN_LABEL_SHARE || !arc.circumference) return;
         const angle = arc.startAngle + arc.circumference / 2;
         const cos = Math.cos(angle);
@@ -135,7 +137,7 @@ const CategoryPie = forwardRef(function CategoryPie({ data, currency = "ARS" }, 
     labels: names,
     datasets: [
       {
-        data: data.map((item) => item.total),
+        data: sliceSizes(data.map((item) => item.total)),
         backgroundColor: data.map((item) => metaOf(item.category).color),
         // Borde del color del panel: separa las porciones como en amCharts.
         borderColor: colors.base,
@@ -165,8 +167,10 @@ const CategoryPie = forwardRef(function CategoryPie({ data, currency = "ARS" }, 
         callbacks: {
           title: () => "",
           label: (context) => {
-            const share = total ? Math.round((context.parsed / total) * 100) : 0;
-            return ` ${context.label}  ${formatCurrency(context.parsed, locale, { currency })} · ${share}%`;
+            // El monto real (la porcion puede estar agrandada para que se vea).
+            const amount = data[context.dataIndex].total;
+            const share = total ? Math.round((amount / total) * 100) : 0;
+            return ` ${context.label}  ${formatCurrency(amount, locale, { currency })} · ${share}%`;
           },
         },
       },
@@ -180,7 +184,7 @@ const CategoryPie = forwardRef(function CategoryPie({ data, currency = "ARS" }, 
         key={`${resolvedTheme}-${appearance.palette}`}
         data={chartData}
         options={options}
-        plugins={[outsideLabelsPlugin({ names, colors })]}
+        plugins={[outsideLabelsPlugin({ names, colors, values: data.map((item) => item.total) })]}
       />
     </div>
   );
