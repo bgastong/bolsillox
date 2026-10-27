@@ -1,4 +1,4 @@
-import { RepeatIcon } from "lucide-react";
+import { RepeatIcon, UsersIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCategories } from "@/hooks/useCategories";
 import { useLanguage } from "@/hooks/useLanguage";
@@ -64,6 +64,19 @@ export function RecurringMark({ className }) {
     <RepeatIcon
       className={cn("size-3.5 shrink-0 text-muted-foreground", className)}
       aria-label={t("generatedByRecurring")}
+      role="img"
+    />
+  );
+}
+
+// Icono chico que marca un gasto compartido (dividido con otras personas).
+export function SharedMark({ count, className }) {
+  const { t } = useLanguage();
+  const label = count ? t("sharedWithCount", { count }) : t("sharedExpense");
+  return (
+    <UsersIcon
+      className={cn("size-3.5 shrink-0 text-muted-foreground", className)}
+      aria-label={label}
       role="img"
     />
   );
