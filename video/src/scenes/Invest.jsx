@@ -1,8 +1,10 @@
 import { useCurrentFrame, useVideoConfig } from "remotion";
 import { LineArea } from "../charts";
-import { easeInOut, progress, rise, soft } from "../motion";
+import { Camera } from "../camera";
+import { Kinetic } from "../kinetic";
+import { easeInOut, progress, soft } from "../motion";
 import { C, MONO, SANS, alpha, money } from "../theme";
-import { Caption, Card, Label, Mono } from "../ui";
+import { Card, Label, Mono } from "../ui";
 
 // S&P 500 de ejemplo (sube con baches) y el dolar blue (en escala logaritmica).
 function walk(n, start, end, vol, seed) {
@@ -26,21 +28,30 @@ const TERMS = [
   { label: "Milei", from: 0.82, to: 1, color: "#fcd34d" },
 ];
 
+// Recorre la inversion (S&P), pasa al dolar y al final se aleja para ver las dos.
+const CAMERA = [
+  { at: 0, x: 580, y: 610, s: 1.45, ry: 12, rx: 4 },
+  { at: 150, x: 600, y: 600, s: 1.3, ry: 4 },
+  { at: 195, x: 1580, y: 600, s: 1.4, ry: -8 },
+  { at: 330, x: 1580, y: 600, s: 1.3, ry: -3 },
+  { at: 395, x: 1080, y: 640, s: 0.9, ry: 0, rx: 0 },
+  { at: 420, x: 1080, y: 640, s: 0.88 },
+];
+
 // Escena 6: inversion al S&P 500 con las compras marcadas y el dolar por gobierno.
 export function InvestScene() {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const reveal = progress(frame, 20, 140, easeInOut);
   const value = 2200000 + 543662 * progress(frame, 40, 130, easeInOut);
-  const bands = progress(frame, 150, 90, easeInOut);
-  const dollar = progress(frame, 170, 130, easeInOut);
-  const W = 746;
+  const bands = progress(frame, 170, 80, easeInOut);
+  const dollar = progress(frame, 185, 120, easeInOut);
+  const W = 876;
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
-      <Caption frame={frame} start={0} eyebrow="Inversiones" title="Invertí siguiendo al S&P 500." muted="Y mirá el dólar de cada gobierno." style={{ position: "absolute", left: 120, top: 90 }} />
-
-      <Card style={{ position: "absolute", left: 120, top: 380, width: 810, display: "grid", gap: 20, ...rise(frame, 8) }}>
+      <Camera frame={frame} keys={CAMERA} width={2160}>
+      <Card style={{ position: "absolute", left: 110, top: 330, width: 940, display: "grid", gap: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div style={{ display: "grid", gap: 6 }}>
             <div style={{ fontFamily: SANS, fontSize: 26, fontWeight: 500, color: C.fg }}>S&P mensual</div>
@@ -58,9 +69,10 @@ export function InvestScene() {
           id="sp"
           values={SP}
           width={W}
-          height={300}
+          height={340}
           reveal={reveal}
           color={C.income}
+          glow
           markers={BUYS.map((index) => {
             const at = (index / (SP.length - 1)) * 140 + 20;
             const pop = soft(frame, fps, at + 6, { damping: 12, stiffness: 160 });
@@ -70,7 +82,7 @@ export function InvestScene() {
         <Label style={{ fontSize: 17, color: C.text4 }}>● Cada punto es un aporte, al precio de ese día.</Label>
       </Card>
 
-      <Card style={{ position: "absolute", left: 990, top: 380, width: 810, display: "grid", gap: 20, ...rise(frame, 16) }}>
+      <Card style={{ position: "absolute", left: 1110, top: 330, width: 940, display: "grid", gap: 20 }}>
         <div style={{ display: "grid", gap: 6 }}>
           <div style={{ fontFamily: SANS, fontSize: 26, fontWeight: 500, color: C.fg }}>Dólar blue histórico</div>
           <Label style={{ fontSize: 18 }}>Dividido por gobierno · escala logarítmica</Label>
@@ -79,7 +91,7 @@ export function InvestScene() {
           <Label style={{ fontSize: 18 }}>Hoy</Label>
           <Mono style={{ fontSize: 54, fontWeight: 500, letterSpacing: -2.4, color: C.fg }}>$ 1.290</Mono>
         </div>
-        <div style={{ position: "relative", width: W, height: 300 }}>
+        <div style={{ position: "relative", width: W, height: 340 }}>
           {TERMS.map((term) => (
             <div
               key={term.label}
@@ -87,7 +99,7 @@ export function InvestScene() {
                 position: "absolute",
                 left: term.from * W,
                 top: 0,
-                height: 300,
+                height: 340,
                 width: (term.to - term.from) * W * bands,
                 background: alpha(term.color, 0.1),
                 borderLeft: `2px dashed ${alpha(term.color, 0.5)}`,
@@ -98,8 +110,8 @@ export function InvestScene() {
             </div>
           ))}
           <div style={{ position: "absolute", inset: 0 }}>
-            <LineArea id="usd" values={DOLLAR} width={W} height={300} reveal={dollar} color={C.text2} markers={[80, 84, 88].map((index) => {
-              const pop = soft(frame, fps, 170 + (index / 89) * 130 + 6, { damping: 12, stiffness: 160 });
+            <LineArea id="usd" values={DOLLAR} width={W} height={340} glow reveal={dollar} color={C.text2} markers={[80, 84, 88].map((index) => {
+              const pop = soft(frame, fps, 185 + (index / 89) * 120 + 6, { damping: 12, stiffness: 160 });
               return { index, opacity: Math.min(1, pop * 1.5), scale: pop };
             })} />
           </div>
@@ -112,6 +124,9 @@ export function InvestScene() {
           ))}
         </div>
       </Card>
+      </Camera>
+      <Kinetic frame={frame} start={14} end={160} eyebrow="Inversiones" lines={["Invertí siguiendo al S&P 500."]} />
+      <Kinetic frame={frame} start={175} eyebrow="Dólar histórico" lines={["Y mirá el dólar de cada gobierno."]} />
     </div>
   );
 }

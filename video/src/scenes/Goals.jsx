@@ -1,8 +1,10 @@
 import { useCurrentFrame, useVideoConfig } from "remotion";
 import { HeadphonesIcon, PlaneIcon, ShieldCheckIcon } from "lucide-react";
-import { easeInOut, progress, rise, soft } from "../motion";
+import { Camera } from "../camera";
+import { Kinetic } from "../kinetic";
+import { easeInOut, progress, soft } from "../motion";
 import { C, SANS, alpha } from "../theme";
-import { Caption, Card, Label, Mono } from "../ui";
+import { Card, Label, Mono } from "../ui";
 
 const GOALS = [
   { name: "Vacaciones en Bariloche", date: "Para el 15 de mar de 2027", saved: 496000, target: 800000, prefix: "$", status: "Este mes te faltan $ 33.334" },
@@ -13,9 +15,29 @@ const GOALS = [
 const DEPOSIT = 175;
 const DEPOSIT_AMOUNT = 100000;
 
+// Las tarjetas entran girando desde abajo (como cartas que se dan vuelta).
+function flip(frame, fps, start) {
+  const t = soft(frame, fps, start, { damping: 15, stiffness: 120 });
+  return {
+    opacity: Math.min(1, t * 1.6),
+    transform: `rotateX(${(1 - t) * 75}deg) translateY(${(1 - t) * 80}px)`,
+    transformOrigin: "50% 100%",
+  };
+}
+
 function format(value, prefix) {
   return `${prefix} ${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(Math.round(value))}`;
 }
+
+// Arranca de frente a las tres tarjetas, se acerca a la primera para el aporte y vuelve.
+const CAMERA = [
+  { at: 0, x: 960, y: 640, s: 1.25, rx: 14, ry: 0 },
+  { at: 100, x: 960, y: 620, s: 1, rx: 0 },
+  { at: DEPOSIT - 30, x: 960, y: 620, s: 1 },
+  { at: DEPOSIT + 10, x: 400, y: 600, s: 1.75, ry: 8 },
+  { at: DEPOSIT + 100, x: 420, y: 600, s: 1.7, ry: 4 },
+  { at: 330, x: 960, y: 620, s: 1.02, ry: 0 },
+];
 
 // Escena 5: metas de ahorro que se van llenando; se aporta a una y sube.
 export function GoalsScene() {
@@ -26,8 +48,8 @@ export function GoalsScene() {
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
-      <Caption frame={frame} start={0} eyebrow="Metas de ahorro" title="Juntá para lo que querés." muted="Y sabé cuánto apartar por mes." style={{ position: "absolute", left: 120, top: 90 }} />
-      <div style={{ position: "absolute", left: 120, top: 400, display: "grid", gridTemplateColumns: "repeat(3, 540px)", gap: 30 }}>
+      <Camera frame={frame} keys={CAMERA}>
+      <div style={{ position: "absolute", left: 120, top: 380, display: "grid", gridTemplateColumns: "repeat(3, 540px)", gap: 30, perspective: 1600 }}>
         {GOALS.map((goal, index) => {
           const fill = progress(frame, 30 + index * 14, 90, easeInOut);
           const extra = index === 0 ? deposit * DEPOSIT_AMOUNT : 0;
@@ -35,7 +57,7 @@ export function GoalsScene() {
           const percent = Math.min(100, (saved / goal.target) * 100);
           const color = goal.done ? C.income : C.income;
           return (
-            <Card key={goal.name} style={{ display: "grid", gap: 26, ...rise(frame, 10 + index * 10) }}>
+            <Card key={goal.name} style={{ display: "grid", gap: 26, ...flip(frame, fps, 4 + index * 9) }}>
               <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
                 <span style={{ width: 62, height: 62, borderRadius: 16, display: "grid", placeItems: "center", border: `1px solid ${goal.done ? alpha(C.income, 0.35) : C.border}`, background: goal.done ? alpha(C.income, 0.1) : C.soft, fontSize: 28 }}>
                   {(() => {
@@ -74,9 +96,11 @@ export function GoalsScene() {
         })}
       </div>
       {/* "+$ 100.000" que sube desde el boton */}
-      <div style={{ position: "absolute", left: 300, top: 640 - deposit * 70, opacity: deposit * (1 - progress(frame, DEPOSIT + 60, 30)), fontFamily: SANS, fontSize: 30, fontWeight: 600, color: C.income }}>
+      <div style={{ position: "absolute", left: 300, top: 620 - deposit * 70, opacity: deposit * (1 - progress(frame, DEPOSIT + 60, 30)), fontFamily: SANS, fontSize: 30, fontWeight: 600, color: C.income }}>
         +$ 100.000
       </div>
+      </Camera>
+      <Kinetic frame={frame} start={14} end={DEPOSIT - 16} eyebrow="Metas de ahorro" lines={["Juntá para lo que querés."]} />
     </div>
   );
 }

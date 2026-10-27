@@ -21,7 +21,7 @@ Linea con degradado debajo, que se dibuja de izquierda a derecha.
 - color: color de la linea (o colorAt(i) por tramo).
 - min/max: rango vertical (si no, se calcula).
 */
-export function LineArea({ id, values, width, height, reveal = 1, color = C.income, min, max, markers = [], strokeWidth = 4, pad = 14 }) {
+export function LineArea({ id, values, width, height, reveal = 1, color = C.income, min, max, markers = [], strokeWidth = 4, pad = 14, glow = false, endDot = false }) {
   const lo = min ?? Math.min(...values);
   const hi = max ?? Math.max(...values);
   const span = hi - lo || 1;
@@ -40,6 +40,13 @@ export function LineArea({ id, values, width, height, reveal = 1, color = C.inco
           <stop offset="0%" stopColor={alpha(color, 0.28)} />
           <stop offset="100%" stopColor={alpha(color, 0)} />
         </linearGradient>
+        <filter id={`${id}-glow`} x="-10%" y="-40%" width="120%" height="180%">
+          <feGaussianBlur stdDeviation="7" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
         <clipPath id={`${id}-clip`}>
           <rect x={-20} y={-40} width={clipWidth + 20} height={height + 80} />
         </clipPath>
@@ -50,8 +57,9 @@ export function LineArea({ id, values, width, height, reveal = 1, color = C.inco
       ))}
       <g clipPath={`url(#${id}-clip)`}>
         <path d={area} fill={`url(#${id}-fill)`} />
-        <path d={line} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+        <path d={line} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" filter={glow ? `url(#${id}-glow)` : undefined} />
       </g>
+      {endDot && reveal >= 1 && <circle cx={pts.at(-1).x} cy={pts.at(-1).y} r={9} fill={C.bg} stroke={color} strokeWidth={4} />}
       {/* Punto al final de lo dibujado */}
       {reveal > 0.02 && reveal < 1 && (() => {
         const x = pad + reveal * (width - pad * 2);
@@ -116,6 +124,14 @@ export function Pie({ slices, size = 420, sweep = 1, labels = 1, lift = -1, lift
           />
         );
       })}
+      {/* Brillo suave arriba a la izquierda (le da volumen) */}
+      <defs>
+        <radialGradient id="pie-shine" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.22)" />
+          <stop offset="60%" stopColor="rgba(255,255,255,0)" />
+        </radialGradient>
+      </defs>
+      <circle cx={cx} cy={cy} r={r} fill="url(#pie-shine)" opacity={sweep} style={{ pointerEvents: "none" }} />
       {parts
         .filter((p) => p.share >= 0.08)
         .map((p) => {

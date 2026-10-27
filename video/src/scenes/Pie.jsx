@@ -1,8 +1,10 @@
 import { useCurrentFrame, useVideoConfig } from "remotion";
+import { Camera } from "../camera";
 import { Pie } from "../charts";
-import { easeInOut, progress, rise, soft } from "../motion";
+import { Kinetic } from "../kinetic";
+import { easeInOut, easeOutExpo, progress, soft } from "../motion";
 import { C, CAT, SANS, money } from "../theme";
-import { Caption, Card, Mono } from "../ui";
+import { Card, Mono } from "../ui";
 
 const SLICES = [
   { label: "Vivienda", value: 320000, color: CAT.housing, change: "= 0%", tone: C.text4 },
@@ -13,62 +15,73 @@ const SLICES = [
   { label: "Salidas", value: 22000, color: CAT.entertainment, change: "nuevo", tone: C.text4 },
 ];
 const TOTAL = SLICES.reduce((sum, item) => sum + item.value, 0);
+const PIE_CENTER = { x: 500, y: 600 };
+
+// La camara arranca pegada a la torta mientras gira y se aleja para mostrar la lista.
+const CAMERA = [
+  { at: 0, ...PIE_CENTER, s: 2.1, ry: 18, rx: 6 },
+  { at: 40, ...PIE_CENTER, s: 1.9, ry: 10 },
+  { at: 130, x: 960, y: 600, s: 1, ry: -4, rx: 2 },
+  { at: 330, x: 1020, y: 600, s: 1.06, ry: 0 },
+];
 
 // Escena 3: gastos por categoria, en una torta que entra girando y una lista.
 export function PieScene() {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const sweep = progress(frame, 18, 80, easeInOut);
-  const labels = progress(frame, 80, 30);
+  const sweep = progress(frame, 0, 70, easeInOut);
+  const labels = progress(frame, 70, 26, easeOutExpo);
   // Despues se resalta una porcion por vez (como al pasar el mouse por la lista).
-  const step = Math.floor((frame - 150) / 50);
+  const step = Math.floor((frame - 150) / 45);
   const lift = frame >= 150 && step < 3 ? step : -1;
-  const liftAmount = lift >= 0 ? soft(frame, fps, 150 + step * 50, { damping: 18, stiffness: 120 }) * 18 : 0;
+  const liftAmount = lift >= 0 ? soft(frame, fps, 150 + step * 45, { damping: 12, stiffness: 170 }) * 22 : 0;
 
   return (
     <div style={{ position: "absolute", inset: 0 }}>
-      <Caption frame={frame} start={0} eyebrow="Gastos por categoría" title="Mirá a dónde se va tu plata." muted="Y cuánto cambió." style={{ position: "absolute", left: 120, top: 90, width: 760 }} />
-      <Card style={{ position: "absolute", left: 120, top: 400, width: 760, height: 560, display: "grid", placeItems: "center", ...rise(frame, 8) }}>
-        <Pie slices={SLICES} size={460} sweep={sweep} labels={labels} lift={lift} liftAmount={liftAmount} />
-      </Card>
-      <Card style={{ position: "absolute", left: 940, top: 90, width: 860, padding: 26, display: "grid", gap: 6, ...rise(frame, 16) }}>
-        {SLICES.map((item, index) => {
-          const appear = progress(frame, 40 + index * 8, 36);
-          const bar = progress(frame, 60 + index * 8, 60, easeInOut);
-          const active = index === lift;
-          return (
-            <div
-              key={item.label}
-              style={{
-                opacity: appear,
-                transform: `translateX(${(1 - appear) * 30}px)`,
-                display: "flex",
-                alignItems: "center",
-                gap: 22,
-                padding: "18px 18px",
-                borderRadius: 16,
-                background: active ? "rgba(255,255,255,0.04)" : "transparent",
-              }}
-            >
-              <span style={{ width: 52, height: 52, borderRadius: 14, border: `1px solid ${C.border}`, background: C.soft, display: "grid", placeItems: "center" }}>
-                <span style={{ width: 14, height: 14, borderRadius: 7, background: item.color }} />
-              </span>
-              <div style={{ flex: 1, display: "grid", gap: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <span style={{ fontFamily: SANS, fontSize: 26, color: C.fg }}>
-                    {item.label} <Mono style={{ fontSize: 20, color: C.text4 }}>{Math.round((item.value / TOTAL) * 100)}%</Mono>
-                  </span>
-                  <Mono style={{ fontSize: 24, color: C.text2 }}>{money(item.value * bar)}</Mono>
+      <Camera frame={frame} keys={CAMERA}>
+        <Card style={{ position: "absolute", left: 110, top: 290, width: 780, height: 620, display: "grid", placeItems: "center" }}>
+          <Pie slices={SLICES} size={480} sweep={sweep} labels={labels} lift={lift} liftAmount={liftAmount} />
+        </Card>
+        <Card style={{ position: "absolute", left: 950, top: 290, width: 860, padding: 26, display: "grid", gap: 6 }}>
+          {SLICES.map((item, index) => {
+            const appear = progress(frame, 90 + index * 7, 30, easeOutExpo);
+            const bar = progress(frame, 100 + index * 7, 50, easeInOut);
+            const active = index === lift;
+            return (
+              <div
+                key={item.label}
+                style={{
+                  opacity: appear,
+                  transform: `translateX(${(1 - appear) * 60}px)`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 22,
+                  padding: "15px 18px",
+                  borderRadius: 16,
+                  background: active ? "rgba(255,255,255,0.05)" : "transparent",
+                }}
+              >
+                <span style={{ width: 52, height: 52, borderRadius: 14, border: `1px solid ${C.border}`, background: C.soft, display: "grid", placeItems: "center" }}>
+                  <span style={{ width: 14, height: 14, borderRadius: 7, background: item.color }} />
+                </span>
+                <div style={{ flex: 1, display: "grid", gap: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    <span style={{ fontFamily: SANS, fontSize: 26, color: C.fg }}>
+                      {item.label} <Mono style={{ fontSize: 20, color: C.text4 }}>{Math.round((item.value / TOTAL) * 100)}%</Mono>
+                    </span>
+                    <Mono style={{ fontSize: 24, color: C.text2 }}>{money(item.value * bar)}</Mono>
+                  </div>
+                  <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${(item.value / SLICES[0].value) * 100 * bar}%`, borderRadius: 3, background: item.color, boxShadow: active ? `0 0 14px ${item.color}` : "none" }} />
+                  </div>
                 </div>
-                <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${(item.value / SLICES[0].value) * 100 * bar}%`, borderRadius: 3, background: item.color }} />
-                </div>
+                <Mono style={{ width: 120, textAlign: "right", fontSize: 21, color: item.tone }}>{item.change}</Mono>
               </div>
-              <Mono style={{ width: 120, textAlign: "right", fontSize: 21, color: item.tone }}>{item.change}</Mono>
-            </div>
-          );
-        })}
-      </Card>
+            );
+          })}
+        </Card>
+      </Camera>
+      <Kinetic frame={frame} start={20} eyebrow="Gastos por categoría" lines={["Mirá a dónde se va tu plata."]} />
     </div>
   );
 }
