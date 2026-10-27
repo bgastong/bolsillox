@@ -19,7 +19,14 @@ export const MEP_SYMBOL = "MEP";
 
 const YAHOO_URL = process.env.MARKET_URL || "https://query1.finance.yahoo.com/v8/finance/chart";
 const STOOQ_URL = "https://stooq.com/q/d/l/";
-const MEP_HISTORY_URL = process.env.MEP_HISTORY_URL || "https://api.argentinadatos.com/v1/cotizaciones/dolares/bolsa";
+const DOLLAR_HISTORY_URL = process.env.DOLLAR_HISTORY_URL || "https://api.argentinadatos.com/v1/cotizaciones/dolares";
+
+// Historicos del dolar: simbolo en market_prices y "casa" en argentinadatos.
+export const DOLLAR_SERIES = {
+  oficial: { symbol: "USD_OFICIAL", casa: "oficial" },
+  blue: { symbol: "USD_BLUE", casa: "blue" },
+  mep: { symbol: MEP_SYMBOL, casa: "bolsa" },
+};
 
 const QUOTE_TTL_MS = 10 * 60 * 1000;
 const MEP_TTL_MS = 12 * 60 * 60 * 1000;
@@ -178,10 +185,12 @@ export function createMarketService(db, { fetchImpl = globalThis.fetch, now = ()
     }
   }
 
-  async function fetchMep() {
-    const points = parseMepHistory(await getJson(MEP_HISTORY_URL));
-    await savePoints(MEP_SYMBOL, points);
-    await saveQuote(MEP_SYMBOL, { price: points.at(-1).close });
+  // Historico completo de una cotizacion del dolar (oficial, blue o MEP).
+  async function fetchDollar(source) {
+    const { symbol, casa } = DOLLAR_SERIES[source];
+    const points = parseMepHistory(await getJson(`${DOLLAR_HISTORY_URL}/${casa}`));
+    await savePoints(symbol, points);
+    await saveQuote(symbol, { price: points.at(-1).close, previousClose: points.at(-2)?.close ?? null });
   }
 
   // Un pedido por simbolo a la vez: si ya hay uno en curso, se reutiliza.
@@ -213,8 +222,12 @@ export function createMarketService(db, { fetchImpl = globalThis.fetch, now = ()
     const meta = MARKET_INDICES[key];
     await Promise.all([
       ensure(meta.yahoo, QUOTE_TTL_MS, () => fetchIndex(key)),
-      withMep ? ensure(MEP_SYMBOL, MEP_TTL_MS, fetchMep) : null,
+      withMep ? ensureDollar("mep") : null,
     ]);
+  }
+
+  function ensureDollar(source) {
+    return ensure(DOLLAR_SERIES[source].symbol, MEP_TTL_MS, () => fetchDollar(source));
   }
 
   // Como viene el indice hoy: precio, variacion del dia y si los datos estan al dia.
@@ -238,5 +251,5 @@ export function createMarketService(db, { fetchImpl = globalThis.fetch, now = ()
     };
   }
 
-  return { ensureFresh, status, history, readQuote, refresh };
+  return { ensureFresh, ensureDollar, status, history, readQuote, refresh };
 }

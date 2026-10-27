@@ -269,5 +269,15 @@ export function createInvestmentsService(db, { market, now = () => new Date() } 
     return get(userId, id);
   }
 
-  return { list, get, create, update, remove, addEntry, removeEntry };
+  // Aportes de la persona (para marcarlos en los graficos): [{ date, amount, currency, name, index }].
+  async function purchases(userId) {
+    return db.all(sql`
+      SELECT e.date, e.amount, i.currency, i.name, i.index_key AS "index"
+      FROM investment_entries e JOIN investments i ON i.id = e.investment_id
+      WHERE i.user_id = ${userId} AND e.amount > 0
+      ORDER BY e.date
+    `);
+  }
+
+  return { list, get, create, update, remove, addEntry, removeEntry, purchases };
 }

@@ -195,7 +195,7 @@ export function createApp(
   app.use("/api/receivables", receivablesRouter(receivables));
   app.use("/api/goals", goalsRouter(goals));
   app.use("/api/investments", investmentsRouter(investments));
-  app.use("/api/market", marketRouter(market, { now }));
+  app.use("/api/market", marketRouter(market, investments, { now }));
 
   app.get("/api/summary", async (req, res) => {
     const month = parseMonth(req.query.month);

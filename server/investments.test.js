@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, test } from "node:test";
 import { investmentSeries, investmentValue } from "./investments.js";
+import { governmentTerms } from "./routes/investments.js";
 import { parseMepHistory, parseStooqCsv, parseYahooChart, priceOn } from "./market.js";
 import { FAKE_RATES, startTestServer } from "./testHelpers.js";
 
@@ -28,6 +29,13 @@ const MEP = [
   { casa: "bolsa", compra: 1090, venta: 1100, fecha: "2026-10-01" },
 ];
 
+const BLUE = [
+  { casa: "blue", venta: 14, fecha: "2015-12-01" },
+  { casa: "blue", venta: 70, fecha: "2019-12-01" },
+  { casa: "blue", venta: 1000, fecha: "2023-12-01" },
+  { casa: "blue", venta: 1200, fecha: "2026-10-01" },
+];
+
 const market = { yahooFails: false, calls: 0 };
 const json = (data) => ({ ok: true, status: 200, json: async () => data, text: async () => JSON.stringify(data) });
 async function fakeFetch(url) {
@@ -37,7 +45,7 @@ async function fakeFetch(url) {
     return json(YAHOO);
   }
   if (url.includes("stooq")) return { ok: true, status: 200, text: async () => STOOQ };
-  if (url.includes("argentinadatos")) return json(MEP);
+  if (url.includes("argentinadatos")) return json(url.endsWith("/blue") ? BLUE : MEP);
   return json(FAKE_RATES);
 }
 
@@ -59,6 +67,22 @@ describe("datos de mercado", () => {
     assert.equal(priceOn(series, "2026-09-15"), 5000);
     assert.equal(priceOn(series, "2026-10-01"), 5500);
     assert.equal(priceOn(series, "2026-08-01"), null);
+  });
+});
+
+describe("dolar por gobierno", () => {
+  test("cuanto subio en cada mandato con datos", () => {
+    const series = BLUE.map((item) => ({ date: item.fecha, close: item.venta }));
+    const terms = governmentTerms(series, "2026-10-15");
+    assert.deepEqual(
+      terms.map((term) => [term.key, term.from, term.to, term.changePercent, term.partial]),
+      [
+        ["cfk2", 14, 14, 0, true],
+        ["macri", 14, 70, 400, false],
+        ["afernandez", 70, 1000, 1328.57, false],
+        ["milei", 1000, 1200, 20, false],
+      ],
+    );
   });
 });
 
@@ -166,6 +190,18 @@ describe("inversiones", () => {
   test("la moneda no se cambia si ya hay aportes", async () => {
     const res = await request(`/investments/${item.id}`, { method: "PUT", body: { name: "S&P", index: "sp500", currency: "USD" } });
     assert.equal((await res.json()).fields.currency, "errorInvestmentLocked");
+  });
+
+  test("los graficos marcan cada compra con el precio de ese dia", async () => {
+    const index = await getJson("/market/sp500?range=max");
+    assert.deepEqual(
+      index.purchases.map((item) => [item.date, item.price, item.amount, item.name]),
+      [["2026-09-01", 5000, 100000, "S&P mensual"]],
+    );
+    const dollar = await getJson("/market/dollar?source=blue");
+    assert.deepEqual(dollar.purchases.map((item) => [item.date, item.price]), [["2026-09-01", 1000]]);
+    assert.equal(dollar.terms.at(-1).key, "milei");
+    assert.equal(dollar.price, 1200);
   });
 
   test("borrar el aporte borra su gasto", async () => {
