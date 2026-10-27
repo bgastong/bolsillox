@@ -117,3 +117,8 @@ export const CATEGORY_COLORS = [
   "#a3e635",
   "#94a3b8",
 ];
+
+// Metas de ahorro: iconos que se pueden elegir y largo del nombre.
+export const GOAL_ICONS = ["piggyBank", "plane", "home", "car", "gift", "heart", "book", "phone", "briefcase", "baby", "dog", "music"];
+export const GOAL_NAME_MAX_LENGTH = 40;
+export const GOALS_MAX = 30;
