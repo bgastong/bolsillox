@@ -18,6 +18,7 @@ import CursorDots from "@/components/Brand/CursorDots";
 import LiveChart from "@/components/Landing/LiveChart";
 import LiveBalance from "@/components/Landing/LiveBalance";
 import FeatureOrbit from "@/components/Landing/FeatureOrbit";
+import ProductVideo from "@/components/Landing/ProductVideo";
 import { LanguageToggle } from "@/components/Auth/AuthLayout";
 import { ThemeToggle } from "@/components/Theme/ThemeControls";
 import { buttonVariants } from "@/components/ui/button";
@@ -216,6 +217,19 @@ function Landing() {
 
           <div className="landing-tilt">
             <ProductPreview />
+          </div>
+        </section>
+
+        {/* Video: como se usa (cargar un gasto, graficos, metas, inversiones) */}
+        <section aria-labelledby="video-title" className="border-t border-fg/[0.06]">
+          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6">
+            <div className="grid max-w-2xl gap-3">
+              <h2 id="video-title" className="m-0 text-[28px] leading-[1.15] font-medium tracking-[-0.04em] sm:text-[34px]">
+                {t("landingVideoTitle")}
+              </h2>
+              <p className="m-0 text-[color:var(--text-3)]">{t("landingVideoSubtitle")}</p>
+            </div>
+            <ProductVideo />
           </div>
         </section>
 
