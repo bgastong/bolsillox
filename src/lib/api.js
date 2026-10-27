@@ -131,6 +131,18 @@ export const api = {
   addGoalEntry: (id, data) => request(`/goals/${id}/entries`, { method: "POST", body: data }),
   deleteGoalEntry: (id, entryId) => request(`/goals/${id}/entries/${entryId}`, { method: "DELETE" }),
 
+  // Inversiones indexadas y precios de mercado
+  listInvestments: (options) => request("/investments", options),
+  createInvestment: (data) => request("/investments", { method: "POST", body: data }),
+  updateInvestment: (id, data) => request(`/investments/${id}`, { method: "PUT", body: data }),
+  deleteInvestment: (id) => request(`/investments/${id}`, { method: "DELETE" }),
+  addInvestmentEntry: (id, data) => request(`/investments/${id}/entries`, { method: "POST", body: data }),
+  deleteInvestmentEntry: (id, entryId) => request(`/investments/${id}/entries/${entryId}`, { method: "DELETE" }),
+  // Historico de un indice: range 1m|6m|1y|5y|max
+  getMarket: (index, range, options) => request(`/market/${index}${toQuery({ range })}`, options),
+  // Dolar historico (oficial, blue o mep) con los tramos por gobierno
+  getDollarHistory: (source, range, options) => request(`/market/dollar${toQuery({ source, range })}`, options),
+
   // Avisos por email (recordatorios de cuotas y cobros) e idioma en que llegan
   getNotificationSettings: (options) => request("/notifications", options),
   saveNotificationSettings: (settings) => request("/notifications", { method: "PUT", body: settings }),
