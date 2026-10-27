@@ -122,3 +122,10 @@ export const CATEGORY_COLORS = [
 export const GOAL_ICONS = ["piggyBank", "plane", "home", "car", "gift", "heart", "book", "phone", "briefcase", "baby", "dog", "music"];
 export const GOAL_NAME_MAX_LENGTH = 40;
 export const GOALS_MAX = 30;
+
+// Inversiones indexadas: a que indice sigue cada una (se pueden sumar mas).
+export const INVESTMENT_INDICES = ["sp500"];
+export const INVESTMENT_NAME_MAX_LENGTH = 40;
+export const INVESTMENTS_MAX = 20;
+// Hasta cuantos años atras se puede cargar un aporte (el historial que se guarda).
+export const INVESTMENT_HISTORY_YEARS = 10;

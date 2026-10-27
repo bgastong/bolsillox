@@ -10,6 +10,8 @@ import {
   EXPENSE_CATEGORIES,
   GOAL_ICONS,
   GOAL_NAME_MAX_LENGTH,
+  INVESTMENT_INDICES,
+  INVESTMENT_NAME_MAX_LENGTH,
   isCustomCategory,
   MOVEMENT_TYPES,
   NOTE_MAX_LENGTH,
@@ -257,6 +259,30 @@ export const sharedExpenseSchema = z
       ctx.addIssue({ code: "custom", path: ["split"], message: "errorSplitTooLarge" });
     }
   });
+
+// Inversion indexada: nombre, indice que sigue y moneda en que se aporta.
+export const investmentSchema = z.object({
+  name: z
+    .string({ error: "errorInvestmentNameRequired" })
+    .trim()
+    .min(1, { error: "errorInvestmentNameRequired" })
+    .max(INVESTMENT_NAME_MAX_LENGTH, { error: "errorInvestmentNameTooLong" }),
+  index: z.enum(INVESTMENT_INDICES, { error: "errorInvestmentIndexInvalid" }).default("sp500"),
+  currency: z.enum(CURRENCIES, { error: "errorCurrencyInvalid" }).default(DEFAULT_CURRENCY),
+});
+
+/*
+Aporte (deposit) o rescate (withdraw) de una inversion. Si registerMovement,
+se carga tambien en los movimientos: un gasto al aportar, un ingreso al rescatar.
+*/
+export const INVESTMENT_ENTRY_TYPES = ["deposit", "withdraw"];
+export const investmentEntrySchema = z.object({
+  type: z.enum(INVESTMENT_ENTRY_TYPES, { error: "errorTypeInvalid" }).default("deposit"),
+  amount: amountSchema,
+  date: isoDateSchema,
+  registerMovement: z.boolean().optional().default(true),
+  paymentMethod: z.enum(PAYMENT_METHODS, { error: "errorMethodInvalid" }).optional().default("transfer"),
+});
 
 // Avisos por email: recordatorios de cuotas e idioma en que llegan.
 export const notificationSettingsSchema = z.object({
