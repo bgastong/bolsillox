@@ -33,6 +33,10 @@ describe("progreso de una meta", () => {
     assert.deepEqual([progress.perMonth, progress.thisMonthLeft, progress.status], [500, 0, "onTrack"]);
   });
 
+  test("lo de cada mes se redondea para arriba", () => {
+    assert.equal(goalProgress({ target: 1000, deadline: "2026-12-31", entries: [] }, today).perMonth, 334);
+  });
+
   test("cumplida y vencida", () => {
     assert.equal(goalProgress({ target: 100, deadline: "2026-01-01", entries: [{ amount: 100, date: "2025-12-01" }] }, today).status, "done");
     assert.equal(goalProgress({ target: 100, deadline: "2026-10-01", entries: [] }, today).status, "overdue");

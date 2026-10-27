@@ -48,7 +48,8 @@ export function goalProgress({ target, deadline, entries }, today) {
   const thisMonth = roundMoney(entries.filter((entry) => entry.date >= monthStart).reduce((sum, entry) => sum + entry.amount, 0));
   const savedBefore = saved - thisMonth;
   const monthsLeft = monthsBetween(today, deadline) + 1;
-  const perMonth = roundMoney(Math.max(target - savedBefore, 0) / monthsLeft);
+  // Redondeado para arriba a la unidad: apartando eso todos los meses se llega.
+  const perMonth = Math.ceil(Math.max(target - savedBefore, 0) / monthsLeft);
   const thisMonthLeft = roundMoney(Math.max(perMonth - thisMonth, 0));
   return {
     ...base,
