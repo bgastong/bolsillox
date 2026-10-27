@@ -3,6 +3,11 @@ import { Easing, interpolate, spring } from "remotion";
 // Curvas suaves para todas las animaciones (entrada rapida, frenada larga).
 export const easeOut = Easing.bezier(0.16, 1, 0.3, 1);
 export const easeInOut = Easing.bezier(0.65, 0, 0.35, 1);
+// Movimiento de camara: arranca con decision y frena largo.
+export const cinematic = Easing.bezier(0.7, 0, 0.18, 1);
+export const easeInCubic = Easing.bezier(0.55, 0, 1, 0.45);
+export const easeOutExpo = Easing.bezier(0.16, 1, 0.3, 1);
+export const easeOutBack = Easing.bezier(0.34, 1.56, 0.64, 1);
 
 // 0 -> 1 entre dos cuadros, con frenada suave.
 export function progress(frame, start, duration, easing = easeOut) {
