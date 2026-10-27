@@ -123,6 +123,14 @@ export const api = {
   deleteReceivable: (id) => request(`/receivables/${id}`, { method: "DELETE" }),
   collectReceivable: (id, data) => request(`/receivables/${id}/payments`, { method: "POST", body: data }),
 
+  // Metas de ahorro y sus aportes (o retiros)
+  listGoals: (options) => request("/goals", options),
+  createGoal: (data) => request("/goals", { method: "POST", body: data }),
+  updateGoal: (id, data) => request(`/goals/${id}`, { method: "PUT", body: data }),
+  deleteGoal: (id) => request(`/goals/${id}`, { method: "DELETE" }),
+  addGoalEntry: (id, data) => request(`/goals/${id}/entries`, { method: "POST", body: data }),
+  deleteGoalEntry: (id, entryId) => request(`/goals/${id}/entries/${entryId}`, { method: "DELETE" }),
+
   // Avisos por email (recordatorios de cuotas y cobros) e idioma en que llegan
   getNotificationSettings: (options) => request("/notifications", options),
   saveNotificationSettings: (settings) => request("/notifications", { method: "PUT", body: settings }),

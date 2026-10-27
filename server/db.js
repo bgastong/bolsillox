@@ -269,11 +269,38 @@ const MIGRATIONS = [
     PRIMARY KEY (receivable_id, due_date, kind)
   );
   `,
-  // v12: gastos compartidos. Lo que cada persona debe de un gasto que pago la
+  // v12: metas de ahorro y lo que se fue aportando (o sacando) de cada una.
+  `
+  CREATE TABLE savings_goals (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER          NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    name       TEXT             NOT NULL,
+    target     DOUBLE PRECISION NOT NULL CHECK (target > 0),
+    currency   TEXT             NOT NULL DEFAULT 'ARS' CHECK (currency IN ('ARS', 'USD')),
+    deadline   TEXT,
+    icon       TEXT             NOT NULL DEFAULT 'piggyBank',
+    created_at TIMESTAMPTZ      NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ      NOT NULL DEFAULT now()
+  );
+  CREATE INDEX idx_savings_goals_user ON savings_goals (user_id);
+
+  -- amount positivo = aporte, negativo = retiro. Si se cargo en los movimientos,
+  -- movement_id apunta al gasto (aporte) o ingreso (retiro).
+  CREATE TABLE savings_goal_entries (
+    id          SERIAL PRIMARY KEY,
+    goal_id     INTEGER          NOT NULL REFERENCES savings_goals (id) ON DELETE CASCADE,
+    amount      DOUBLE PRECISION NOT NULL CHECK (amount <> 0),
+    date        TEXT             NOT NULL,
+    movement_id INTEGER          REFERENCES movements (id) ON DELETE SET NULL,
+    created_at  TIMESTAMPTZ      NOT NULL DEFAULT now()
+  );
+  CREATE INDEX idx_savings_goal_entries_goal ON savings_goal_entries (goal_id);
+  `,
+  // v13: gastos compartidos. Lo que cada persona debe de un gasto que pago la
   // persona queda en receivables, unido al gasto por movement_id.
   `
-  ALTER TABLE receivables ADD COLUMN movement_id INTEGER REFERENCES movements (id) ON DELETE SET NULL;
-  CREATE INDEX idx_receivables_movement ON receivables (movement_id);
+  ALTER TABLE receivables ADD COLUMN IF NOT EXISTS movement_id INTEGER REFERENCES movements (id) ON DELETE SET NULL;
+  CREATE INDEX IF NOT EXISTS idx_receivables_movement ON receivables (movement_id);
   `,
 ];
 

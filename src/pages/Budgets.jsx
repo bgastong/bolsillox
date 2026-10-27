@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { PlusIcon } from "lucide-react";
 import BudgetDialog from "@/components/Budgets/BudgetDialog";
 import BudgetRow from "@/components/Budgets/BudgetRow";
+import PlanTabs from "@/components/Budgets/PlanTabs";
 import MonthPicker from "@/components/MonthPicker/MonthPicker";
 import { CategoryIcon, PageHeader } from "@/components/Movements/MovementBits";
 import { EmptyState, ErrorState } from "@/components/States/States";
@@ -43,6 +44,7 @@ function Budgets() {
         subtitle={t("budgetsSubtitle")}
         actions={<MonthPicker month={month} onChange={setMonth} />}
       />
+      <PlanTabs />
 
       {error && !data ? (
         <ErrorState error={error} onRetry={reload} />

@@ -15,6 +15,7 @@ import {
   SearchIcon,
   SettingsIcon,
   SunIcon,
+  TargetIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
@@ -33,6 +34,7 @@ const PAGES = [
   { to: "/recurring", labelKey: "recurringTitle", icon: RepeatIcon },
   { to: "/debts", labelKey: "debtsTitle", icon: HandCoinsIcon },
   { to: "/budgets", labelKey: "budgetsTitle", icon: PiggyBankIcon },
+  { to: "/goals", labelKey: "goalsTitle", icon: TargetIcon },
   { to: "/settings", labelKey: "settingsTitle", icon: SettingsIcon },
 ];
 

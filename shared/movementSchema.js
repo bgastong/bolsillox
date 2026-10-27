@@ -8,6 +8,8 @@ import {
   CURRENCIES,
   DEFAULT_CURRENCY,
   EXPENSE_CATEGORIES,
+  GOAL_ICONS,
+  GOAL_NAME_MAX_LENGTH,
   isCustomCategory,
   MOVEMENT_TYPES,
   NOTE_MAX_LENGTH,
@@ -189,6 +191,35 @@ export const receivablePaymentSchema = z.object({
   paymentMethod: z.enum(PAYMENT_METHODS, { error: "errorMethodInvalid" }).optional().default("transfer"),
 });
 
+// Meta de ahorro: nombre, cuanto se quiere juntar, en que moneda y para cuando (opcional).
+export const goalSchema = z.object({
+  name: z
+    .string({ error: "errorGoalNameRequired" })
+    .trim()
+    .min(1, { error: "errorGoalNameRequired" })
+    .max(GOAL_NAME_MAX_LENGTH, { error: "errorGoalNameTooLong" }),
+  target: amountSchema,
+  currency: z.enum(CURRENCIES, { error: "errorCurrencyInvalid" }).default(DEFAULT_CURRENCY),
+  deadline: z
+    .union([isoDateSchema, z.literal(""), z.null()])
+    .optional()
+    .transform((value) => value || null),
+  icon: z.enum(GOAL_ICONS, { error: "errorGoalIconInvalid" }).default("piggyBank"),
+});
+
+/*
+Movimiento de una meta: aportar (deposit) o sacar plata (withdraw). Si
+registerMovement, se carga tambien en los movimientos (un gasto al aportar,
+un ingreso al sacar), asi el saldo disponible refleja lo que se aparto.
+*/
+export const GOAL_ENTRY_TYPES = ["deposit", "withdraw"];
+export const goalEntrySchema = z.object({
+  type: z.enum(GOAL_ENTRY_TYPES, { error: "errorTypeInvalid" }).default("deposit"),
+  amount: amountSchema,
+  date: isoDateSchema,
+  registerMovement: z.boolean().optional().default(true),
+  paymentMethod: z.enum(PAYMENT_METHODS, { error: "errorMethodInvalid" }).optional().default("transfer"),
+});
 /*
 Gasto compartido: un gasto que pago la persona y que se divide con otros.
 split.people: con quien y cuanto pone cada uno (lo que no ponen ellos es la
