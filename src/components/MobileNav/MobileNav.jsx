@@ -18,7 +18,7 @@ const ITEM =
 Una seccion. La activa lleva una pastilla detras del icono y el texto en blanco
 (no solo cambia el color, asi se distingue tambien sin verlo).
 - also: rutas extra que tambien la marcan como activa (Historial cubre Recurrentes y
-  Deudas; Presupuestos cubre Metas).
+  Deudas; Presupuestos cubre Metas e Inversiones).
 */
 function NavItem({ to, end, also = [], icon: Icon, label }) {
   const { pathname } = useLocation();
@@ -84,7 +84,7 @@ function MobileNav() {
           <span className="max-w-full truncate px-0.5">{t("mobileNavNew")}</span>
         </button>
 
-        <NavItem to="/budgets" also={["/goals"]} icon={PiggyBankIcon} label={t("budgetsTitle")} />
+        <NavItem to="/budgets" also={["/goals", "/investments"]} icon={PiggyBankIcon} label={t("budgetsTitle")} />
         <NavItem to="/settings" icon={SettingsIcon} label={t("settingsTitle")} />
       </div>
     </nav>

@@ -1,18 +1,19 @@
 import { NavLink } from "react-router-dom";
-import { PiggyBankIcon, TargetIcon } from "lucide-react";
+import { PiggyBankIcon, TargetIcon, TrendingUpIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/hooks/useLanguage";
 
-// Pestanas Presupuestos / Metas (lo que se planea gastar y lo que se quiere juntar).
+// Pestanas Presupuestos / Metas / Inversiones (lo que se planea gastar, juntar e invertir).
 function PlanTabs() {
   const { t } = useLanguage();
   const tabs = [
     { to: "/budgets", label: t("budgetsTitle"), icon: PiggyBankIcon },
     { to: "/goals", label: t("goalsTitle"), icon: TargetIcon },
+    { to: "/investments", label: t("investmentsTitle"), icon: TrendingUpIcon },
   ];
 
   return (
-    <nav aria-label={t("planViews")} className="grid grid-cols-2 gap-1 rounded-xl bg-fg/[0.04] p-1 sm:inline-grid sm:w-auto">
+    <nav aria-label={t("planViews")} className="grid grid-cols-3 gap-1 rounded-xl bg-fg/[0.04] p-1 sm:inline-grid sm:w-auto">
       {tabs.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}

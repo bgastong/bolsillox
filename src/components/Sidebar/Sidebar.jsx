@@ -8,6 +8,7 @@ import {
   SearchIcon,
   SettingsIcon,
   TargetIcon,
+  TrendingUpIcon,
 } from "lucide-react";
 import styles from "./Sidebar.module.css";
 import { useLanguage } from "../../hooks/useLanguage";
@@ -36,6 +37,7 @@ const NAV_ITEMS = [
   { to: "/debts", labelKey: "debtsTitle", icon: HandCoinsIcon },
   { to: "/budgets", labelKey: "budgetsTitle", icon: PiggyBankIcon },
   { to: "/goals", labelKey: "goalsTitle", icon: TargetIcon },
+  { to: "/investments", labelKey: "investmentsTitle", icon: TrendingUpIcon },
   { to: "/settings", labelKey: "settingsTitle", icon: SettingsIcon },
 ];
 
