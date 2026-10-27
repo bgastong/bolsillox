@@ -1,8 +1,10 @@
+import { useRef } from "react";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "../../Movements/MovementBits";
+import CategoryPie from "./CategoryPie";
 
 // Variacion contra el mes anterior: gastar mas es malo (rojo), menos es bueno (verde).
 function CategoryVariation({ value }) {
@@ -23,31 +25,20 @@ function CategoryVariation({ value }) {
   );
 }
 
-// Desglose de gastos por categoria: barra apilada con el color de cada
-// categoria arriba y lista con icono, monto, porcentaje, barra relativa y
-// variacion contra el mes anterior.
+// Desglose de gastos por categoria: torta con el color de cada categoria
+// arriba y lista con icono, monto, porcentaje, barra relativa y variacion
+// contra el mes anterior. Al pasar por una fila se resalta su porcion.
 function CategoryBreakdown({ data, currency = "ARS" }) {
   const { locale } = useLanguage();
   const { metaOf, nameOf } = useCategories();
   const total = data.reduce((sum, item) => sum + item.total, 0);
   const top = data[0]?.total || 1;
   const share = (value) => (total ? (value / total) * 100 : 0);
+  const pieRef = useRef(null);
 
   return (
     <div className="grid gap-4">
-      <div className="flex h-2 gap-[3px] overflow-hidden rounded-full" aria-hidden="true">
-        {data.map((item, index) => (
-          <span
-            key={item.category}
-            className="grow-x h-full rounded-[2px]"
-            style={{
-              width: `${share(item.total)}%`,
-              background: metaOf(item.category).color,
-              animationDelay: `${0.2 + index * 0.05}s`,
-            }}
-          />
-        ))}
-      </div>
+      <CategoryPie ref={pieRef} data={data} currency={currency} />
 
       <ul className="-mx-2 m-0 flex list-none flex-col p-0">
         {data.map((item, index) => {
@@ -57,6 +48,8 @@ function CategoryBreakdown({ data, currency = "ARS" }) {
             <li
               key={item.category}
               className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-fg/[0.03]"
+              onMouseEnter={() => pieRef.current?.highlight(index)}
+              onMouseLeave={() => pieRef.current?.highlight(null)}
             >
               <CategoryIcon category={item.category} className="size-8 rounded-lg" />
               <div className="min-w-0 flex-1">
