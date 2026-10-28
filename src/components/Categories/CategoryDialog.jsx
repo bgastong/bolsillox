@@ -5,6 +5,7 @@ import { categorySchema, issuesToFieldErrors } from "@shared/movementSchema.js";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogActions,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -218,7 +219,7 @@ function CategoryForm({ category, initialType, onDone, onCancel }) {
         </p>
       )}
 
-      <div className="sticky bottom-0 -mx-5 flex flex-col gap-2 border-t bg-popover px-5 pt-3 pb-1 sm:static sm:mx-0 sm:flex-row sm:items-center sm:border-0 sm:p-0">
+      <DialogActions>
         {isEdit && (
           <Button
             type="button"
@@ -239,7 +240,7 @@ function CategoryForm({ category, initialType, onDone, onCancel }) {
             {saving ? t("saving") : isEdit ? t("save") : t("create")}
           </Button>
         </div>
-      </div>
+      </DialogActions>
     </form>
   );
 }

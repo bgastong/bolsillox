@@ -25,19 +25,36 @@ export function formatAmount(raw, { group, decimal }) {
 }
 
 /*
+Si se borro un separador de miles (que se pone solo), en realidad se quiso
+borrar el digito de al lado: con Backspace, el de antes; con Supr, el de despues.
+Si no, el punto volveria a aparecer y pareceria que la tecla no anda.
+- previous: el texto antes de borrar. text y caret: como quedo.
+*/
+export function fixSeparatorDelete(previous, text, caret, inputType, { group }) {
+  const removed = previous.length === text.length + 1 && previous.slice(0, caret) + previous.slice(caret + 1) === text;
+  if (!removed || previous[caret] !== group) return { text, caret };
+  if (inputType === "deleteContentForward") return { text: text.slice(0, caret) + text.slice(caret + 1), caret };
+  if (caret === 0) return { text, caret };
+  return { text: text.slice(0, caret - 1) + text.slice(caret), caret: caret - 1 };
+}
+
+/*
 Lo que escribio la persona -> valor crudo y cuantos "caracteres de numero"
 (digitos y la coma decimal) quedan antes del cursor, para volver a ponerlo ahi.
 - text: lo que quedo en el campo. caret: posicion del cursor.
-- typed: la tecla que se apreto (InputEvent.data), o null si se pego o borro.
+- typed: la tecla que se apreto (InputEvent.data), o null.
+- inputType: el tipo de cambio (InputEvent.inputType): "insertText",
+  "insertFromPaste", "deleteContentBackward"...
 Tocar "." o "," es siempre la coma decimal (los miles se ponen solos).
 */
-export function parseAmountInput(text, caret, typed, { group, decimal }) {
+export function parseAmountInput(text, caret, typed, { group, decimal }, inputType = null) {
   const chars = [...text];
   let decimalAt = -1;
   if (typed === "." || typed === ",") {
     decimalAt = caret - 1;
-  } else if (typed === null || typed === undefined) {
-    // Pegado: "1234.56" (sin miles y con punto) tambien es decimal.
+  } else if (inputType === "insertFromPaste" || inputType === "insertFromDrop" || (!inputType && !typed)) {
+    // Pegado: "1234.56" (sin miles y con punto) tambien es decimal. Al borrar
+    // no se aplica: "1.234" que queda en "1.23" sigue siendo mil doscientos...
     if (group === "." && !text.includes(decimal) && /^\d*\.\d{1,2}$/.test(text)) decimalAt = text.lastIndexOf(".");
   }
 

@@ -81,6 +81,27 @@ function DialogFooter({ className, ...props }) {
   );
 }
 
+/*
+Botones al pie de un formulario dentro de un dialogo. En el celular quedan
+pegados abajo y llegan hasta el borde de la pantalla: cubren el margen de la
+barrita de inicio (que queda como espacio dentro de la barra), asi el
+formulario no se ve pasar por debajo de los botones al hacer scroll.
+Igual en pantallas grandes, donde un formulario largo no entra en la ventana.
+*/
+function DialogActions({ className, ...props }) {
+  return (
+    <div
+      data-slot="dialog-actions"
+      className={cn(
+        "sticky -bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-10 -mx-5 -mb-[calc(1.25rem+env(safe-area-inset-bottom))] flex flex-col gap-2 border-t bg-popover px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]",
+        // En pantallas grandes tambien quedan fijos abajo (el dialogo tiene p-6).
+        "sm:-bottom-6 sm:-mx-6 sm:-mb-6 sm:flex-row sm:items-center sm:rounded-b-2xl sm:px-6 sm:pt-4 sm:pb-6",
+        className
+      )}
+      {...props} />
+  );
+}
+
 function DialogTitle({ className, ...props }) {
   return (
     <DialogPrimitive.Title
@@ -101,6 +122,7 @@ function DialogDescription({ className, ...props }) {
 
 export {
   Dialog,
+  DialogActions,
   DialogClose,
   DialogContent,
   DialogDescription,

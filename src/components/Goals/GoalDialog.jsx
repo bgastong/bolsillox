@@ -5,7 +5,7 @@ import { goalSchema, issuesToFieldErrors } from "@shared/movementSchema.js";
 import { Field, Segmented } from "@/components/Movements/MovementForm";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogActions, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { AmountInput } from "@/components/ui/amount-input";
 import { api } from "@/lib/api";
@@ -190,7 +190,7 @@ function GoalForm({ goal, onDone, onCancel }) {
         </p>
       )}
 
-      <div className="sticky bottom-0 -mx-5 flex flex-col gap-2 border-t bg-popover px-5 pt-3 pb-1 sm:static sm:mx-0 sm:flex-row sm:items-center sm:border-0 sm:p-0">
+      <DialogActions>
         {isEdit && (
           <Button
             type="button"
@@ -211,7 +211,7 @@ function GoalForm({ goal, onDone, onCancel }) {
             {saving ? t("saving") : isEdit ? t("save") : t("create")}
           </Button>
         </div>
-      </div>
+      </DialogActions>
     </form>
   );
 }

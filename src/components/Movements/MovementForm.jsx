@@ -20,6 +20,7 @@ import {
   sharedExpenseSchema,
 } from "@shared/movementSchema.js";
 import { Button } from "@/components/ui/button";
+import { DialogActions } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { AmountInput } from "@/components/ui/amount-input";
 import { Label } from "@/components/ui/label";
@@ -586,7 +587,7 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
         )}
 
         {/* Acciones fijas abajo: siempre visibles aunque el teclado este abierto */}
-        <div className="sticky bottom-0 -mx-5 mt-1 flex flex-col gap-2 border-t bg-popover px-5 pt-3 pb-1 sm:static sm:mx-0 sm:flex-row sm:items-center sm:border-0 sm:p-0">
+        <DialogActions className="mt-1">
           {onDelete && (
             <Button
               type="button"
@@ -607,7 +608,7 @@ function MovementForm({ item, mode = "movement", initialKind, onSubmit, onCancel
               {saving ? t("saving") : t("save")}
             </Button>
           </div>
-        </div>
+        </DialogActions>
       </form>
       <CategoryDialog
         target={newCategory}
