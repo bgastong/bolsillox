@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { caretAfter, formatAmount, parseAmountInput, separatorsFor } from "./amountInput.js";
+import { caretAfter, fixSeparatorDelete, formatAmount, parseAmountInput, separatorsFor } from "./amountInput.js";
 
 const es = separatorsFor("es-AR");
 const en = separatorsFor("en-US");
@@ -52,4 +52,20 @@ test("pegar con o sin miles", () => {
 test("sin ceros de mas ni montos gigantes", () => {
   assert.equal(parseAmountInput("0005", 4, "5", es).raw, "5");
   assert.equal(parseAmountInput("123456789012", 12, "2", es).raw, "1234567890");
+});
+
+test("borrar un punto de miles borra el digito de al lado", () => {
+  // "1.234" con el cursor despues del punto y Backspace: queda "1234" con el cursor en 1.
+  assert.deepEqual(fixSeparatorDelete("1.234", "1234", 1, "deleteContentBackward", es), { text: "234", caret: 0 });
+  // Con Supr antes del punto: se borra el 2.
+  assert.deepEqual(fixSeparatorDelete("1.234", "1234", 1, "deleteContentForward", es), { text: "134", caret: 1 });
+  // Si se borro un digito, no cambia nada.
+  assert.deepEqual(fixSeparatorDelete("1.234", "1.34", 2, "deleteContentBackward", es), { text: "1.34", caret: 2 });
+});
+
+test("al borrar no se inventa una coma decimal", () => {
+  // De "1.234" se borra el 4: "1.23" sigue siendo 123, no 1,23.
+  assert.equal(parseAmountInput("1.23", 4, null, es, "deleteContentBackward").raw, "123");
+  // Pegado, "1234.56" si es decimal.
+  assert.equal(parseAmountInput("1234.56", 7, null, es, "insertFromPaste").raw, "1234.56");
 });

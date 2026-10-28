@@ -1,5 +1,5 @@
 import { useLayoutEffect, useMemo, useRef } from "react";
-import { caretAfter, formatAmount, parseAmountInput, separatorsFor } from "@/lib/amountInput";
+import { caretAfter, fixSeparatorDelete, formatAmount, parseAmountInput, separatorsFor } from "@/lib/amountInput";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Input } from "./input";
 
@@ -27,12 +27,12 @@ function AmountInput({ value, onChange, onValueChange, ...props }) {
   });
 
   function handleChange(event) {
-    const { raw, before } = parseAmountInput(
-      event.target.value,
-      event.target.selectionStart ?? event.target.value.length,
-      event.nativeEvent?.data ?? null,
-      separators,
-    );
+    const inputType = event.nativeEvent?.inputType ?? null;
+    // Borrar un punto de miles borra el digito de al lado (ver fixSeparatorDelete).
+    const edited = inputType?.startsWith("delete")
+      ? fixSeparatorDelete(text, event.target.value, event.target.selectionStart ?? event.target.value.length, inputType, separators)
+      : { text: event.target.value, caret: event.target.selectionStart ?? event.target.value.length };
+    const { raw, before } = parseAmountInput(edited.text, edited.caret, event.nativeEvent?.data ?? null, separators, inputType);
     pendingCaret.current = before;
     onChange?.({ target: { value: raw } });
     onValueChange?.(raw);
