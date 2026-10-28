@@ -543,3 +543,24 @@ Todos respetan prefers-reduced-motion (ver index.css).
     transform: none;
   }
 }
+
+/* Celular de la landing (PhoneShowcase): flota apenas, subiendo y bajando. */
+.phone-float {
+  animation: phone-float 6s ease-in-out infinite;
+}
+
+@keyframes phone-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone-float {
+    animation: none;
+  }
+}

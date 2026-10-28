@@ -17,7 +17,7 @@ import Wordmark from "@/components/Brand/Wordmark";
 import LiveChart from "@/components/Landing/LiveChart";
 import LiveBalance from "@/components/Landing/LiveBalance";
 import FeatureOrbit from "@/components/Landing/FeatureOrbit";
-import ProductVideo from "@/components/Landing/ProductVideo";
+import PhoneShowcase from "@/components/Landing/PhoneShowcase";
 import { LanguageToggle } from "@/components/Auth/AuthLayout";
 import { ThemeToggle } from "@/components/Theme/ThemeControls";
 import { buttonVariants } from "@/components/ui/button";
@@ -227,7 +227,7 @@ function Landing() {
               </h2>
               <p className="m-0 text-[color:var(--text-3)]">{t("landingVideoSubtitle")}</p>
             </div>
-            <ProductVideo />
+            <PhoneShowcase />
           </div>
         </section>
 
