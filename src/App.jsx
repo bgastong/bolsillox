@@ -17,6 +17,7 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
+const Tutorial = lazy(() => import("./pages/Tutorial"));
 const Register = lazy(() => import("./pages/Register"));
 
 // Despues de este tiempo se explica por que tarda (servidor gratis "dormido").
@@ -121,6 +122,8 @@ function App() {
         {/* Paginas legales: con o sin sesion */}
         <Route path="/terminos" element={<Suspense fallback={<FullScreenLoader />}><Terms /></Suspense>} />
         <Route path="/privacidad" element={<Suspense fallback={<FullScreenLoader />}><Privacy /></Suspense>} />
+        {/* Tutorial en video: con o sin sesion */}
+        <Route path="/tutorial" element={<Suspense fallback={<FullScreenLoader />}><Tutorial /></Suspense>} />
         <Route
           path="*"
           element={

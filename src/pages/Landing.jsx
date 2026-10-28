@@ -7,6 +7,7 @@ import {
   CommandIcon,
   DollarSignIcon,
   FilmIcon,
+  PlayIcon,
   LayoutDashboardIcon,
   PiggyBankIcon,
   RepeatIcon,
@@ -17,7 +18,6 @@ import Wordmark from "@/components/Brand/Wordmark";
 import LiveChart from "@/components/Landing/LiveChart";
 import LiveBalance from "@/components/Landing/LiveBalance";
 import FeatureOrbit from "@/components/Landing/FeatureOrbit";
-import PhoneShowcase from "@/components/Landing/PhoneShowcase";
 import { LanguageToggle } from "@/components/Auth/AuthLayout";
 import { ThemeToggle } from "@/components/Theme/ThemeControls";
 import { buttonVariants } from "@/components/ui/button";
@@ -210,24 +210,20 @@ function Landing() {
               primaryLabel={t("landingCtaPrimary")}
               secondaryLabel={t("landingCtaSecondary")}
             />
+            <Link
+              to="/tutorial"
+              className="group inline-flex w-fit items-center gap-2.5 rounded-full text-sm text-[color:var(--text-2)] outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="grid size-8 place-items-center rounded-full border border-fg/12 bg-fg/[0.04] transition-colors group-hover:bg-fg/[0.08]">
+                <PlayIcon className="size-3.5 translate-x-px fill-current" aria-hidden="true" />
+              </span>
+              {t("landingTutorialCta")}
+            </Link>
             <p className="m-0 text-xs text-[color:var(--text-4)]">{t("landingTrust")}</p>
           </div>
 
           <div className="landing-tilt">
             <ProductPreview />
-          </div>
-        </section>
-
-        {/* Video: como se usa (cargar un gasto, graficos, metas, inversiones) */}
-        <section aria-labelledby="video-title" className="border-t border-fg/[0.06]">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-20 sm:px-6">
-            <div className="grid max-w-2xl gap-3">
-              <h2 id="video-title" className="m-0 text-[28px] leading-[1.15] font-medium tracking-[-0.04em] sm:text-[34px]">
-                {t("landingVideoTitle")}
-              </h2>
-              <p className="m-0 text-[color:var(--text-3)]">{t("landingVideoSubtitle")}</p>
-            </div>
-            <PhoneShowcase />
           </div>
         </section>
 
@@ -266,6 +262,9 @@ function Landing() {
           <p className="m-0">{t("footerRights", { year: new Date().getFullYear() })}</p>
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <Link to="/tutorial" className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline">
+                {t("footerTutorial")}
+              </Link>
               <Link to="/terminos" className="text-[color:var(--text-3)] underline-offset-4 hover:text-foreground hover:underline">
                 {t("footerTerms")}
               </Link>
