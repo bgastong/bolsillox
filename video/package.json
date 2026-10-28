@@ -1,0 +1,18 @@
+{
+  "name": "bolsillox-video",
+  "private": true,
+  "type": "module",
+  "description": "Video de la pagina de inicio, hecho con Remotion (no es parte de la app).",
+  "scripts": {
+    "studio": "remotion studio src/index.jsx",
+    "render": "node render.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.539",
+    "@remotion/renderer": "4.0.539",
+    "@remotion/bundler": "4.0.539",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "remotion": "4.0.539"
+  }
+}

@@ -1,33 +1,40 @@
-# Video de la página de inicio
+# Video del tutorial
 
-En la landing («Mirá cómo funciona») se ve la app en un celular en 3D con los
-pasos a la izquierda (cargar un gasto, saldo, flujo de caja, gastos por
-categoría, metas e inversiones). Solo la pantalla del celular es un video: el
-celular, el giro, los pasos y el fondo son de la página
-(`src/components/Landing/PhoneShowcase.jsx`) y siguen al segundo del video.
+Video de la página `/tutorial` de la app: bolsillox real grabado en la compu,
+dentro de una ventana, con una cámara que se acerca sola a lo que se va haciendo.
+Recorre cargar un gasto, el saldo, el flujo de caja, los gastos por categoría,
+los presupuestos, las metas y las inversiones. Está hecho con
+[Remotion](https://www.remotion.dev) y no es parte de la app: tiene sus propias
+dependencias.
 
 ## Archivos
 
-- `record-app.cjs`: graba la app en tamaño celular con la captura de pantalla de
-  Chrome a 3x (1170x2532) y arma `public/app-recording.mp4`. Para que quede
-  prolijo, durante la grabación no se muestra el aviso de datos de ejemplo, la
+- `record-tutorial.cjs`: graba la app a 1440x900 con la captura de pantalla de
+  Chrome a 2x (2880x1800) y arma `public/tutorial-recording.mp4`. También guarda
+  `public/tutorial-marks.json`: en qué segundo pasa cada cosa y dónde está en
+  pantalla. Durante la grabación no se muestra el aviso de datos de ejemplo, la
   cotización del dólar es fija y no salta el aviso de presupuesto excedido (se
   cambian las respuestas de la API en el navegador, no la base). El gasto que
   carga se borra al final.
-- `make-web.sh`: corta el segundo de carga entre Metas e Inversiones, acelera la
-  grabación un 10 % y la guarda en `public/video/` como WebM y MP4 de 720 px de
-  ancho, con la imagen de portada.
+- `src/chapters.js`: velocidad, portada, cierre y capítulos a partir de los momentos.
+- `src/Tutorial.jsx`: el video. La cámara sale de los momentos y las posiciones
+  grabadas, así que si se vuelve a grabar se acomoda sola.
+- `src/camera.jsx`, `src/theme.js`, `src/ui.jsx`, `src/motion.js`: cámara,
+  colores, tipografías, logo y curvas de animación.
+- `make-web.sh`: comprime el video para la web y lo copia a `public/video/`.
 
 ## Cómo se usa
 
-Con la app corriendo (`npm run dev` en la raíz) y la cuenta de ejemplo:
-
 ```bash
 cd video
-NODE_PATH=$(npm root -g) node record-app.cjs   # imprime los momentos de la grabación
+npm install
+# Con la app corriendo (npm run dev en la raíz) y la cuenta de ejemplo:
+NODE_PATH=$(npm root -g) node record-tutorial.cjs
+npm run studio          # editor de Remotion para ver y ajustar
+npm run render          # out/tutorial.mp4 (1920x1080, 60 fps); imprime los capítulos
+node render.mjs still 300   # un cuadro suelto en out/still-300.png
 ./make-web.sh
 ```
 
-Si cambian los momentos de la grabación, hay que actualizar el corte en
-`make-web.sh` y el segundo en que empieza cada paso (`STEPS`) en
-`PhoneShowcase.jsx`.
+Los segundos que imprime `render` van en `CHAPTERS` de `src/pages/Tutorial.jsx`.
+Remotion usa el Chromium del sistema (`REMOTION_BROWSER` para cambiarlo).
