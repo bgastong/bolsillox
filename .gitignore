@@ -17,7 +17,3 @@ server/data/
 .vscode/*
 !.vscode/extensions.json
 .idea
-
-# Video de la landing: grabacion y cuadros (el resultado va a public/video)
-video/public/app-recording.mp4
-video/frames
