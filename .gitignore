@@ -18,6 +18,8 @@ server/data/
 !.vscode/extensions.json
 .idea
 
-# Video de la landing: dependencias y renders (el resultado va a public/video)
+# Video de la landing: dependencias, grabacion y renders (el resultado va a public/video)
 video/node_modules
 video/out
+video/public/app-recording.mp4
+video/frames
