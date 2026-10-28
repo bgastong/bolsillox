@@ -14,7 +14,6 @@ import {
   UtensilsIcon,
 } from "lucide-react";
 import Wordmark from "@/components/Brand/Wordmark";
-import CursorDots from "@/components/Brand/CursorDots";
 import LiveChart from "@/components/Landing/LiveChart";
 import LiveBalance from "@/components/Landing/LiveBalance";
 import FeatureOrbit from "@/components/Landing/FeatureOrbit";
@@ -166,7 +165,6 @@ function Landing() {
     <div className="surface-glow relative min-h-svh overflow-x-clip">
       <div className="bg-glow" aria-hidden="true" />
       <div className="landing-beam" aria-hidden="true" />
-      <CursorDots />
 
       <header className="sticky top-0 z-20 border-b border-fg/[0.06] bg-[color-mix(in_srgb,var(--background)_75%,transparent)] pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
