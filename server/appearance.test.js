@@ -25,6 +25,7 @@ test("se guarda la paleta y donde se ve el color de los gastos, por usuario", as
   const choice = {
     palette: "contraste",
     expenseColor: { list: true, balanceBar: false, cashflow: true, due: false, monthTotal: true },
+    categoryChart: { type: "bars", labels: "amount", top: 5 },
   };
   const res = await request("/appearance", { method: "PUT", body: choice });
   assert.equal(res.status, 200);
@@ -40,4 +41,14 @@ test("valida la paleta y los interruptores", async () => {
   });
   assert.equal(bad.status, 400);
   assert.equal((await api.request("/appearance")).status, 401);
+});
+
+test("el grafico por categoria es opcional y se valida", async () => {
+  const base = { palette: "clasica", expenseColor: DEFAULT_APPEARANCE.expenseColor };
+  // Sin categoryChart (una version anterior de la app): queda el de siempre.
+  const old = await request("/appearance", { method: "PUT", body: base });
+  assert.equal(old.status, 200);
+  assert.deepEqual((await old.json()).categoryChart, DEFAULT_APPEARANCE.categoryChart);
+  const bad = await request("/appearance", { method: "PUT", body: { ...base, categoryChart: { type: "radar", labels: "percent", top: 3 } } });
+  assert.equal(bad.status, 400);
 });

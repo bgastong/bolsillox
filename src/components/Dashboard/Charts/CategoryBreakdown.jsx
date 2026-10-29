@@ -1,10 +1,25 @@
 import { useRef } from "react";
+import { EllipsisIcon } from "lucide-react";
 import { formatCurrency, formatPercent } from "@/lib/format";
+import { groupTop, OTHER_KEY } from "@/lib/pie";
+import { useAppearance } from "@/hooks/useAppearance";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useCategories } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 import { CategoryIcon } from "../../Movements/MovementBits";
+import CategoryBars from "./CategoryBars";
 import CategoryPie from "./CategoryPie";
+
+// Color de "Otras" (las categorias mas chicas juntas): gris, se ve en los dos temas.
+const OTHER_COLOR = "#8a8f98";
+
+function OtherIcon() {
+  return (
+    <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-fg/[0.07] bg-fg/[0.04] text-[color:var(--text-2)]">
+      <EllipsisIcon className="size-4" strokeWidth={1.75} aria-hidden="true" />
+    </span>
+  );
+}
 
 // Variacion contra el mes anterior: gastar mas es malo (rojo), menos es bueno (verde).
 function CategoryVariation({ value }) {
@@ -25,33 +40,46 @@ function CategoryVariation({ value }) {
   );
 }
 
-// Desglose de gastos por categoria: torta con el color de cada categoria
-// arriba y lista con icono, monto, porcentaje, barra relativa y variacion
-// contra el mes anterior. Al pasar por una fila se resalta su porcion.
+/*
+Desglose de gastos por categoria: arriba el grafico elegido (torta, dona o
+barras contra el mes anterior, ver CategoryChartMenu) y abajo la lista con
+icono, monto, porcentaje, barra relativa y variacion contra el mes anterior.
+Al pasar por una fila se resalta su parte del grafico.
+*/
 function CategoryBreakdown({ data, currency = "ARS" }) {
-  const { locale } = useLanguage();
+  const { t, locale } = useLanguage();
   const { metaOf, nameOf } = useCategories();
-  const total = data.reduce((sum, item) => sum + item.total, 0);
-  const top = data[0]?.total || 1;
+  const { appearance } = useAppearance();
+  const config = appearance.categoryChart;
+  const items = groupTop(data, config.top).map((item) =>
+    item.category === OTHER_KEY
+      ? { ...item, name: t("categoryOthers", { count: item.count }), color: OTHER_COLOR }
+      : { ...item, name: nameOf(item.category), color: metaOf(item.category).color },
+  );
+  const total = items.reduce((sum, item) => sum + item.total, 0);
+  const top = Math.max(...items.map((item) => item.total), 1);
   const share = (value) => (total ? (value / total) * 100 : 0);
-  const pieRef = useRef(null);
+  const chartRef = useRef(null);
 
   return (
     <div className="grid gap-4">
-      <CategoryPie ref={pieRef} data={data} currency={currency} />
+      {config.type === "bars" ? (
+        <CategoryBars ref={chartRef} items={items} currency={currency} labels={config.labels} />
+      ) : (
+        <CategoryPie ref={chartRef} items={items} currency={currency} donut={config.type === "donut"} labels={config.labels} />
+      )}
 
       <ul className="-mx-2 m-0 flex list-none flex-col p-0">
-        {data.map((item, index) => {
-          const name = nameOf(item.category);
-          const { color } = metaOf(item.category);
+        {items.map((item, index) => {
+          const { name, color } = item;
           return (
             <li
               key={item.category}
               className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-fg/[0.03]"
-              onMouseEnter={() => pieRef.current?.highlight(index)}
-              onMouseLeave={() => pieRef.current?.highlight(null)}
+              onMouseEnter={() => chartRef.current?.highlight(index)}
+              onMouseLeave={() => chartRef.current?.highlight(null)}
             >
-              <CategoryIcon category={item.category} className="size-8 rounded-lg" />
+              {item.category === OTHER_KEY ? <OtherIcon /> : <CategoryIcon category={item.category} className="size-8 rounded-lg" />}
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2 text-sm">
                   <span className="flex min-w-0 items-center gap-1.5">
