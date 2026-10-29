@@ -20,6 +20,7 @@ import InstallmentAlerts from "@/components/Recurring/InstallmentAlerts";
 import BudgetRow from "@/components/Budgets/BudgetRow";
 import DollarRates from "@/components/Dashboard/DollarRates";
 import CategoryBreakdown from "@/components/Dashboard/Charts/CategoryBreakdown";
+import CategoryChartMenu from "@/components/Dashboard/Charts/CategoryChartMenu";
 import CashflowPanel from "@/components/Dashboard/CashflowPanel";
 import ExpenseList from "@/components/Dashboard/ExpenseList/ExpenseList";
 import Panel from "@/components/Dashboard/Panel";
@@ -310,7 +311,12 @@ function Dashboard() {
             className="xl:col-span-4 xl:self-start"
             title={t("chartByCategory")}
             titleId="categories-title"
-            action={<span className="text-xs text-[color:var(--text-4)]">{t("vsLastMonth")}</span>}
+            action={
+              <span className="flex items-center gap-1.5">
+                <span className="text-xs text-[color:var(--text-4)]">{t("vsLastMonth")}</span>
+                <CategoryChartMenu />
+              </span>
+            }
           >
             {showSkeleton ? (
               <PanelSkeleton />

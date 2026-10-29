@@ -1,10 +1,9 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import { ArcElement, Chart as ChartJS } from "chart.js";
-import { Pie } from "react-chartjs-2";
+import { Doughnut } from "react-chartjs-2";
 import { formatCurrency } from "@/lib/format";
 import { sliceSizes } from "@/lib/pie";
 import { useAppearance } from "@/hooks/useAppearance";
-import { useCategories } from "@/hooks/useCategories";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useTheme } from "@/hooks/useTheme";
 import { chartColors, tooltipStyle } from "./chartSetup";
@@ -25,7 +24,7 @@ Etiquetas afuera de la torta, como en amCharts: una linea que sale del borde
 de la porcion, quiebra hacia el costado y termina en el nombre y el porcentaje.
 Las de cada lado se separan para que no se encimen.
 */
-function outsideLabelsPlugin({ names, colors, values }) {
+function outsideLabelsPlugin({ names, colors, values, text }) {
   return {
     id: "outsideLabels",
     afterDatasetsDraw(chart) {
@@ -47,7 +46,7 @@ function outsideLabelsPlugin({ names, colors, values }) {
           right: cos >= 0,
           from: { x: arc.x + cos * radius, y: arc.y + sin * radius },
           elbow: { x: arc.x + cos * (radius + 12), y: arc.y + sin * (radius + 12) },
-          share: Math.round((value / total) * 100),
+          label: text(value, total),
           color: chart.data.datasets[0].backgroundColor[index],
         });
       });
@@ -97,7 +96,7 @@ function outsideLabelsPlugin({ names, colors, values }) {
         ctx.textBaseline = "top";
         ctx.fillStyle = colors.text;
         ctx.font = '500 11.5px "Geist Mono Variable", ui-monospace, monospace';
-        ctx.fillText(`${item.share}%`, endX, item.y + 3);
+        ctx.fillText(item.label, endX, item.y + 3);
       }
       ctx.restore();
     },
@@ -105,21 +104,25 @@ function outsideLabelsPlugin({ names, colors, values }) {
 }
 
 /*
-Torta de gastos por categoria (cada porcion en el color de su categoria). Es
-decorativa para lectores de pantalla: la lista de abajo dice lo mismo.
+Torta (o dona, con el total en el centro) de gastos por categoria, cada porcion
+en el color de su categoria. items: [{ name, color, total }].
+labels: que dice la etiqueta de afuera ("percent", "amount" o "none").
+Es decorativa para lectores de pantalla: la lista de abajo dice lo mismo.
 Con ref se puede resaltar una porcion desde afuera (al pasar por la lista).
 */
-const CategoryPie = forwardRef(function CategoryPie({ data, currency = "ARS" }, ref) {
-  const { locale } = useLanguage();
+const CategoryPie = forwardRef(function CategoryPie({ items, currency = "ARS", donut = false, labels = "percent" }, ref) {
+  const { t, locale } = useLanguage();
   const { resolvedTheme } = useTheme();
   const { appearance } = useAppearance();
-  const { metaOf, nameOf } = useCategories();
   const chartRef = useRef(null);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const colors = useMemo(() => chartColors(), [resolvedTheme, appearance.palette]);
 
-  const names = data.map((item) => nameOf(item.category));
-  const total = data.reduce((sum, item) => sum + item.total, 0);
+  const names = items.map((item) => item.name);
+  const values = items.map((item) => item.total);
+  const total = values.reduce((sum, value) => sum + value, 0);
+  const labelText = (value, sum) =>
+    labels === "amount" ? formatCurrency(value, locale, { currency }) : `${Math.round((value / sum) * 100)}%`;
 
   useImperativeHandle(ref, () => ({
     highlight(index) {
@@ -137,8 +140,8 @@ const CategoryPie = forwardRef(function CategoryPie({ data, currency = "ARS" }, 
     labels: names,
     datasets: [
       {
-        data: sliceSizes(data.map((item) => item.total)),
-        backgroundColor: data.map((item) => metaOf(item.category).color),
+        data: sliceSizes(values),
+        backgroundColor: items.map((item) => item.color),
         // Borde del color del panel: separa las porciones como en amCharts.
         borderColor: colors.base,
         borderWidth: 2,
@@ -154,6 +157,7 @@ const CategoryPie = forwardRef(function CategoryPie({ data, currency = "ARS" }, 
     // Lugar a los costados para las etiquetas y arriba/abajo para la porcion que sale.
     layout: { padding: { top: HOVER_OFFSET + 4, bottom: HOVER_OFFSET + 4, left: 4, right: 4 } },
     radius: "72%",
+    cutout: donut ? "62%" : 0,
     // Arranca a la izquierda y entra girando hasta completar la vuelta.
     rotation: -90,
     animation: prefersReducedMotion() ? false : { animateRotate: true, animateScale: false, duration: 900, easing: "easeOutQuart" },
@@ -168,7 +172,7 @@ const CategoryPie = forwardRef(function CategoryPie({ data, currency = "ARS" }, 
           title: () => "",
           label: (context) => {
             // El monto real (la porcion puede estar agrandada para que se vea).
-            const amount = data[context.dataIndex].total;
+            const amount = values[context.dataIndex];
             const share = total ? Math.round((amount / total) * 100) : 0;
             return ` ${context.label}  ${formatCurrency(amount, locale, { currency })} · ${share}%`;
           },
@@ -179,13 +183,19 @@ const CategoryPie = forwardRef(function CategoryPie({ data, currency = "ARS" }, 
 
   return (
     <div className="relative h-56 sm:h-60" aria-hidden="true">
-      <Pie
+      <Doughnut
         ref={chartRef}
-        key={`${resolvedTheme}-${appearance.palette}`}
+        key={`${resolvedTheme}-${appearance.palette}-${donut}-${labels}`}
         data={chartData}
         options={options}
-        plugins={[outsideLabelsPlugin({ names, colors, values: data.map((item) => item.total) })]}
+        plugins={labels === "none" ? [] : [outsideLabelsPlugin({ names, colors, values, text: labelText })]}
       />
+      {donut && (
+        <div className="pointer-events-none absolute inset-0 grid place-content-center text-center">
+          <span className="text-[11px] text-[color:var(--text-4)]">{t("chartTotal")}</span>
+          <span className="text-[15px] font-medium tracking-[-0.02em] tabular-nums">{formatCurrency(total, locale, { currency })}</span>
+        </div>
+      )}
     </div>
   );
 });
