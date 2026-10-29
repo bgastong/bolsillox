@@ -17,3 +17,20 @@ export function sliceSizes(values, minShare = MIN_SLICE_SHARE) {
   const restShare = 1 - small * minShare;
   return values.map((value) => (isSmall(value) ? minShare : (value / restTotal) * restShare) * total);
 }
+
+// Clave de la categoria que junta a las mas chicas ("Otras").
+export const OTHER_KEY = "__other";
+
+/*
+Las `top` categorias que mas se gastaron y el resto sumado en una sola
+("Otras", con su gasto del mes anterior para comparar). Con top 0, o si no
+sobra mas de una, quedan todas. Espera los datos ordenados de mayor a menor.
+*/
+export function groupTop(data, top) {
+  if (!top || data.length <= top + 1) return data;
+  const rest = data.slice(top);
+  const total = rest.reduce((sum, item) => sum + item.total, 0);
+  const previous = rest.reduce((sum, item) => sum + (item.previous ?? 0), 0);
+  const variation = previous ? Math.round(((total - previous) / previous) * 1000) / 10 : null;
+  return [...data.slice(0, top), { category: OTHER_KEY, total, previous, variation, count: rest.length }];
+}
