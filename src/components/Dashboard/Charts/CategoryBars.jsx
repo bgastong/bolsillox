@@ -6,8 +6,6 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useTheme } from "@/hooks/useTheme";
 import { chartColors, tooltipStyle } from "./chartSetup";
 
-const ROW_HEIGHT = 34;
-
 function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
@@ -42,6 +40,8 @@ function barLabelsPlugin({ colors, text }) {
 Barras horizontales de gastos por categoria: este mes (en el color de cada
 categoria) y, debajo, el mes anterior en gris para comparar.
 items: [{ name, color, total, previous }]. labels: "percent", "amount" o "none".
+Ocupa lo mismo que la torta: asi, al cambiar de grafico el panel no cambia de
+alto (ni el flujo de caja de al lado, que se estira para emparejarlo).
 Decorativo para lectores de pantalla (la lista de abajo dice lo mismo); con
 ref se resalta una categoria desde afuera.
 */
@@ -81,6 +81,7 @@ const CategoryBars = forwardRef(function CategoryBars({ items, currency = "ARS",
         borderRadius: 4,
         barPercentage: 0.9,
         categoryPercentage: 0.78,
+        maxBarThickness: 14,
       },
       {
         label: t("chartPreviousMonth"),
@@ -90,6 +91,7 @@ const CategoryBars = forwardRef(function CategoryBars({ items, currency = "ARS",
         borderRadius: 4,
         barPercentage: 0.9,
         categoryPercentage: 0.78,
+        maxBarThickness: 14,
       },
     ],
   };
@@ -130,7 +132,7 @@ const CategoryBars = forwardRef(function CategoryBars({ items, currency = "ARS",
   };
 
   return (
-    <div className="grid gap-2" aria-hidden="true">
+    <div className="grid h-56 grid-rows-[auto_minmax(0,1fr)] gap-2 sm:h-60" aria-hidden="true">
       <div className="flex items-center gap-4 text-[11px] text-[color:var(--text-4)]">
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-3 rounded-sm bg-[linear-gradient(90deg,#a78bfa,#fbbf24,#38bdf8)]" />
@@ -141,7 +143,7 @@ const CategoryBars = forwardRef(function CategoryBars({ items, currency = "ARS",
           {t("chartPreviousMonth")}
         </span>
       </div>
-      <div className="relative" style={{ height: items.length * ROW_HEIGHT + 28 }}>
+      <div className="relative min-h-0">
         <Bar
           ref={chartRef}
           key={`${resolvedTheme}-${appearance.palette}-${labels}`}
