@@ -59,20 +59,6 @@ Si cambiás una variable, tenés que volver a publicar: **Deployments → ⋯ �
 
 Abrí tu dominio, tocá **Crear cuenta** y listo.
 
-### Traer los datos que tenías en tu compu (opcional)
-
-Si cargaste movimientos en la versión anterior (antes de que hubiera cuentas), están en `server/data/bolsillox.db`. Para pasarlos a tu cuenta nueva:
-
-1. En la carpeta del proyecto, creá un archivo `.env` (ver `.env.example`) con:
-   ```
-   DATABASE_URL=la-connection-string-de-neon
-   ```
-2. Corré:
-   ```bash
-   npm run import:sqlite -- --email tu@email.com
-   ```
-   El email tiene que ser el de la cuenta que creaste.
-
 ## 5. Login con Google (opcional)
 
 1. Entrá a [console.cloud.google.com](https://console.cloud.google.com) y creá un proyecto (por ejemplo, `bolsillox`).
