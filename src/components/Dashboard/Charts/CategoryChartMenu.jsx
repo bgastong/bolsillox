@@ -40,7 +40,13 @@ function CategoryChartMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="-my-1 size-7 text-[color:var(--text-3)]" aria-label={t("chartSettings")}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="-my-1 size-7 text-[color:var(--text-3)]"
+          aria-label={t("chartSettings")}
+          data-tour="chart-settings"
+        >
           <SlidersHorizontalIcon className="size-3.5" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>

@@ -84,7 +84,7 @@ function AppSidebar() {
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarGroup className="pt-0">
+          <SidebarGroup className="pt-0" data-tour="menu">
             <SidebarGroupLabel className="sr-only">{t("menu")}</SidebarGroupLabel>
             <SidebarMenu className="gap-0.5">
               {NAV_ITEMS.map(({ to, labelKey, icon: Icon, end }) => (

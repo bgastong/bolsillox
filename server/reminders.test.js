@@ -198,3 +198,21 @@ describe("recordatorios de lo que me deben", () => {
     assert.equal(outbox.length, before);
   });
 });
+
+describe("cuentas de prueba", () => {
+  test("no reciben recordatorios (su email no es real)", async () => {
+    setToday(1, 11);
+    const start = await api.request("/auth/demo", { method: "POST", body: {} });
+    assert.equal(start.status, 201);
+    const demo = sessionCookie(start);
+    const res = await api.request("/receivables", {
+      method: "POST",
+      cookie: demo,
+      body: { person: "Juli", concept: "", amount: 2000, currency: "ARS", date: "2026-12-01", dueDate: "2026-12-03" },
+    });
+    assert.equal(res.status, 201);
+    const before = outbox.length;
+    await cron();
+    assert.ok(outbox.slice(before).every((message) => !message.to.endsWith("@demo.invalid")));
+  });
+});

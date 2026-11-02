@@ -61,6 +61,7 @@ function MobileNav() {
 
   return (
     <nav
+      data-tour="menu"
       aria-label={t("mainNavigation")}
       className="fixed inset-x-0 bottom-0 z-30 rounded-t-[22px] border-t border-fg/[0.08] bg-[color:var(--elevated)] pb-[max(6px,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.18)] backdrop-blur-xl md:hidden"
     >
@@ -72,6 +73,7 @@ function MobileNav() {
         <button
           type="button"
           onClick={openCreate}
+          data-tour="new-movement"
           aria-label={t("newMovement")}
           className={cn(ITEM, "font-medium text-foreground")}
         >

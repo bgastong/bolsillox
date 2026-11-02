@@ -83,6 +83,11 @@ export const confirmCodeSchema = z.object({
   code: codeSchema,
 });
 
+// Entrar con una cuenta de prueba (solo el idioma, para el nombre "Invitado").
+export const demoStartSchema = z.object({
+  language: languageSchema,
+});
+
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string({ error: "errorPasswordRequired" }).min(1, { error: "errorPasswordRequired" }),

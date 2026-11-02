@@ -343,6 +343,12 @@ const MIGRATIONS = [
   );
   CREATE INDEX idx_investment_entries_investment ON investment_entries (investment_id);
   `,
+  // v15: cuentas de prueba ("Probar sin registrarme"): vencen a las 12 horas y
+  // se borran solas. NULL = cuenta normal.
+  `
+  ALTER TABLE users ADD COLUMN IF NOT EXISTS demo_expires_at TIMESTAMPTZ;
+  CREATE INDEX IF NOT EXISTS idx_users_demo_expires ON users (demo_expires_at) WHERE demo_expires_at IS NOT NULL;
+  `,
 ];
 
 // BIGINT (COUNT, SUM de enteros) y NUMERIC llegan como texto: se pasan a numero.

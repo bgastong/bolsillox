@@ -216,6 +216,7 @@ function PanelLink({ to, children }) {
 
 function Dashboard() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [month, setMonth] = useState(currentMonthKey);
   const { openCreate, openEdit, notifyChange, version } = useMovements();
   const { currency, rate } = useSettings();
@@ -248,7 +249,7 @@ function Dashboard() {
       <h1 className="sr-only">{t("dashboardTitle")}</h1>
       <header className="flex items-center justify-between gap-3">
         <MonthPicker month={month} onChange={setMonth} />
-        <Button onClick={openCreate} className="max-md:hidden">
+        <Button onClick={openCreate} className="max-md:hidden" data-tour="new-movement">
           <PlusIcon data-icon="inline-start" />
           {t("newMovement")}
           <kbd className="kbd ml-1 border-current bg-transparent text-current opacity-45">N</kbd>
@@ -256,7 +257,8 @@ function Dashboard() {
       </header>
 
       {isEmptyAccount && <WelcomeCard onCreate={openCreate} onDemoLoaded={notifyChange} />}
-      {summary?.hasDemoData && <DemoDataNotice onDeleted={notifyChange} />}
+      {/* En la cuenta de prueba ya esta el aviso de arriba (y "empezar de cero" al crear la cuenta). */}
+      {summary?.hasDemoData && !user?.demoExpiresAt && <DemoDataNotice onDeleted={notifyChange} />}
       <InstallmentAlerts />
       <ReceivableAlerts />
 

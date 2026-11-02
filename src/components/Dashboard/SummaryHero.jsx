@@ -115,6 +115,7 @@ export function BalanceCard({ summary, className }) {
 
   return (
     <section
+      data-tour="balance"
       aria-labelledby="balance-title"
       className={cn("surface flex min-w-0 flex-col gap-5 rounded-[14px] p-5 sm:p-[22px]", className)}
     >

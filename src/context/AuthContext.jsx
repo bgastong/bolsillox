@@ -73,6 +73,33 @@ export function AuthProvider({ children }) {
     return { verificationRequired: false, user };
   }, []);
 
+  // Cuenta de prueba ("Probar sin registrarme"): entra con datos de ejemplo.
+  // wait: una promesa que tambien se espera antes de entrar (la animacion de la portada).
+  const startDemo = useCallback(async (language, wait) => {
+    const [user] = await Promise.all([api.startDemo(language), wait]);
+    setState({ status: "authenticated", user });
+    return user;
+  }, []);
+
+  /*
+  Pasar la cuenta de prueba a una cuenta normal. Con envio de emails devuelve
+  { verificationRequired: true, email } y se termina con confirmDemo(code).
+  */
+  const convertDemo = useCallback(async (data) => {
+    const result = await api.convertDemo(data);
+    if (result.verificationRequired) return result;
+    const user = { ...result };
+    delete user.verificationRequired;
+    setState((prev) => ({ ...prev, user }));
+    return { verificationRequired: false, user };
+  }, []);
+
+  const confirmDemo = useCallback(async (code) => {
+    const user = await api.confirmDemo(code);
+    setState((prev) => ({ ...prev, user }));
+    return user;
+  }, []);
+
   // Confirmar el email o recuperar la contraseña tambien inician sesion.
   const verifyEmail = useCallback(async (data) => {
     const user = await api.verifyEmail(data);
@@ -110,6 +137,9 @@ export function AuthProvider({ children }) {
       config,
       login,
       register,
+      startDemo,
+      convertDemo,
+      confirmDemo,
       verifyEmail,
       resetPassword,
       updateUser,
@@ -117,7 +147,7 @@ export function AuthProvider({ children }) {
       deleteAccount,
       retrySession,
     }),
-    [state, config, login, register, verifyEmail, resetPassword, updateUser, logout, deleteAccount, retrySession],
+    [state, config, login, register, startDemo, convertDemo, confirmDemo, verifyEmail, resetPassword, updateUser, logout, deleteAccount, retrySession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -38,7 +38,7 @@ describe("limpieza de la base", () => {
 
     const maintenance = createMaintenance(db, { now });
     const deleted = await maintenance.runIfDue();
-    assert.deepEqual(deleted, { pendingAccounts: 1, sessions: 1, codes: 0, rateLimits: 1 });
+    assert.deepEqual(deleted, { pendingAccounts: 1, demoAccounts: 0, sessions: 1, codes: 0, rateLimits: 1 });
     assert.deepEqual(await emails(), ["activa-vieja@mail.com", "nueva-pendiente@mail.com"]);
     const sessions = await db.all(sql`SELECT id FROM sessions`);
     assert.deepEqual(sessions.map((row) => row.id), ["vigente"]);
