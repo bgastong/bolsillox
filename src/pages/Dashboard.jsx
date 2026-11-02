@@ -216,6 +216,7 @@ function PanelLink({ to, children }) {
 
 function Dashboard() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [month, setMonth] = useState(currentMonthKey);
   const { openCreate, openEdit, notifyChange, version } = useMovements();
   const { currency, rate } = useSettings();
@@ -256,7 +257,8 @@ function Dashboard() {
       </header>
 
       {isEmptyAccount && <WelcomeCard onCreate={openCreate} onDemoLoaded={notifyChange} />}
-      {summary?.hasDemoData && <DemoDataNotice onDeleted={notifyChange} />}
+      {/* En la cuenta de prueba ya esta el aviso de arriba (y "empezar de cero" al crear la cuenta). */}
+      {summary?.hasDemoData && !user?.demoExpiresAt && <DemoDataNotice onDeleted={notifyChange} />}
       <InstallmentAlerts />
       <ReceivableAlerts />
 

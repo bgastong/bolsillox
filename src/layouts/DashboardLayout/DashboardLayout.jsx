@@ -9,6 +9,7 @@ import Navbar from "../../components/Navbar/Navbar";
 import Footer from "../../components/Footer/Footer";
 import MobileNav from "../../components/MobileNav/MobileNav";
 import OpenFromShortcut from "../../components/Pwa/OpenFromShortcut";
+import DemoLayer from "../../components/Demo/DemoLayer";
 
 function DashboardLayout({ children }) {
   const { t } = useLanguage();
@@ -30,6 +31,8 @@ function DashboardLayout({ children }) {
           <SidebarInset className="dashboard-shell bg-transparent">
             <Navbar />
             <div id="main-content" tabIndex={-1} className="dashboard-content">
+              {/* Cuenta de prueba: aviso arriba, crear la cuenta y recorrido guiado */}
+              <DemoLayer />
               {/* La key reinicia la animacion de entrada al cambiar de pantalla */}
               <div key={pathname} className="page-enter">
                 {children}

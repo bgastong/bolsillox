@@ -543,3 +543,224 @@ Todos respetan prefers-reduced-motion (ver index.css).
     transform: none;
   }
 }
+
+/*
+Boton "Probar sin registrarme" de la portada: vidrio liquido (fondo translucido
+con desenfoque y un brillo arriba) y un borde fino de luz verde que da vueltas.
+*/
+@property --demo-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.demo-cta {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 18px 0 8px;
+  border-radius: 999px;
+  color: var(--foreground);
+  font-size: 14px;
+  font-weight: 500;
+  background:
+    linear-gradient(180deg, rgb(var(--fg-rgb) / 0.1), rgb(var(--fg-rgb) / 0.03) 55%, rgb(var(--fg-rgb) / 0.05));
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(0 0 0 / 0.18),
+    0 10px 30px -12px rgba(62, 207, 142, 0.35);
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s ease;
+  outline: none;
+}
+
+/* El borde de luz: un degradado conico que gira, recortado a un borde de 1px */
+.demo-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--demo-angle),
+    rgb(var(--fg-rgb) / 0.12) 0deg,
+    rgb(var(--fg-rgb) / 0.12) 200deg,
+    rgba(62, 207, 142, 0) 220deg,
+    #3ecf8e 300deg,
+    #a7f3d0 335deg,
+    rgba(62, 207, 142, 0) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: demo-border 4s linear infinite;
+}
+
+/* Brillo de vidrio en la mitad de arriba */
+.demo-cta::after {
+  content: "";
+  position: absolute;
+  inset: 1px 10px auto;
+  height: 45%;
+  z-index: -1;
+  border-radius: 999px 999px 40% 40%;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.16), transparent);
+  pointer-events: none;
+}
+
+.demo-cta:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    inset 0 -1px 0 rgb(0 0 0 / 0.18),
+    0 14px 36px -12px rgba(62, 207, 142, 0.5);
+}
+
+.demo-cta:hover::before {
+  animation-duration: 2s;
+}
+
+.demo-cta:active {
+  transform: scale(0.97);
+}
+
+.demo-cta:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--background),
+    0 0 0 4px var(--ring);
+}
+
+.demo-cta[aria-busy="true"] {
+  pointer-events: none;
+}
+
+.demo-cta-play {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: #062b1b;
+  background: linear-gradient(135deg, #a7f3d0, #3ecf8e 60%, #22a06b);
+  box-shadow: 0 0 0 4px rgba(62, 207, 142, 0.14);
+  animation: demo-play 2.4s ease-in-out infinite;
+}
+
+@keyframes demo-border {
+  to {
+    --demo-angle: 360deg;
+  }
+}
+
+@keyframes demo-play {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(62, 207, 142, 0.14);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(62, 207, 142, 0.06);
+  }
+}
+
+:root[data-theme="light"] .demo-cta {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.9),
+    inset 0 -1px 0 rgb(0 0 0 / 0.06),
+    0 10px 30px -14px rgba(10, 125, 86, 0.35);
+}
+
+/*
+Entrada a la app: una copia de la vista previa de la portada crece hasta cubrir
+la pantalla y se funde con el fondo mientras se crea la cuenta de prueba.
+*/
+.demo-zoom {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.demo-zoom-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--background);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+
+.demo-zoom-card {
+  position: fixed;
+  margin: 0;
+  transform-origin: center;
+  transition:
+    transform 0.75s cubic-bezier(0.7, 0, 0.18, 1),
+    opacity 0.3s ease;
+}
+
+.demo-zoom-card > * {
+  width: 100%;
+  height: 100%;
+}
+
+/* La copia no repite la entrada de la portada y aparece derecha */
+.demo-zoom-card .landing-preview {
+  animation: none;
+  transform: none;
+}
+
+.demo-zoom-content {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 0.3s ease,
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.demo-zoom[data-open="true"] .demo-zoom-bg {
+  opacity: 1;
+  transition-delay: 0.45s;
+}
+
+.demo-zoom[data-open="true"] .demo-zoom-card {
+  opacity: 0;
+  transition-delay: 0s, 0.5s;
+}
+
+.demo-zoom[data-open="true"] .demo-zoom-content {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.6s;
+}
+
+/* Cuenta de prueba dentro de la app: aviso de arriba con el mismo vidrio */
+.demo-banner {
+  position: relative;
+  background: linear-gradient(90deg, rgba(62, 207, 142, 0.09), rgb(var(--fg-rgb) / 0.03) 60%);
+  box-shadow:
+    inset 0 0 0 1px rgba(62, 207, 142, 0.22),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-cta::before,
+  .demo-cta-play {
+    animation: none;
+  }
+}

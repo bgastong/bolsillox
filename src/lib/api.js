@@ -61,6 +61,10 @@ export const api = {
   saveAppearance: (data) => request("/appearance", { method: "PUT", body: data }),
   register: (data) => request("/auth/register", { method: "POST", body: data }),
   login: (data) => request("/auth/login", { method: "POST", body: data }),
+  // Cuenta de prueba: entrar sin registrarse, pasarla a cuenta normal y confirmar el email.
+  startDemo: (language) => request("/auth/demo", { method: "POST", body: { language } }),
+  convertDemo: (data) => request("/auth/demo/convert", { method: "POST", body: data }),
+  confirmDemo: (code) => request("/auth/demo/confirm", { method: "POST", body: { code } }),
   logout: () => request("/auth/logout", { method: "POST" }),
   deleteAccount: (email) => request("/auth/account", { method: "DELETE", body: { email } }),
   // Codigos por email: confirmar la cuenta, recuperar la contraseña, cambiar el email.

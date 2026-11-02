@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useToast } from "@/hooks/useToast";
+import { openConvertDialog } from "@/components/Demo/demoEvents";
 import UserAvatar from "./UserAvatar";
 import { AccountDialog } from "./AccountDialogs";
 
@@ -104,7 +105,9 @@ function AccountSection({ Section }) {
         <UserAvatar name={user.name} />
         <div className="grid min-w-0 flex-1 gap-0.5">
           <span className="truncate font-medium">{user.name}</span>
-          <span className="truncate text-sm text-muted-foreground">{user.email}</span>
+          <span className="truncate text-sm text-muted-foreground">
+            {user.demoExpiresAt ? t("demoBannerLabel") : user.email}
+          </span>
         </div>
       </div>
       {user.hasGoogle && (
@@ -113,27 +116,36 @@ function AccountSection({ Section }) {
           {t("linkedWithGoogle")}
         </p>
       )}
-      {/* Cambiar los datos de la cuenta */}
-      <div className="grid gap-2 sm:grid-cols-3">
-        <Button variant="outline" onClick={() => setEditing("name")} className="h-11 justify-start sm:h-9">
-          <PencilIcon data-icon="inline-start" />
-          {t("editName")}
-        </Button>
-        {config.email && (
-          <Button variant="outline" onClick={() => setEditing("email")} className="h-11 justify-start sm:h-9">
-            <MailIcon data-icon="inline-start" />
-            {t("changeEmailTitle")}
+      {/* Cuenta de prueba: no tiene email ni contraseña propios hasta crear la cuenta */}
+      {user.demoExpiresAt ? (
+        <div className="grid gap-3 rounded-xl border border-fg/10 bg-fg/[0.02] p-3 text-sm sm:flex sm:items-center sm:justify-between">
+          <p className="m-0 text-muted-foreground">{t("demoAccountNote")}</p>
+          <Button size="sm" onClick={openConvertDialog} className="h-11 shrink-0 sm:h-9">
+            {t("demoCreateAccount")}
           </Button>
-        )}
-        <Button
-          variant="outline"
-          onClick={() => setEditing(user.hasPassword ? "password" : "createPassword")}
-          className="h-11 justify-start sm:h-9"
-        >
-          <KeyRoundIcon data-icon="inline-start" />
-          {t(user.hasPassword ? "changePasswordTitle" : "setPasswordTitle")}
-        </Button>
-      </div>
+        </div>
+      ) : (
+        <div className="grid gap-2 sm:grid-cols-3">
+          <Button variant="outline" onClick={() => setEditing("name")} className="h-11 justify-start sm:h-9">
+            <PencilIcon data-icon="inline-start" />
+            {t("editName")}
+          </Button>
+          {config.email && (
+            <Button variant="outline" onClick={() => setEditing("email")} className="h-11 justify-start sm:h-9">
+              <MailIcon data-icon="inline-start" />
+              {t("changeEmailTitle")}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={() => setEditing(user.hasPassword ? "password" : "createPassword")}
+            className="h-11 justify-start sm:h-9"
+          >
+            <KeyRoundIcon data-icon="inline-start" />
+            {t(user.hasPassword ? "changePasswordTitle" : "setPasswordTitle")}
+          </Button>
+        </div>
+      )}
       <div className="flex flex-col gap-2 border-t border-fg/[0.06] pt-4 sm:flex-row">
         <Button variant="outline" onClick={logout} className="h-11 sm:h-9">
           <LogOutIcon data-icon="inline-start" />

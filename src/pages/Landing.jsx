@@ -17,6 +17,7 @@ import Wordmark from "@/components/Brand/Wordmark";
 import LiveChart from "@/components/Landing/LiveChart";
 import LiveBalance from "@/components/Landing/LiveBalance";
 import FeatureOrbit from "@/components/Landing/FeatureOrbit";
+import DemoButton from "@/components/Landing/DemoButton";
 import { LanguageToggle } from "@/components/Auth/AuthLayout";
 import { ThemeToggle } from "@/components/Theme/ThemeControls";
 import { buttonVariants } from "@/components/ui/button";
@@ -209,6 +210,7 @@ function Landing() {
               primaryLabel={t("landingCtaPrimary")}
               secondaryLabel={t("landingCtaSecondary")}
             />
+            <DemoButton />
             <p className="m-0 text-xs text-[color:var(--text-4)]">{t("landingTrust")}</p>
           </div>
 
