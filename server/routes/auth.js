@@ -4,6 +4,7 @@ import {
   changePasswordSchema,
   confirmCodeSchema,
   deleteAccountSchema,
+  demoStartSchema,
   loginSchema,
   registerSchema,
   requestCodeSchema,
@@ -12,6 +13,7 @@ import {
   verifyEmailSchema,
 } from "../../shared/authSchema.js";
 import { CODE_MINUTES, cookieOptions, SESSION_COOKIE } from "../auth.js";
+import { seedUser } from "../db.js";
 import { codeEmail } from "../emails.js";
 import { HttpError } from "../errors.js";
 import {
@@ -36,6 +38,8 @@ export function authRouter(
   const limiter = (name, limit, windowMs) => createRateLimiter({ db, name, limit, windowMs, now });
   const loginLimiter = limiter("login", limits.login ?? 10, 15 * 60 * 1000);
   const registerLimiter = limiter("register", limits.register ?? 20, 60 * 60 * 1000);
+  // Cuentas de prueba por IP por hora (cada una crea un usuario con datos de ejemplo).
+  const demoLimiter = limiter("demo", limits.demo ?? 5, 60 * 60 * 1000);
 
   // Codigos: intentos por IP + email cada 15 minutos y emails enviados por IP por hora.
   const codeLimiter = limiter("code", limits.code ?? 10, 15 * 60 * 1000);
@@ -44,6 +48,11 @@ export function authRouter(
   function requireUser(req) {
     if (!req.user) throw new HttpError(401, "unauthorized");
     return req.user;
+  }
+
+  // La cuenta de prueba no tiene email ni contraseña propios hasta convertirla.
+  function requireNotDemo(user) {
+    if (user.demoExpiresAt) throw new HttpError(403, "demo_account");
   }
 
   function requireMailer() {
@@ -148,6 +157,41 @@ export function authRouter(
     res.json(user);
   });
 
+  // --- Cuenta de prueba ("Probar sin registrarme") ---
+
+  // Crea una cuenta de prueba con datos de ejemplo y entra con ella.
+  router.post("/demo", async (req, res) => {
+    if (req.user) throw new HttpError(409, "already_signed_in");
+    const { language } = demoStartSchema.parse(req.body ?? {});
+    await demoLimiter.consume(req.ip);
+    const user = await auth.createDemoUser({ name: language === "en" ? "Guest" : "Invitado" });
+    await seedUser(db, user.id, now());
+    startSession(res, await auth.createSession(user.id));
+    res.status(201).json(user);
+  });
+
+  /*
+  Pasar la cuenta de prueba a una cuenta normal (se queda con todo lo cargado).
+  Con el envio de emails activo manda un codigo al email y se termina en
+  /demo/confirm; sin emails queda lista en el momento.
+  */
+  router.post("/demo/convert", async (req, res) => {
+    const user = requireUser(req);
+    const { language, ...data } = registerSchema.parse(req.body ?? {});
+    if (!mailer.enabled) return res.json({ ...(await auth.convertDemo(user.id, data)), verificationRequired: false });
+    await sendLimiter.consume(req.ip);
+    const code = await auth.requestDemoConversion(user.id, data);
+    await sendCode(data.email, "verify_email", code, language);
+    res.json({ email: data.email, verificationRequired: true });
+  });
+
+  router.post("/demo/confirm", async (req, res) => {
+    const user = requireUser(req);
+    const data = confirmCodeSchema.parse(req.body ?? {});
+    await codeLimiter.consume(`${req.ip}|demo|${user.id}`);
+    res.json(await auth.confirmDemoConversion(user.id, data));
+  });
+
   // --- Datos de la cuenta (con sesion) ---
 
   router.patch("/me", async (req, res) => {
@@ -157,6 +201,7 @@ export function authRouter(
 
   router.post("/change-password", async (req, res) => {
     const user = requireUser(req);
+    requireNotDemo(user);
     const data = changePasswordSchema.parse(req.body ?? {});
     await codeLimiter.consume(`${req.ip}|pw|${user.id}`);
     res.json(await auth.changePassword(user.id, data, req.sessionToken));
@@ -164,6 +209,7 @@ export function authRouter(
 
   router.post("/change-email", async (req, res) => {
     const user = requireUser(req);
+    requireNotDemo(user);
     requireMailer();
     const { language, ...data } = changeEmailSchema.parse(req.body ?? {});
     await codeLimiter.consume(`${req.ip}|email|${user.id}`);

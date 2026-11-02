@@ -102,7 +102,7 @@ export function createReminders(db, { recurring, receivables, mailer, appUrl = n
     // Solo quien tiene la cuenta confirmada y compras en cuotas activas o deudas con vencimiento.
     const users = await db.all(sql`
       SELECT u.id, u.email FROM users u
-      WHERE NOT u.pending_verification AND (
+      WHERE NOT u.pending_verification AND u.demo_expires_at IS NULL AND (
         EXISTS (SELECT 1 FROM recurring r WHERE r.user_id = u.id AND r.active
                 AND r.installments_total IS NOT NULL AND r.confirm_from IS NOT NULL)
         OR EXISTS (SELECT 1 FROM receivables d WHERE d.user_id = u.id AND d.due_date IS NOT NULL)

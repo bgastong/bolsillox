@@ -9,6 +9,8 @@ const scrypt = promisify(crypto.scrypt);
 export const SESSION_COOKIE = "bx_session";
 const SESSION_DAYS = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;
+// Horas que dura una cuenta de prueba antes de borrarse.
+export const DEMO_HOURS = 12;
 // Si a la sesion le quedan menos dias que esto, se extiende (sesion "deslizante").
 const RENEW_BELOW_DAYS = 15;
 
@@ -57,7 +59,8 @@ function tokenId(token) {
 
 const USER_COLUMNS = sql`
   id, email, name, google_id IS NOT NULL AS "hasGoogle",
-  password_hash IS NOT NULL AS "hasPassword", created_at AS "createdAt"
+  password_hash IS NOT NULL AS "hasPassword", created_at AS "createdAt",
+  demo_expires_at AS "demoExpiresAt"
 `;
 
 export function createAuthService(db, { now = () => new Date() } = {}) {
@@ -93,6 +96,72 @@ export function createAuthService(db, { now = () => new Date() } = {}) {
     `);
     if (!user) throw new HttpError(409, "email_taken");
     return user;
+  }
+
+  /*
+  Cuenta de prueba: sin email real ni contraseña, vence a las DEMO_HOURS horas
+  (la limpieza la borra con todos sus datos). Quien la crea acepta los terminos
+  con el boton que dice que al probar se aceptan.
+  */
+  async function createDemoUser({ name }) {
+    const email = `demo-${crypto.randomBytes(9).toString("hex")}@demo.invalid`;
+    const expiresAt = new Date(now().getTime() + DEMO_HOURS * 60 * 60 * 1000);
+    const created = await db.one(sql`
+      INSERT INTO users (email, name, demo_expires_at, terms_version, terms_accepted_at)
+      VALUES (${email}, ${name}, ${expiresAt}, ${TERMS_VERSION}, ${now()})
+      RETURNING id
+    `);
+    return getUser(created.id);
+  }
+
+  async function requireDemo(userId) {
+    const user = await getUser(userId);
+    if (!user?.demoExpiresAt) throw new HttpError(400, "not_demo_account");
+    return user;
+  }
+
+  async function ensureEmailFree(email) {
+    const taken = await db.one(sql`SELECT id FROM users WHERE email = ${email} AND NOT pending_verification`);
+    if (taken) throw new HttpError(409, "email_taken");
+  }
+
+  /*
+  Pasar la cuenta de prueba a una cuenta normal, con todo lo cargado. Sin envio
+  de emails queda lista en el momento (como el registro). Con emails se guardan
+  nombre y contraseña y se manda un codigo al email (confirmDemoConversion).
+  */
+  async function convertDemo(userId, { name, email, password }) {
+    await requireDemo(userId);
+    await ensureEmailFree(email);
+    const passwordHash = await hashPassword(password);
+    await db.run(sql`DELETE FROM users WHERE email = ${email} AND pending_verification`);
+    await db.run(sql`
+      UPDATE users SET name = ${name}, email = ${email}, password_hash = ${passwordHash},
+                       demo_expires_at = NULL, terms_version = ${TERMS_VERSION}, terms_accepted_at = ${now()}
+      WHERE id = ${userId}
+    `);
+    return getUser(userId);
+  }
+
+  async function requestDemoConversion(userId, { name, email, password }) {
+    await requireDemo(userId);
+    await ensureEmailFree(email);
+    const passwordHash = await hashPassword(password);
+    await db.run(sql`UPDATE users SET name = ${name}, password_hash = ${passwordHash} WHERE id = ${userId}`);
+    return issueCode(userId, "change_email", { newEmail: email });
+  }
+
+  async function confirmDemoConversion(userId, { code }) {
+    await requireDemo(userId);
+    const { newEmail } = await consumeCode(userId, "change_email", code);
+    await db.run(sql`DELETE FROM users WHERE email = ${newEmail} AND pending_verification`);
+    const updated = await db.run(sql`
+      UPDATE users SET email = ${newEmail}, email_verified = TRUE, demo_expires_at = NULL,
+                       terms_version = ${TERMS_VERSION}, terms_accepted_at = ${now()}
+      WHERE id = ${userId} AND NOT EXISTS (SELECT 1 FROM users WHERE email = ${newEmail})
+    `);
+    if (!updated) throw new HttpError(409, "email_taken");
+    return getUser(userId);
   }
 
   async function login({ email, password }) {
@@ -313,7 +382,9 @@ export function createAuthService(db, { now = () => new Date() } = {}) {
       await db.run(sql`UPDATE sessions SET expires_at = ${expiresAt} WHERE id = ${id}`);
     }
     const user = await getUser(session.userId);
-    return user ? { user, expiresAt } : null;
+    // Una cuenta de prueba vencida no entra aunque la limpieza todavia no la borro.
+    if (!user || (user.demoExpiresAt && new Date(user.demoExpiresAt) <= now())) return null;
+    return { user, expiresAt };
   }
 
   async function deleteSession(token) {
@@ -328,6 +399,10 @@ export function createAuthService(db, { now = () => new Date() } = {}) {
   return {
     getUser,
     register,
+    createDemoUser,
+    convertDemo,
+    requestDemoConversion,
+    confirmDemoConversion,
     login,
     verifyEmail,
     verificationCodeFor,

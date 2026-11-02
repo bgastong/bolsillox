@@ -15,7 +15,8 @@ const CHECK_EVERY_MS = 10 * 60 * 1000;
 /*
 Limpieza periodica de la base. No hay un proceso aparte (en Vercel no hay
 servidor siempre prendido): la dispara el trafico normal de la API.
-- Cuentas sin confirmar de mas de 7 dias (con sus codigos, por cascada).
+- Cuentas sin confirmar de mas de 7 dias (con sus codigos, por cascada) y
+  cuentas de prueba vencidas (con todos sus datos).
 - Sesiones, codigos por email y limites de intentos vencidos.
 - Recordatorios de cuotas y cobros por email (si se pasa reminders; ver reminders.js).
 */
@@ -45,6 +46,7 @@ export function createMaintenance(db, { now = () => new Date(), reminders = null
       pendingAccounts: await db.run(sql`
         DELETE FROM users WHERE pending_verification AND created_at < ${pendingBefore}
       `),
+      demoAccounts: await db.run(sql`DELETE FROM users WHERE demo_expires_at < ${time}`),
       sessions: await db.run(sql`DELETE FROM sessions WHERE expires_at < ${time}`),
       codes: await db.run(sql`DELETE FROM email_codes WHERE expires_at < ${time}`),
       rateLimits: await db.run(sql`DELETE FROM rate_limits WHERE reset_at < ${time}`),
