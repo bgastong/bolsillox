@@ -4,7 +4,27 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import ConvertDemoDialog from "./ConvertDemoDialog";
-import { hoursLeft, OPEN_CONVERT_EVENT, openConvertDialog, startTour } from "./demoEvents";
+import DemoTour from "./DemoTour";
+import { hoursLeft, OPEN_CONVERT_EVENT, openConvertDialog, START_TOUR_EVENT, startTour } from "./demoEvents";
+
+// El recorrido arranca solo la primera vez que se entra con cada cuenta de prueba.
+const tourSeenKey = (userId) => `bolsillox.tourSeen.${userId}`;
+
+function tourSeen(userId) {
+  try {
+    return localStorage.getItem(tourSeenKey(userId)) === "1";
+  } catch {
+    return true;
+  }
+}
+
+function markTourSeen(userId) {
+  try {
+    localStorage.setItem(tourSeenKey(userId), "1");
+  } catch {
+    // sin storage: el recorrido se puede volver a ver igual con "Ver recorrido"
+  }
+}
 
 // Horas que le quedan a la cuenta de prueba; se actualiza cada minuto.
 function useHoursLeft(expiresAt) {
@@ -58,16 +78,35 @@ function DemoLayer() {
   const { user } = useAuth();
   const [converting, setConverting] = useState(false);
   const isDemo = Boolean(user?.demoExpiresAt);
+  const [touring, setTouring] = useState(false);
 
   useEffect(() => {
     const open = () => setConverting(true);
+    const tour = () => setTouring(true);
     window.addEventListener(OPEN_CONVERT_EVENT, open);
-    return () => window.removeEventListener(OPEN_CONVERT_EVENT, open);
+    window.addEventListener(START_TOUR_EVENT, tour);
+    return () => {
+      window.removeEventListener(OPEN_CONVERT_EVENT, open);
+      window.removeEventListener(START_TOUR_EVENT, tour);
+    };
   }, []);
+
+  // Primera vez con esta cuenta de prueba: el recorrido arranca solo, cuando ya cargo el Inicio.
+  useEffect(() => {
+    if (!isDemo || tourSeen(user.id)) return undefined;
+    const timer = setTimeout(() => setTouring(true), 1200);
+    return () => clearTimeout(timer);
+  }, [isDemo, user?.id]);
+
+  function closeTour() {
+    setTouring(false);
+    if (user) markTourSeen(user.id);
+  }
 
   return (
     <>
       {isDemo && <DemoBanner expiresAt={user.demoExpiresAt} />}
+      {isDemo && touring && <DemoTour onClose={closeTour} />}
       {/* Queda montado mientras termina la conversion (ahi la cuenta ya no es de prueba). */}
       {(isDemo || converting) && <ConvertDemoDialog open={converting} onOpenChange={setConverting} />}
     </>

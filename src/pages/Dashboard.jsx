@@ -249,7 +249,7 @@ function Dashboard() {
       <h1 className="sr-only">{t("dashboardTitle")}</h1>
       <header className="flex items-center justify-between gap-3">
         <MonthPicker month={month} onChange={setMonth} />
-        <Button onClick={openCreate} className="max-md:hidden">
+        <Button onClick={openCreate} className="max-md:hidden" data-tour="new-movement">
           <PlusIcon data-icon="inline-start" />
           {t("newMovement")}
           <kbd className="kbd ml-1 border-current bg-transparent text-current opacity-45">N</kbd>
